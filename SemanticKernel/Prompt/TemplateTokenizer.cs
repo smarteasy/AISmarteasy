@@ -99,7 +99,7 @@ public sealed class TemplateTokenizer
                         }
                         else
                         {
-                            List<Block> codeBlocks = this._codeTokenizer.Tokenize(contentWithoutDelimiters);
+                            var codeBlocks = this._codeTokenizer.Tokenize(contentWithoutDelimiters);
 
                             switch (codeBlocks[0].Type)
                             {
