@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Prompt;
+namespace SemanticKernel.Prompt.Blocks;
 
 internal sealed class FunctionIdBlock : Block, ITextRendering
 {
@@ -17,32 +17,32 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
     public FunctionIdBlock(string? text, ILoggerFactory? loggerFactory = null)
         : base(text?.Trim(), loggerFactory)
     {
-        var functionNameParts = this.Content.Split('.');
+        var functionNameParts = Content.Split('.');
         if (functionNameParts.Length > 2)
         {
-            this.Logger.LogError("Invalid function name `{FunctionName}`.", this.Content);
-            throw new SKException($"Invalid function name `{this.Content}`. A function name can contain at most one dot separating the skill name from the function name");
+            Logger.LogError("Invalid function name `{FunctionName}`.", Content);
+            throw new SKException($"Invalid function name `{Content}`. A function name can contain at most one dot separating the skill name from the function name");
         }
 
         if (functionNameParts.Length == 2)
         {
-            this.SkillName = functionNameParts[0];
-            this.FunctionName = functionNameParts[1];
+            SkillName = functionNameParts[0];
+            FunctionName = functionNameParts[1];
             return;
         }
 
-        this.FunctionName = this.Content;
+        FunctionName = Content;
     }
 
     public override bool IsValid(out string errorMsg)
     {
-        if (!s_validContentRegex.IsMatch(this.Content))
+        if (!s_validContentRegex.IsMatch(Content))
         {
             errorMsg = "The function identifier is empty";
             return false;
         }
 
-        if (HasMoreThanOneDot(this.Content))
+        if (HasMoreThanOneDot(Content))
         {
             errorMsg = "The function identifier can contain max one '.' char separating skill name from function name";
             return false;
@@ -54,7 +54,7 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
 
     public string Render(ContextVariables? variables)
     {
-        return this.Content;
+        return Content;
     }
 
     private static bool HasMoreThanOneDot(string? value)

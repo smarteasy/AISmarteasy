@@ -9,6 +9,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Prompt.Blocks;
 
 //using Microsoft.SemanticKernel.Diagnostics;
 //using Microsoft.SemanticKernel.Orchestration;

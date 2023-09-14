@@ -1,50 +1,13 @@
-﻿//using System.Collections.Generic;
-//using System.Diagnostics.CodeAnalysis;
-//using System.Text;
-
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
-//using Microsoft.SemanticKernel.Diagnostics;
-//using Microsoft.SemanticKernel.TemplateEngine.Prompt.Blocks;
+using SemanticKernel.Prompt.Blocks;
 
 namespace SemanticKernel.Prompt;
 
-///// <summary>
-///// Simple tokenizer used for default SK template code language.
-/////
-///// BNF parsed by TemplateTokenizer:
-///// [template]       ::= "" | [block] | [block] [template]
-///// [block]          ::= [sk-block] | [text-block]
-///// [sk-block]       ::= "{{" [variable] "}}" | "{{" [value] "}}" | "{{" [function-call] "}}"
-///// [text-block]     ::= [any-char] | [any-char] [text-block]
-///// [any-char]       ::= any char
-/////
-///// BNF parsed by CodeTokenizer:
-///// [template]       ::= "" | [variable] " " [template] | [value] " " [template] | [function-call] " " [template]
-///// [variable]       ::= "$" [valid-name]
-///// [value]          ::= "'" [text] "'" | '"' [text] '"'
-///// [function-call]  ::= [function-id] | [function-id] [parameter]
-///// [parameter]      ::= [variable] | [value]
-/////
-///// BNF parsed by dedicated blocks
-///// [function-id]    ::= [valid-name] | [valid-name] "." [valid-name]
-///// [valid-name]     ::= [valid-symbol] | [valid-symbol] [valid-name]
-///// [valid-symbol]   ::= [letter] | [digit] | "_"
-///// [letter]         ::= "a" | "b" ... | "z" | "A" | "B" ... | "Z"
-///// [digit]          ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-///// </summary>
 internal sealed class CodeTokenizer
 {
-    private enum TokenTypes
-    {
-        None = 0,
-        Value = 1,
-        Variable = 2,
-        FunctionId = 3,
-        NamedArg = 4,
-    }
-
     private readonly ILoggerFactory _loggerFactory;
 
     public CodeTokenizer(ILoggerFactory? loggerFactory = null)
@@ -52,295 +15,265 @@ internal sealed class CodeTokenizer
         this._loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
     }
 
-    //    /// <summary>
-    //    /// Tokenize a code block, without checking for syntax errors
-    //    /// </summary>
-    //    /// <param name="text">Text to parse</param>
-    //    /// <returns>A list of blocks</returns>
     public List<Block> Tokenize(string? text)
     {
-        //        // Remove spaces, which are ignored anyway
-        //        text = text?.Trim();
+        text = text?.Trim();
 
-        //        // Render NULL to ""
-        //        if (string.IsNullOrEmpty(text)) { return new List<Block>(); }
+        if (string.IsNullOrEmpty(text)) { return new List<Block>(); }
 
-        //        // Track what type of token we're reading
-        //        TokenTypes currentTokenType = TokenTypes.None;
+        TokenTypeKind currentTokenType = TokenTypeKind.None;
 
-        //        // Track the content of the current token
-        //        var currentTokenContent = new StringBuilder();
+        var currentTokenContent = new StringBuilder();
 
-        //        char textValueDelimiter = '\0';
+        char textValueDelimiter = '\0';
 
         var blocks = new List<Block>();
-        //        char nextChar = text![0];
+        char nextChar = text![0];
 
-        //        // Tokens must be separated by spaces, track their presence
-        //        bool spaceSeparatorFound = false;
+        bool spaceSeparatorFound = false;
 
-        //        // Named args may contain string values that contain spaces. These are used
-        //        // to determine when a space occurs between quotes.
-        //        bool namedArgSeparatorFound = false;
-        //        char namedArgValuePrefix = '\0';
+        bool namedArgSeparatorFound = false;
+        char namedArgValuePrefix = '\0';
 
-        //        // 1 char only edge case
-        //        if (text.Length == 1)
-        //        {
-        //            switch (nextChar)
-        //            {
-        //                case Symbols.VarPrefix:
-        //                    blocks.Add(new VarBlock(text, this._loggerFactory));
-        //                    break;
 
-        //                case Symbols.DblQuote:
-        //                case Symbols.SglQuote:
-        //                    blocks.Add(new ValBlock(text, this._loggerFactory));
-        //                    break;
+        if (text.Length == 1)
+        {
+            switch (nextChar)
+            {
+                case Symbols.VarPrefix:
+                    blocks.Add(new VarBlock(text, this._loggerFactory));
+                    break;
 
-        //                default:
-        //                    blocks.Add(new FunctionIdBlock(text, this._loggerFactory));
-        //                    break;
-        //            }
+                case Symbols.DblQuote:
+                case Symbols.SglQuote:
+                    blocks.Add(new ValBlock(text, this._loggerFactory));
+                    break;
 
-        //            return blocks;
-        //        }
+                default:
+                    blocks.Add(new FunctionIdBlock(text, this._loggerFactory));
+                    break;
+            }
 
-        //        bool skipNextChar = false;
-        //        for (int nextCharCursor = 1; nextCharCursor < text.Length; nextCharCursor++)
-        //        {
-        //            char currentChar = nextChar;
-        //            nextChar = text[nextCharCursor];
+            return blocks;
+        }
 
-        //            if (skipNextChar)
-        //            {
-        //                skipNextChar = false;
-        //                continue;
-        //            }
+        bool skipNextChar = false;
+        for (int nextCharCursor = 1; nextCharCursor < text.Length; nextCharCursor++)
+        {
+            char currentChar = nextChar;
+            nextChar = text[nextCharCursor];
 
-        //            // First char is easy
-        //            if (nextCharCursor == 1)
-        //            {
-        //                if (IsVarPrefix(currentChar))
-        //                {
-        //                    currentTokenType = TokenTypes.Variable;
-        //                }
-        //                else if (IsQuote(currentChar))
-        //                {
-        //                    currentTokenType = TokenTypes.Value;
-        //                    textValueDelimiter = currentChar;
-        //                }
-        //                else
-        //                {
-        //                    currentTokenType = TokenTypes.FunctionId;
-        //                }
+            if (skipNextChar)
+            {
+                skipNextChar = false;
+                continue;
+            }
 
-        //                currentTokenContent.Append(currentChar);
-        //                continue;
-        //            }
+            if (nextCharCursor == 1)
+            {
+                if (IsVarPrefix(currentChar))
+                {
+                    currentTokenType = TokenTypeKind.Variable;
+                }
+                else if (IsQuote(currentChar))
+                {
+                    currentTokenType = TokenTypeKind.Value;
+                    textValueDelimiter = currentChar;
+                }
+                else
+                {
+                    currentTokenType = TokenTypeKind.FunctionId;
+                }
 
-        //            // While reading a values between quotes
-        //            if (currentTokenType == TokenTypes.Value || (currentTokenType == TokenTypes.NamedArg && IsQuote(namedArgValuePrefix)))
-        //            {
-        //                // If the current char is escaping the next special char:
-        //                // - skip the current char (escape char)
-        //                // - add the next (special char)
-        //                // - jump to the one after (to handle "\\" properly)
-        //                if (currentChar == Symbols.EscapeChar && CanBeEscaped(nextChar))
-        //                {
-        //                    currentTokenContent.Append(nextChar);
-        //                    skipNextChar = true;
-        //                    continue;
-        //                }
+                currentTokenContent.Append(currentChar);
+                continue;
+            }
 
-        //                currentTokenContent.Append(currentChar);
+            if (currentTokenType == TokenTypeKind.Value || (currentTokenType == TokenTypeKind.NamedArg && IsQuote(namedArgValuePrefix)))
+            {
+                if (currentChar == Symbols.EscapeChar && CanBeEscaped(nextChar))
+                {
+                    currentTokenContent.Append(nextChar);
+                    skipNextChar = true;
+                    continue;
+                }
 
-        //                // When we reach the end of the value
-        //                if (currentChar == textValueDelimiter && currentTokenType == TokenTypes.Value)
-        //                {
-        //                    blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                    currentTokenContent.Clear();
-        //                    currentTokenType = TokenTypes.None;
-        //                    spaceSeparatorFound = false;
-        //                }
-        //                else if (currentChar == namedArgValuePrefix && currentTokenType == TokenTypes.NamedArg)
-        //                {
-        //                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                    currentTokenContent.Clear();
-        //                    currentTokenType = TokenTypes.None;
-        //                    spaceSeparatorFound = false;
-        //                    namedArgSeparatorFound = false;
-        //                    namedArgValuePrefix = '\0';
-        //                }
+                currentTokenContent.Append(currentChar);
 
-        //                continue;
-        //            }
+                if (currentChar == textValueDelimiter && currentTokenType == TokenTypeKind.Value)
+                {
+                    blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    currentTokenContent.Clear();
+                    currentTokenType = TokenTypeKind.None;
+                    spaceSeparatorFound = false;
+                }
+                else if (currentChar == namedArgValuePrefix && currentTokenType == TokenTypeKind.NamedArg)
+                {
+                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    currentTokenContent.Clear();
+                    currentTokenType = TokenTypeKind.None;
+                    spaceSeparatorFound = false;
+                    namedArgSeparatorFound = false;
+                    namedArgValuePrefix = '\0';
+                }
 
-        //            // If we're not between quotes, a space signals the end of the current token
-        //            // Note: there might be multiple consecutive spaces
-        //            if (IsBlankSpace(currentChar))
-        //            {
-        //                if (currentTokenType == TokenTypes.Variable)
-        //                {
-        //                    blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                    currentTokenContent.Clear();
-        //                    currentTokenType = TokenTypes.None;
-        //                }
-        //                else if (currentTokenType == TokenTypes.FunctionId)
-        //                {
-        //                    var tokenContent = currentTokenContent.ToString();
-        //                    // This isn't an expected block at this point but the TemplateTokenizer should throw an error when
-        //                    // a named arg is used without a function call
-        //                    if (CodeTokenizer.IsValidNamedArg(tokenContent))
-        //                    {
-        //                        blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
-        //                    }
-        //                    else
-        //                    {
-        //                        blocks.Add(new FunctionIdBlock(tokenContent, this._loggerFactory));
-        //                    }
-        //                    currentTokenContent.Clear();
-        //                    currentTokenType = TokenTypes.None;
-        //                }
-        //                else if (currentTokenType == TokenTypes.NamedArg && namedArgSeparatorFound && namedArgValuePrefix != 0)
-        //                {
-        //                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                    currentTokenContent.Clear();
-        //                    namedArgSeparatorFound = false;
-        //                    namedArgValuePrefix = '\0';
-        //                    currentTokenType = TokenTypes.None;
-        //                }
+                continue;
+            }
 
-        //                spaceSeparatorFound = true;
+            if (IsBlankSpace(currentChar))
+            {
+                if (currentTokenType == TokenTypeKind.Variable)
+                {
+                    blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    currentTokenContent.Clear();
+                    currentTokenType = TokenTypeKind.None;
+                }
+                else if (currentTokenType == TokenTypeKind.FunctionId)
+                {
+                    var tokenContent = currentTokenContent.ToString();
 
-        //                continue;
-        //            }
+                    if (CodeTokenizer.IsValidNamedArg(tokenContent))
+                    {
+                        blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
+                    }
+                    else
+                    {
+                        blocks.Add(new FunctionIdBlock(tokenContent, this._loggerFactory));
+                    }
+                    currentTokenContent.Clear();
+                    currentTokenType = TokenTypeKind.None;
+                }
+                else if (currentTokenType == TokenTypeKind.NamedArg && namedArgSeparatorFound && namedArgValuePrefix != 0)
+                {
+                    blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    currentTokenContent.Clear();
+                    namedArgSeparatorFound = false;
+                    namedArgValuePrefix = '\0';
+                    currentTokenType = TokenTypeKind.None;
+                }
 
-        //            // If reading a named argument and either the '=' or the value prefix ($, ', or ") haven't been found
-        //            if (currentTokenType == TokenTypes.NamedArg && (!namedArgSeparatorFound || namedArgValuePrefix == 0))
-        //            {
-        //                if (!namedArgSeparatorFound)
-        //                {
-        //                    if (currentChar == Symbols.NamedArgBlockSeparator)
-        //                    {
-        //                        namedArgSeparatorFound = true;
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    namedArgValuePrefix = currentChar;
-        //                    if (!IsQuote((char)namedArgValuePrefix) && namedArgValuePrefix != Symbols.VarPrefix)
-        //                    {
-        //                        throw new SKException($"Named argument values need to be prefixed with a quote or {Symbols.VarPrefix}.");
-        //                    }
-        //                }
-        //                currentTokenContent.Append(currentChar);
-        //                continue;
-        //            }
+                spaceSeparatorFound = true;
 
-        //            // If we're not inside a quoted value and we're not processing a space
-        //            currentTokenContent.Append(currentChar);
+                continue;
+            }
 
-        //            if (currentTokenType == TokenTypes.None)
-        //            {
-        //                if (!spaceSeparatorFound)
-        //                {
-        //                    throw new SKException("Tokens must be separated by one space least");
-        //                }
+            if (currentTokenType == TokenTypeKind.NamedArg && (!namedArgSeparatorFound || namedArgValuePrefix == 0))
+            {
+                if (!namedArgSeparatorFound)
+                {
+                    if (currentChar == Symbols.NamedArgBlockSeparator)
+                    {
+                        namedArgSeparatorFound = true;
+                    }
+                }
+                else
+                {
+                    namedArgValuePrefix = currentChar;
+                    if (!IsQuote((char)namedArgValuePrefix) && namedArgValuePrefix != Symbols.VarPrefix)
+                    {
+                        throw new SKException($"Named argument values need to be prefixed with a quote or {Symbols.VarPrefix}.");
+                    }
+                }
+                currentTokenContent.Append(currentChar);
+                continue;
+            }
 
-        //                if (IsQuote(currentChar))
-        //                {
-        //                    // A quoted value starts here
-        //                    currentTokenType = TokenTypes.Value;
-        //                    textValueDelimiter = currentChar;
-        //                }
-        //                else if (IsVarPrefix(currentChar))
-        //                {
-        //                    // A variable starts here
-        //                    currentTokenType = TokenTypes.Variable;
-        //                }
-        //                else if (blocks.Count == 0)
-        //                {
-        //                    // A function Id starts here
-        //                    currentTokenType = TokenTypes.FunctionId;
-        //                }
-        //                else
-        //                {
-        //                    // A named arg starts here
-        //                    currentTokenType = TokenTypes.NamedArg;
-        //                }
-        //            }
-        //        }
+            currentTokenContent.Append(currentChar);
 
-        //        // Capture last token
-        //        currentTokenContent.Append(nextChar);
-        //        switch (currentTokenType)
-        //        {
-        //            case TokenTypes.Value:
-        //                blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                break;
+            if (currentTokenType == TokenTypeKind.None)
+            {
+                if (!spaceSeparatorFound)
+                {
+                    throw new SKException("Tokens must be separated by one space least");
+                }
 
-        //            case TokenTypes.Variable:
-        //                blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                break;
+                if (IsQuote(currentChar))
+                {
+                    currentTokenType = TokenTypeKind.Value;
+                    textValueDelimiter = currentChar;
+                }
+                else if (IsVarPrefix(currentChar))
+                {
+                    currentTokenType = TokenTypeKind.Variable;
+                }
+                else if (blocks.Count == 0)
+                {
+                    currentTokenType = TokenTypeKind.FunctionId;
+                }
+                else
+                {
+                    currentTokenType = TokenTypeKind.NamedArg;
+                }
+            }
+        }
 
-        //            case TokenTypes.FunctionId:
-        //                var tokenContent = currentTokenContent.ToString();
-        //                // This isn't an expected block at this point but the TemplateTokenizer should throw an error when
-        //                // a named arg is used without a function call
-        //                if (CodeTokenizer.IsValidNamedArg(tokenContent))
-        //                {
-        //                    blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
-        //                }
-        //                else
-        //                {
-        //                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                }
-        //                break;
+        currentTokenContent.Append(nextChar);
+        switch (currentTokenType)
+        {
+            case TokenTypeKind.Value:
+                blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
+                break;
 
-        //            case TokenTypes.NamedArg:
-        //                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
-        //                break;
+            case TokenTypeKind.Variable:
+                blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
+                break;
 
-        //            case TokenTypes.None:
-        //                throw new SKException("Tokens must be separated by one space least");
-        //        }
+            case TokenTypeKind.FunctionId:
+                var tokenContent = currentTokenContent.ToString();
+
+                if (CodeTokenizer.IsValidNamedArg(tokenContent))
+                {
+                    blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
+                }
+                else
+                {
+                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), this._loggerFactory));
+                }
+                break;
+
+            case TokenTypeKind.NamedArg:
+                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                break;
+
+            case TokenTypeKind.None:
+                throw new SKException("Tokens must be separated by one space least");
+        }
 
         return blocks;
     }
 
-    //    private static bool IsVarPrefix(char c)
-    //    {
-    //        return (c == Symbols.VarPrefix);
-    //    }
+    private static bool IsVarPrefix(char c)
+    {
+        return (c == Symbols.VarPrefix);
+    }
 
-    //    private static bool IsBlankSpace(char c)
-    //    {
-    //        return c is Symbols.Space or Symbols.NewLine or Symbols.CarriageReturn or Symbols.Tab;
-    //    }
+    private static bool IsBlankSpace(char c)
+    {
+        return c is Symbols.Space or Symbols.NewLine or Symbols.CarriageReturn or Symbols.Tab;
+    }
 
-    //    private static bool IsQuote(char c)
-    //    {
-    //        return c is Symbols.DblQuote or Symbols.SglQuote;
-    //    }
+    private static bool IsQuote(char c)
+    {
+        return c is Symbols.DblQuote or Symbols.SglQuote;
+    }
 
-    //    private static bool CanBeEscaped(char c)
-    //    {
-    //        return c is Symbols.DblQuote or Symbols.SglQuote or Symbols.EscapeChar;
-    //    }
+    private static bool CanBeEscaped(char c)
+    {
+        return c is Symbols.DblQuote or Symbols.SglQuote or Symbols.EscapeChar;
+    }
 
-    //    [SuppressMessage("Design", "CA1031:Modify to catch a more specific allowed exception type, or rethrow exception",
-    //    Justification = "Does not throw an exception by design.")]
-    //    private static bool IsValidNamedArg(string tokenContent)
-    //    {
-    //        try
-    //        {
-    //            var tokenContentAsNamedArg = new NamedArgBlock(tokenContent);
-    //            return tokenContentAsNamedArg.IsValid(out var error);
-    //        }
-    //        catch
-    //        {
-    //            return false;
-    //        }
-    //    }
+    [SuppressMessage("Design", "CA1031:Modify to catch a more specific allowed exception type, or rethrow exception",
+    Justification = "Does not throw an exception by design.")]
+    private static bool IsValidNamedArg(string tokenContent)
+    {
+        try
+        {
+            var tokenContentAsNamedArg = new NamedArgBlock(tokenContent);
+            return tokenContentAsNamedArg.IsValid(out var error);
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

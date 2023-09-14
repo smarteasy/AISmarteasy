@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Prompt;
+﻿namespace SemanticKernel.Prompt.Blocks;
 
 public enum BlockTypeKind
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Prompt;
+namespace SemanticKernel.Prompt.Blocks;
 
-internal sealed class ValBlock : Block, ITextRendering
+public sealed class ValBlock : Block, ITextRendering
 {
     public override BlockTypeKind Type => BlockTypeKind.Value;
 
@@ -21,15 +21,15 @@ internal sealed class ValBlock : Block, ITextRendering
     public ValBlock(string? quotedValue, ILoggerFactory? loggerFactory = null)
         : base(quotedValue?.Trim(), loggerFactory)
     {
-        if (this.Content.Length < 2)
+        if (Content.Length < 2)
         {
-            this.Logger.LogError("A value must have single quotes or double quotes on both sides");
+            Logger.LogError("A value must have single quotes or double quotes on both sides");
             return;
         }
 
-        this._first = this.Content[0];
-        this._last = this.Content[this.Content.Length - 1];
-        this._value = this.Content.Substring(1, this.Content.Length - 2);
+        _first = Content[0];
+        _last = Content[Content.Length - 1];
+        _value = Content.Substring(1, Content.Length - 2);
     }
 
 #pragma warning disable CA2254 // error strings are used also internally, not just for logging
@@ -39,18 +39,18 @@ internal sealed class ValBlock : Block, ITextRendering
         errorMsg = string.Empty;
 
         // Content includes the quotes, so it must be at least 2 chars long
-        if (this.Content.Length < 2)
+        if (Content.Length < 2)
         {
             errorMsg = "A value must have single quotes or double quotes on both sides";
-            this.Logger.LogError(errorMsg);
+            Logger.LogError(errorMsg);
             return false;
         }
 
         // Check if delimiting chars are consistent
-        if (this._first != this._last)
+        if (_first != _last)
         {
             errorMsg = "A value must be defined using either single quotes or double quotes, not both";
-            this.Logger.LogError(errorMsg);
+            Logger.LogError(errorMsg);
             return false;
         }
 
@@ -60,13 +60,13 @@ internal sealed class ValBlock : Block, ITextRendering
 
     public string Render(ContextVariables? variables)
     {
-        return this._value;
+        return _value;
     }
 
     public static bool HasValPrefix(string? text)
     {
         return !string.IsNullOrEmpty(text)
                && text!.Length > 0
-               && (text[0] is Symbols.DblQuote or Symbols.SglQuote);
+               && text[0] is Symbols.DblQuote or Symbols.SglQuote;
     }
 }

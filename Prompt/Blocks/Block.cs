@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace SemanticKernel.Prompt;
+namespace SemanticKernel.Prompt.Blocks;
 
 public abstract class Block
 {
