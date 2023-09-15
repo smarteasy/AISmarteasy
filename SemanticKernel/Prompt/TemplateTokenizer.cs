@@ -96,11 +96,11 @@ public sealed class TemplateTokenizer
 
                         if (contentWithoutDelimiters.Length == 0)
                         {
-                            blocks.Add(new TextBlock(contentWithDelimiters, this._loggerFactory));
+                            blocks.Add(new TextBlock(contentWithDelimiters, _loggerFactory));
                         }
                         else
                         {
-                            var codeBlocks = this._codeTokenizer.Tokenize(contentWithoutDelimiters);
+                            var codeBlocks = _codeTokenizer.Tokenize(contentWithoutDelimiters);
 
                             switch (codeBlocks[0].Type)
                             {

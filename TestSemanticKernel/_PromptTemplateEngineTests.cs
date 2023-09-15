@@ -20,39 +20,8 @@ using System.Threading.Tasks;
 //    }
 
 
-//    [Fact]
-//    public async Task ItSupportsValuesAsync()
-//    {
-//        // Arrange
-//        const string Template = "And the winner\n of {{'template\ntests'}} \nis: {{  \"SK\" }}!";
-//        const string Expected = "And the winner\n of template\ntests \nis: SK!";
 
-//        var kernel = Kernel.Builder.Build();
-//        var context = kernel.CreateNewContext();
 
-//        // Act
-//        var result = await this._target.RenderAsync(Template, context);
-
-//        // Assert
-//        Assert.Equal(Expected, result);
-//    }
-
-//    [Fact]
-//    public async Task ItAllowsToPassVariablesToFunctionsAsync()
-//    {
-//        // Arrange
-//        const string Template = "== {{my.check123 $call}} ==";
-//        var kernel = Kernel.Builder.Build();
-//        kernel.ImportSkill(new MySkill(), "my");
-//        var context = kernel.CreateNewContext();
-//        context.Variables["call"] = "123";
-
-//        // Act
-//        var result = await this._target.RenderAsync(Template, context);
-
-//        // Assert
-//        Assert.Equal("== 123 ok ==", result);
-//    }
 
 //    [Fact]
 //    public async Task ItAllowsToPassValuesToFunctionsAsync()

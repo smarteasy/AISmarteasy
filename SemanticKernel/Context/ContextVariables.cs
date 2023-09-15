@@ -84,7 +84,7 @@ public sealed class ContextVariables : IDictionary<string, string>
         get => _variables[name];
         set
         {
-            _variables[name] = value;
+            if (_variables != null) _variables[name] = value;
         }
     }
 
