@@ -12,11 +12,7 @@ public sealed class SKContext
 
     public string Result => this.Variables.ToString();
 
-    //    /// <summary>
-    //    /// When a prompt is processed, aka the current data after any model results processing occurred.
-    //    /// (One prompt can have multiple results).
-    //    /// </summary>
-    //    public IReadOnlyCollection<ModelResult> ModelResults { get; set; } = Array.Empty<ModelResult>();
+    public IReadOnlyCollection<ModelResult> ModelResults { get; set; } = Array.Empty<ModelResult>();
 
     public CultureInfo Culture
     {

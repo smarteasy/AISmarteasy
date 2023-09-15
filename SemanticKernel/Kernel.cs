@@ -1,318 +1,240 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Reflection;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using Microsoft.Extensions.Logging;
-//using Microsoft.SemanticKernel.AI.TextCompletion;
-//using Microsoft.SemanticKernel.Diagnostics;
-//using Microsoft.SemanticKernel.Http;
-//using Microsoft.SemanticKernel.Memory;
-//using Microsoft.SemanticKernel.Orchestration;
-//using Microsoft.SemanticKernel.SemanticFunctions;
-//using Microsoft.SemanticKernel.Services;
-//using Microsoft.SemanticKernel.SkillDefinition;
-//using Microsoft.SemanticKernel.TemplateEngine;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
+using SemanticKernel.Function;
+using SemanticKernel.Memory;
+using SemanticKernel.Prompt;
+using SemanticKernel.Service;
 
 namespace SemanticKernel;
 
-///// <summary>
-///// 시맨틱커널 클래스
-///// 커널은 시맨틱 함수와 네이티브 함수를 정의하는 스킬 컬렉션을 제공한다.
-///// an orchestrator to execute a list of functions. ??
-/////함수 목록을 실행하는 오케스트레이터를 제공합니다.
-/////
-///// 시맨틱 함수는 PromptTemplateEngine을 사용해서 자동으로 렌더링 되고 실행된다.
-/////
-///// 향후 버전에서는
-///// * customize the rendering engine - 랜더링이 뭘 하는걸까?
-///// * include branching logic in the functions pipeline - 조건 분기할 수 있으면 좋겠지
-///// * persist execution state for long running pipelines - 오래 실행되면 실행 상태를 저장할 필요가 있지
-///// * distribute pipelines over a network
-///// * RPC functions and secure environments, e.g. sandboxing and credentials management
-///// * auto-generate pipelines given a higher level goal - 상위 레벨 목표에 따라 파이프라인 자동 생성
-///// </summary>
-public sealed class Kernel : IKernel //, IDisposable
+public sealed class Kernel : IKernel, IDisposable
 {
-    //    /// <inheritdoc/>
-    //    public ILoggerFactory LoggerFactory { get; }
+        public ILoggerFactory LoggerFactory { get; }
 
-    //    /// <inheritdoc/>
-    //    public ISemanticTextMemory Memory => this._memory;
+        public ISemanticTextMemory Memory => this._memory;
 
-    //    /// <inheritdoc/>
-    //    public IReadOnlySkillCollection Skills => this._skillCollection;
+    public IReadOnlySkillCollection Skills => this._skillCollection;
 
-    //    /// <inheritdoc/>
-    //    public IPromptTemplateEngine PromptTemplateEngine { get; }
+    public IPromptTemplateEngine PromptTemplateEngine { get; }
 
-    //    /// <summary>
-    //    /// Return a new instance of the kernel builder, used to build and configure kernel instances.
-    //    /// </summary>
-    //    public static KernelBuilder Builder => new();
+    public static KernelBuilder Builder => new();
+    public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
-    //    /// <inheritdoc/>
-    //    public IDelegatingHandlerFactory HttpHandlerFactory => this._httpHandlerFactory;
+    public Kernel(
+       ISkillCollection skillCollection,
+       IAIServiceProvider aiServiceProvider,
+       IPromptTemplateEngine promptTemplateEngine,
+       ISemanticTextMemory memory,
+       IDelegatingHandlerFactory httpHandlerFactory,
+       ILoggerFactory loggerFactory)
+    {
+        LoggerFactory = loggerFactory;
+        HttpHandlerFactory = httpHandlerFactory;
+        PromptTemplateEngine = promptTemplateEngine;
+        _memory = memory;
+        _aiServiceProvider = aiServiceProvider;
+        _promptTemplateEngine = promptTemplateEngine;
+        _skillCollection = skillCollection;
 
-    //    /// <summary>
-    //    /// 생성자. See KernelBuilder for an easier and less error prone approach to create kernel instances.
-    //    /// </summary>
-    //    /// <param name="skillCollection">Skill collection</param>
-    //    /// <param name="aiServiceProvider">AI Service Provider</param>
-    //    /// <param name="promptTemplateEngine">Prompt template engine</param>
-    //    /// <param name="memory">Semantic text Memory</param>
-    //    /// <param name="httpHandlerFactory"></param>
-    //    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use for logging. If null, no logging will be performed.</param>
-    //    public Kernel(
-    //        ISkillCollection skillCollection,
-    //        IAIServiceProvider aiServiceProvider,
-    //        IPromptTemplateEngine promptTemplateEngine,
-    //        ISemanticTextMemory memory,
-    //        IDelegatingHandlerFactory httpHandlerFactory,
-    //        ILoggerFactory loggerFactory)
-    //    {
-    //        this.LoggerFactory = loggerFactory;
-    //        this._httpHandlerFactory = httpHandlerFactory;
-    //        this.PromptTemplateEngine = promptTemplateEngine;
-    //        this._memory = memory;
-    //        this._aiServiceProvider = aiServiceProvider;
-    //        this._promptTemplateEngine = promptTemplateEngine;
-    //        this._skillCollection = skillCollection;
+        _logger = loggerFactory.CreateLogger(typeof(Kernel));
+    }
 
-    //        this._logger = loggerFactory.CreateLogger(typeof(Kernel));
-    //    }
+    public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
+    {
+        return RegisterSemanticFunction(SkillCollection.GlobalSkill, functionName, functionConfig);
+    }
 
-    //    /// <inheritdoc/>
-    //    public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
-    //    {
-    //        return this.RegisterSemanticFunction(SkillCollection.GlobalSkill, functionName, functionConfig);
-    //    }
+    public ISKFunction RegisterSemanticFunction(string skillName, string functionName, SemanticFunctionConfig functionConfig)
+    {
+        Verify.ValidSkillName(skillName);
+        Verify.ValidFunctionName(functionName);
 
-    //    /// <inheritdoc/>
-    //    public ISKFunction RegisterSemanticFunction(string skillName, string functionName, SemanticFunctionConfig functionConfig)
-    //    {
-    //        // Future-proofing the name not to contain special chars
-    //        Verify.ValidSkillName(skillName);
-    //        Verify.ValidFunctionName(functionName);
+        ISKFunction function = CreateSemanticFunction(skillName, functionName, functionConfig);
+        _skillCollection.AddFunction(function);
 
-    //        ISKFunction function = this.CreateSemanticFunction(skillName, functionName, functionConfig);
-    //        this._skillCollection.AddFunction(function);
+        return function;
+    }
+    public IDictionary<string, ISKFunction> ImportSkill(object skillInstance, string? skillName = null)
+    {
+        Verify.NotNull(skillInstance);
 
-    //        return function;
-    //    }
+        if (string.IsNullOrWhiteSpace(skillName))
+        {
+            skillName = SkillCollection.GlobalSkill;
+            _logger.LogTrace("Importing skill {0} in the global namespace", skillInstance.GetType().FullName);
+        }
+        else
+        {
+            _logger.LogTrace("Importing skill {0}", skillName);
+        }
 
-    //    /// <inheritdoc/>
-    //    public IDictionary<string, ISKFunction> ImportSkill(object skillInstance, string? skillName = null)
-    //    {
-    //        Verify.NotNull(skillInstance);
+        Dictionary<string, ISKFunction> skill = ImportSkill(
+            skillInstance,
+            skillName!,
+            _logger,
+            LoggerFactory
+        );
+        foreach (KeyValuePair<string, ISKFunction> f in skill)
+        {
+            f.Value.SetDefaultSkillCollection(this.Skills);
+            this._skillCollection.AddFunction(f.Value);
+        }
 
-    //        if (string.IsNullOrWhiteSpace(skillName))
-    //        {
-    //            skillName = SkillCollection.GlobalSkill;
-    //            this._logger.LogTrace("Importing skill {0} in the global namespace", skillInstance.GetType().FullName);
-    //        }
-    //        else
-    //        {
-    //            this._logger.LogTrace("Importing skill {0}", skillName);
-    //        }
+        return skill;
+    }
 
-    //        Dictionary<string, ISKFunction> skill = ImportSkill(
-    //            skillInstance,
-    //            skillName!,
-    //            this._logger,
-    //            this.LoggerFactory
-    //        );
-    //        foreach (KeyValuePair<string, ISKFunction> f in skill)
-    //        {
-    //            f.Value.SetDefaultSkillCollection(this.Skills);
-    //            this._skillCollection.AddFunction(f.Value);
-    //        }
+    public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
+    {
+        Verify.NotNull(customFunction);
 
-    //        return skill;
-    //    }
+        customFunction.SetDefaultSkillCollection(this.Skills);
+        _skillCollection.AddFunction(customFunction);
 
-    //    /// <inheritdoc/>
-    //    public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
-    //    {
-    //        Verify.NotNull(customFunction);
+        return customFunction;
+    }
 
-    //        customFunction.SetDefaultSkillCollection(this.Skills);
-    //        this._skillCollection.AddFunction(customFunction);
+    public void RegisterMemory(ISemanticTextMemory memory)
+    {
+        _memory = memory;
+    }
 
-    //        return customFunction;
-    //    }
+    public Task<SKContext> RunAsync(ISKFunction skFunction,
+        ContextVariables? variables = null,
+        CancellationToken cancellationToken = default)
+        => this.RunAsync(variables ?? new(), cancellationToken, skFunction);
 
-    //    /// <inheritdoc/>
-    //    public void RegisterMemory(ISemanticTextMemory memory)
-    //    {
-    //        this._memory = memory;
-    //    }
+    public Task<SKContext> RunAsync(params ISKFunction[] pipeline)
+        => this.RunAsync(new ContextVariables(), pipeline);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(ISKFunction skFunction,
-    //        ContextVariables? variables = null,
-    //        CancellationToken cancellationToken = default)
-    //        => this.RunAsync(variables ?? new(), cancellationToken, skFunction);
+    public Task<SKContext> RunAsync(string input, params ISKFunction[] pipeline)
+        => this.RunAsync(new ContextVariables(input), pipeline);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(params ISKFunction[] pipeline)
-    //        => this.RunAsync(new ContextVariables(), pipeline);
+    public Task<SKContext> RunAsync(ContextVariables variables, params ISKFunction[] pipeline)
+        => this.RunAsync(variables, CancellationToken.None, pipeline);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(string input, params ISKFunction[] pipeline)
-    //        => this.RunAsync(new ContextVariables(input), pipeline);
+    public Task<SKContext> RunAsync(CancellationToken cancellationToken, params ISKFunction[] pipeline)
+        => this.RunAsync(new ContextVariables(), cancellationToken, pipeline);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(ContextVariables variables, params ISKFunction[] pipeline)
-    //        => this.RunAsync(variables, CancellationToken.None, pipeline);
+    public Task<SKContext> RunAsync(string input, CancellationToken cancellationToken, params ISKFunction[] pipeline)
+        => this.RunAsync(new ContextVariables(input), cancellationToken, pipeline);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(CancellationToken cancellationToken, params ISKFunction[] pipeline)
-    //        => this.RunAsync(new ContextVariables(), cancellationToken, pipeline);
+    public async Task<SKContext> RunAsync(ContextVariables variables, CancellationToken cancellationToken, params ISKFunction[] pipeline)
+    {
+        var context = new SKContext(
+            variables,
+            _skillCollection,
+            LoggerFactory);
 
-    //    /// <inheritdoc/>
-    //    public Task<SKContext> RunAsync(string input, CancellationToken cancellationToken, params ISKFunction[] pipeline)
-    //        => this.RunAsync(new ContextVariables(input), cancellationToken, pipeline);
+        int pipelineStepCount = 0;
 
-    //    /// <inheritdoc/>
-    //    public async Task<SKContext> RunAsync(ContextVariables variables, CancellationToken cancellationToken, params ISKFunction[] pipeline)
-    //    {
-    //        var context = new SKContext(
-    //            variables,
-    //            this._skillCollection,
-    //            this.LoggerFactory);
+        foreach (ISKFunction f in pipeline)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
-    //        int pipelineStepCount = 0;
+            try
+            {
+                context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.SkillName, f.Name, pipelineStepCount, ex.Message);
+                throw;
+            }
 
-    //        foreach (ISKFunction f in pipeline)
-    //        {
-    //            cancellationToken.ThrowIfCancellationRequested();
+            pipelineStepCount++;
+        }
 
-    //            try
-    //            {
-    //                context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                this._logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.SkillName, f.Name, pipelineStepCount, ex.Message);
-    //                throw;
-    //            }
+        return context;
+    }
 
-    //            pipelineStepCount++;
-    //        }
+    public ISKFunction Func(string skillName, string functionName)
+    {
+        return this.Skills.GetFunction(skillName, functionName);
+    }
 
-    //        return context;
-    //    }
+    public SKContext CreateNewContext()
+    {
+        return new SKContext(
+            skills: _skillCollection,
+            loggerFactory: LoggerFactory);
+    }
 
-    //    /// <inheritdoc/>
-    //    public ISKFunction Func(string skillName, string functionName)
-    //    {
-    //        return this.Skills.GetFunction(skillName, functionName);
-    //    }
+    public T GetService<T>(string? name = null) where T : IAIService
+    {
+        var service = _aiServiceProvider.GetService<T>(name);
+        if (service != null)
+        {
+            return service;
+        }
 
-    //    /// <inheritdoc/>
-    //    public SKContext CreateNewContext()
-    //    {
-    //        return new SKContext(
-    //            skills: this._skillCollection,
-    //            loggerFactory: this.LoggerFactory);
-    //    }
+        throw new SKException($"Service of type {typeof(T)} and name {name ?? "<NONE>"} not registered.");
+    }
 
-    //    /// <inheritdoc/>
-    //    public T GetService<T>(string? name = null) where T : IAIService
-    //    {
-    //        var service = this._aiServiceProvider.GetService<T>(name);
-    //        if (service != null)
-    //        {
-    //            return service;
-    //        }
+    public void Dispose()
+    {
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if (_memory is IDisposable mem) { mem.Dispose(); }
 
-    //        throw new SKException($"Service of type {typeof(T)} and name {name ?? "<NONE>"} not registered.");
-    //    }
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if (_skillCollection is IDisposable reg) { reg.Dispose(); }
+    }
 
-    //    /// <summary>
-    //    /// Dispose of resources.
-    //    /// </summary>
-    //    public void Dispose()
-    //    {
-    //        // ReSharper disable once SuspiciousTypeConversion.Global
-    //        if (this._memory is IDisposable mem) { mem.Dispose(); }
 
-    //        // ReSharper disable once SuspiciousTypeConversion.Global
-    //        if (this._skillCollection is IDisposable reg) { reg.Dispose(); }
-    //    }
+    private readonly ISkillCollection _skillCollection;
+    private ISemanticTextMemory _memory;
+    private readonly IPromptTemplateEngine _promptTemplateEngine;
+    private readonly IAIServiceProvider _aiServiceProvider;
+    private readonly ILogger _logger;
 
-    //    #region private ================================================================================
+    private ISKFunction CreateSemanticFunction(
+        string skillName,
+        string functionName,
+        SemanticFunctionConfig functionConfig)
+    {
+        if (!functionConfig.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new SKException($"Function type not supported: {functionConfig.PromptTemplateConfig}");
+        }
 
-    //    private readonly ISkillCollection _skillCollection;
-    //    private ISemanticTextMemory _memory;
-    //    private readonly IPromptTemplateEngine _promptTemplateEngine;
-    //    private readonly IAIServiceProvider _aiServiceProvider;
-    //    private readonly ILogger _logger;
-    //    private readonly IDelegatingHandlerFactory _httpHandlerFactory;
+        ISKFunction func = SemanticFunction.FromSemanticConfig(
+            skillName,
+            functionName,
+            functionConfig,
+            LoggerFactory
+        );
 
-    //    private ISKFunction CreateSemanticFunction(
-    //        string skillName,
-    //        string functionName,
-    //        SemanticFunctionConfig functionConfig)
-    //    {
-    //        if (!functionConfig.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
-    //        {
-    //            throw new SKException($"Function type not supported: {functionConfig.PromptTemplateConfig}");
-    //        }
+        func.SetDefaultSkillCollection(this.Skills);
 
-    //        ISKFunction func = SemanticFunction.FromSemanticConfig(
-    //            skillName,
-    //            functionName,
-    //            functionConfig,
-    //            this.LoggerFactory
-    //        );
+        func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
 
-    //        // Connect the function to the current kernel skill collection, in case the function
-    //        // is invoked manually without a context and without a way to find other functions.
-    //        func.SetDefaultSkillCollection(this.Skills);
+        func.SetAIService(() => this.GetService<ITextCompletion>(functionConfig.PromptTemplateConfig.Completion.ServiceId));
 
-    //        func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
+        return func;
+    }
 
-    //        // Note: the service is instantiated using the kernel configuration state when the function is invoked
-    //        func.SetAIService(() => this.GetService<ITextCompletion>(functionConfig.PromptTemplateConfig.Completion.ServiceId));
+   private static Dictionary<string, ISKFunction> ImportSkill(object skillInstance, string skillName, ILogger logger, ILoggerFactory loggerFactory)
+    {
+        MethodInfo[] methods = skillInstance.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
+        logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", skillName, methods.Length);
 
-    //        return func;
-    //    }
+        // Filter out non-SKFunctions and fail if two functions have the same name
+        Dictionary<string, ISKFunction> result = new(StringComparer.OrdinalIgnoreCase);
+        foreach (MethodInfo method in methods)
+        {
+            if (method.GetCustomAttribute<SKFunctionAttribute>() is not null)
+            {
+                ISKFunction function = SKFunction.FromNativeMethod(method, skillInstance, skillName, loggerFactory);
+                if (result.ContainsKey(function.Name))
+                {
+                    throw new SKException("Function overloads are not supported, please differentiate function names");
+                }
 
-    //    /// <summary>
-    //    /// Import a skill into the kernel skill collection, so that semantic functions and pipelines can consume its functions.
-    //    /// </summary>
-    //    /// <param name="skillInstance">Skill class instance</param>
-    //    /// <param name="skillName">Skill name, used to group functions under a shared namespace</param>
-    //    /// <param name="logger">Application logger</param>
-    //    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use for logging. If null, no logging will be performed.</param>
-    //    /// <returns>Dictionary of functions imported from the given class instance, case-insensitively indexed by name.</returns>
-    //    private static Dictionary<string, ISKFunction> ImportSkill(object skillInstance, string skillName, ILogger logger, ILoggerFactory loggerFactory)
-    //    {
-    //        MethodInfo[] methods = skillInstance.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
-    //        logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", skillName, methods.Length);
+                result.Add(function.Name, function);
+            }
+        }
 
-    //        // Filter out non-SKFunctions and fail if two functions have the same name
-    //        Dictionary<string, ISKFunction> result = new(StringComparer.OrdinalIgnoreCase);
-    //        foreach (MethodInfo method in methods)
-    //        {
-    //            if (method.GetCustomAttribute<SKFunctionAttribute>() is not null)
-    //            {
-    //                ISKFunction function = SKFunction.FromNativeMethod(method, skillInstance, skillName, loggerFactory);
-    //                if (result.ContainsKey(function.Name))
-    //                {
-    //                    throw new SKException("Function overloads are not supported, please differentiate function names");
-    //                }
+        logger.LogTrace("Methods imported {0}", result.Count);
 
-    //                result.Add(function.Name, function);
-    //            }
-    //        }
-
-    //        logger.LogTrace("Methods imported {0}", result.Count);
-
-    //        return result;
-    //    }
-
-    //    #endregion
+        return result;
+    }
 }

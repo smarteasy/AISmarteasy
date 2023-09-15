@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using SemanticKernel.Function;
 
 namespace SemanticKernel;
 

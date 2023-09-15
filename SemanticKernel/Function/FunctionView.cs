@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Function;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public sealed class FunctionView
@@ -29,14 +29,14 @@ public sealed class FunctionView
         bool isSemantic,
         bool isAsynchronous = true)
     {
-        this.Name = name;
-        this.SkillName = skillName;
-        this.Description = description;
-        this.Parameters = parameters;
-        this.IsSemantic = isSemantic;
-        this.IsAsynchronous = isAsynchronous;
+        Name = name;
+        SkillName = skillName;
+        Description = description;
+        Parameters = parameters;
+        IsSemantic = isSemantic;
+        IsAsynchronous = isAsynchronous;
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"{this.Name} ({this.Description})";
+    private string DebuggerDisplay => $"{Name} ({Description})";
 }
