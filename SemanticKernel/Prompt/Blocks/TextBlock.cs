@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using SemanticKernel.Context;
 using SemanticKernel.Prompt.Blocks;
 
 namespace SemanticKernel.Prompt;

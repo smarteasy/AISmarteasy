@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using SemanticKernel.Embedding;
+using SemanticKernel.Function;
 
 #pragma warning disable IDE0130
 // ReSharper disable once CheckNamespace - Using NS of IKernel

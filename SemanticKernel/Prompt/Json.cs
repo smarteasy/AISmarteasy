@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
+using SemanticKernel.Memory;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Prompt;
 
 internal static class Json
 {

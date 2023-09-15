@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Memory;
 
 // .NET 8 and the System.Text.Json v8.0.0 nuget package include built-in support for ReadOnlyMemory.
 // This is a temporary workaround for .NET 6 and the System.Text.Json v6.0.0 nuget package.

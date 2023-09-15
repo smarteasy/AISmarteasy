@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Handler;
 
 public interface IDelegatingHandlerFactory
 {

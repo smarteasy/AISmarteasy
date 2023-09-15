@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
 using SemanticKernel.Function;
+using SemanticKernel.Handler;
 using SemanticKernel.Memory;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
@@ -135,7 +138,7 @@ public sealed class Kernel : IKernel, IDisposable
             {
                 context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.SkillName, f.Name, pipelineStepCount, ex.Message);
                 throw;

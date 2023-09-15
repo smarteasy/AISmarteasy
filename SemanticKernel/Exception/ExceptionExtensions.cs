@@ -2,12 +2,12 @@
 
 #pragma warning disable IDE0130
 // ReSharper disable once CheckNamespace - Using NS of Exception
-namespace SemanticKernel;
+namespace SemanticKernel.Exception;
 #pragma warning restore IDE0130
 
 internal static class ExceptionExtensions
 {
-    internal static bool IsCriticalException(this Exception ex)
+    internal static bool IsCriticalException(this System.Exception ex)
         => ex is ThreadAbortException
             or AccessViolationException
             or AppDomainUnloadedException

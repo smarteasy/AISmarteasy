@@ -2,22 +2,24 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Function;
+using SemanticKernel.Service;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Context;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public sealed class SKContext
 {
     private CultureInfo _culture;
 
-    public string Result => this.Variables.ToString();
+    public string Result => Variables.ToString();
 
     public IReadOnlyCollection<ModelResult> ModelResults { get; set; } = Array.Empty<ModelResult>();
 
     public CultureInfo Culture
     {
-        get => this._culture;
-        set => this._culture = value ?? CultureInfo.CurrentCulture;
+        get => _culture;
+        set => _culture = value ?? CultureInfo.CurrentCulture;
     }
 
     public ContextVariables Variables { get; }
@@ -31,25 +33,25 @@ public sealed class SKContext
         IReadOnlySkillCollection? skills = null,
         ILoggerFactory? loggerFactory = null)
     {
-        this.Variables = variables ?? new();
-        this.Skills = skills ?? NullReadOnlySkillCollection.Instance;
-        this.LoggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
-        this._culture = CultureInfo.CurrentCulture;
+        Variables = variables ?? new();
+        Skills = skills ?? NullReadOnlySkillCollection.Instance;
+        LoggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+        _culture = CultureInfo.CurrentCulture;
     }
 
     public override string ToString()
     {
-        return this.Result;
+        return Result;
     }
 
     public SKContext Clone()
     {
         return new SKContext(
-            variables: this.Variables.Clone(),
-            skills: this.Skills,
-            loggerFactory: this.LoggerFactory)
+            variables: Variables.Clone(),
+            skills: Skills,
+            loggerFactory: LoggerFactory)
         {
-            Culture = this.Culture,
+            Culture = Culture,
         };
     }
 
@@ -58,15 +60,15 @@ public sealed class SKContext
     {
         get
         {
-            string display = this.Variables.DebuggerDisplay;
+            string display = Variables.DebuggerDisplay;
 
-            if (this.Skills is IReadOnlySkillCollection skills)
+            if (Skills is IReadOnlySkillCollection skills)
             {
                 var view = skills.GetFunctionsView();
                 display += $", Skills = {view.NativeFunctions.Count + view.SemanticFunctions.Count}";
             }
 
-            display += $", Culture = {this.Culture.EnglishName}";
+            display += $", Culture = {Culture.EnglishName}";
 
             return display;
         }

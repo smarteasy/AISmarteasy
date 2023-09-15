@@ -1,4 +1,6 @@
-﻿namespace SemanticKernel.Prompt;
+﻿using SemanticKernel.Context;
+
+namespace SemanticKernel.Prompt;
 
 public interface ICodeRendering
 {

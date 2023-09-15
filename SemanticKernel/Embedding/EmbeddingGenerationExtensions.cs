@@ -1,4 +1,6 @@
-﻿namespace SemanticKernel.Embedding;
+﻿using SemanticKernel.Function;
+
+namespace SemanticKernel.Embedding;
 
 public static class EmbeddingGenerationExtensions
 {

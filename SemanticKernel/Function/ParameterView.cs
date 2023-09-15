@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Function;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public sealed class ParameterView
@@ -9,11 +9,11 @@ public sealed class ParameterView
 
     public string Name
     {
-        get => this._name;
+        get => _name;
         set
         {
             Verify.ValidFunctionParamName(value);
-            this._name = value;
+            _name = value;
         }
     }
 
@@ -33,14 +33,14 @@ public sealed class ParameterView
         string? defaultValue = null,
         ParameterViewType? type = null)
     {
-        this.Name = name;
-        this.Description = description;
-        this.DefaultValue = defaultValue;
-        this.Type = type;
+        Name = name;
+        Description = description;
+        DefaultValue = defaultValue;
+        Type = type;
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => string.IsNullOrEmpty(this.Description)
-        ? this.Name
-        : $"{this.Name} ({this.Description})";
+    private string DebuggerDisplay => string.IsNullOrEmpty(Description)
+        ? Name
+        : $"{Name} ({Description})";
 }

@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel;
+﻿namespace SemanticKernel.Service;
 
 public interface ITextResult
 {

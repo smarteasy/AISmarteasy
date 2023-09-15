@@ -1,6 +1,6 @@
 ﻿using SemanticKernel.Prompt;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Function;
 
 public class CompleteRequestSettings
 {

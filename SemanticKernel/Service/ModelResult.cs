@@ -1,8 +1,10 @@
 ﻿using System.Text.Json;
+using SemanticKernel.Function;
+using SemanticKernel.Prompt;
 
 #pragma warning disable CA1024
 
-namespace SemanticKernel;
+namespace SemanticKernel.Service;
 
 public sealed class ModelResult
 {
@@ -15,20 +17,20 @@ public sealed class ModelResult
         this.result = result;
     }
 
-    public object GetRawResult() => this.result;
+    public object GetRawResult() => result;
 
-     public T GetResult<T>()
+    public T GetResult<T>()
     {
-        if (this.result is T typedResult)
+        if (result is T typedResult)
         {
             return typedResult;
         }
 
-        throw new InvalidCastException($"Cannot cast {this.result.GetType()} to {typeof(T)}");
+        throw new InvalidCastException($"Cannot cast {result.GetType()} to {typeof(T)}");
     }
 
     public JsonElement GetJsonResult()
     {
-        return Json.Deserialize<JsonElement>(this.result.ToJson());
+        return Json.Deserialize<JsonElement>(result.ToJson());
     }
 }

@@ -8,6 +8,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
+using SemanticKernel.Service;
 
 namespace SemanticKernel.Function;
 
@@ -106,7 +109,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         {
             return await _function(null, settings, context, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception e) when (!e.IsCriticalException())
+        catch (System.Exception e) when (!e.IsCriticalException())
         {
             _logger.LogError(e, "Native function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, e.Message);
             throw;
@@ -326,7 +329,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
             return (static (SKContext _, CancellationToken cancellationToken) => cancellationToken, null);
         }
 
-        if (!type.IsByRef && GetParser(type) is Func<string, CultureInfo, object> parser)
+        if (!type.IsByRef && GetParser(type) is { } parser)
         {
             SKNameAttribute? nameAttr = parameter.GetCustomAttribute<SKNameAttribute>(inherit: true);
             string name = nameAttr?.Name?.Trim() ?? SanitizeMetadataName(parameter.Name);
@@ -393,7 +396,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
                     {
                         return parser(value, context.Culture);
                     }
-                    catch (Exception e) when (!e.IsCriticalException())
+                    catch (System.Exception e) when (!e.IsCriticalException())
                     {
                         throw new ArgumentOutOfRangeException(name, value, e.Message);
                     }
@@ -513,7 +516,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
             genericValueTask == typeof(ValueTask<>) &&
             returnType.GetMethod("AsTask", BindingFlags.Public | BindingFlags.Instance) is MethodInfo valueTaskAsTask &&
             valueTaskAsTask.ReturnType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod() is MethodInfo asTaskResultGetter &&
-            GetFormatter(asTaskResultGetter.ReturnType) is Func<object?, CultureInfo, string> asTaskResultFormatter)
+            GetFormatter(asTaskResultGetter.ReturnType) is { } asTaskResultFormatter)
         {
             return async (result, context) =>
             {
@@ -532,7 +535,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     }
 
     [DoesNotReturn]
-    private static Exception GetExceptionForInvalidSignature(MethodInfo method, string reason) =>
+    private static System.Exception GetExceptionForInvalidSignature(MethodInfo method, string reason) =>
         throw new SKException($"Function '{method.Name}' is not supported by the kernel. {reason}");
 
     private static void ThrowForInvalidSignatureIf([DoesNotReturnIf(true)] bool condition, MethodInfo method, string reason)
@@ -550,7 +553,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     }
 
     private static Func<string, CultureInfo, object?>? GetParser(Type targetType) =>
-        s_parsers.GetOrAdd(targetType, static targetType =>
+        Parsers.GetOrAdd(targetType, static targetType =>
         {
             if (targetType == typeof(string))
             {
@@ -576,7 +579,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
                     return Enum.Parse(targetType, input, ignoreCase: true);
                 };
             }
-            if (GetTypeConverter(targetType) is TypeConverter converter && converter.CanConvertFrom(typeof(string)))
+            if (GetTypeConverter(targetType) is { } converter && converter.CanConvertFrom(typeof(string)))
             {
                 return (input, cultureInfo) =>
                 {
@@ -588,7 +591,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
                     {
                         return converter.ConvertFromString(context: null, cultureInfo, input);
                     }
-                    catch (Exception e) when (!e.IsCriticalException() && cultureInfo != CultureInfo.InvariantCulture)
+                    catch (System.Exception e) when (!e.IsCriticalException() && cultureInfo != CultureInfo.InvariantCulture)
                     {
                         return converter.ConvertFromInvariantString(input);
                     }
@@ -598,7 +601,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         });
 
     private static Func<object?, CultureInfo, string?>? GetFormatter(Type targetType) =>
-        s_formatters.GetOrAdd(targetType, static targetType =>
+        Formatters.GetOrAdd(targetType, static targetType =>
         {
             bool wasNullable = false;
             if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -617,7 +620,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
                 return (input, cultureInfo) => (string)input!;
             }
 
-            if (GetTypeConverter(targetType) is TypeConverter converter && converter.CanConvertTo(typeof(string)))
+            if (GetTypeConverter(targetType) is { } converter && converter.CanConvertTo(typeof(string)))
             {
                 return (input, cultureInfo) =>
                 {
@@ -667,12 +670,12 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"{this.Name} ({this.Description})";
 
-    private static string SanitizeMetadataName(string methodName) =>
-        s_invalidNameCharsRegex.Replace(methodName, "_");
+    private static string SanitizeMetadataName(string? methodName) =>
+        InvalidNameCharsRegex.Replace(methodName!, "_");
 
-    private static readonly Regex s_invalidNameCharsRegex = new("[^0-9A-Za-z_]");
+    private static readonly Regex InvalidNameCharsRegex = new("[^0-9A-Za-z_]");
 
-    private static readonly ConcurrentDictionary<Type, Func<string, CultureInfo, object>?> s_parsers = new();
+    private static readonly ConcurrentDictionary<Type, Func<string, CultureInfo, object>?> Parsers = new();
 
-    private static readonly ConcurrentDictionary<Type, Func<object?, CultureInfo, string>?> s_formatters = new();
+    private static readonly ConcurrentDictionary<Type, Func<object?, CultureInfo, string>?> Formatters = new();
 }

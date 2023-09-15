@@ -2,7 +2,10 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
 using SemanticKernel.Prompt;
+using SemanticKernel.Service;
 
 namespace SemanticKernel.Function;
 
@@ -166,7 +169,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
             context.ModelResults = completionResults.Select(c => c.ModelResult).ToArray();
         }
-        catch (Exception ex) when (!ex.IsCriticalException())
+        catch (System.Exception ex) when (!ex.IsCriticalException())
         {
             this._logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, ex.Message);
             throw;

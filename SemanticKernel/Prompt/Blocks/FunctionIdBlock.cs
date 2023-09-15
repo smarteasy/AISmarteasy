@@ -3,6 +3,8 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
 
 namespace SemanticKernel.Prompt.Blocks;
 

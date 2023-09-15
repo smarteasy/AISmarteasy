@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel;
+﻿namespace SemanticKernel.Service;
 
 /// <summary>
 /// Interface for text completion streaming results.

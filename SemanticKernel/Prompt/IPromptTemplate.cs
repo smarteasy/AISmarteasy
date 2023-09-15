@@ -1,4 +1,7 @@
-﻿namespace SemanticKernel.Prompt;
+﻿using SemanticKernel.Context;
+using SemanticKernel.Function;
+
+namespace SemanticKernel.Prompt;
 
 public interface IPromptTemplate
 {

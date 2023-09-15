@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
 using SemanticKernel.Function;
+using SemanticKernel.Handler;
 using SemanticKernel.Memory;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
@@ -179,7 +182,7 @@ public sealed class KernelBuilder
                 type.Name.Equals("PromptTemplateEngine", StringComparison.Ordinal) &&
                 type.GetInterface(nameof(IPromptTemplateEngine)) is not null);
         }
-        catch (Exception ex) when (!ex.IsCriticalException())
+        catch (System.Exception ex) when (!ex.IsCriticalException())
         {
             return null;
         }

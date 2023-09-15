@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using SemanticKernel.Context;
+using SemanticKernel.Exception;
+using SemanticKernel.Function;
 
 namespace SemanticKernel.Prompt.Blocks;
 
@@ -103,7 +106,7 @@ internal sealed class CodeBlock : Block, ICodeRendering
         {
             contextClone = await function!.InvokeAsync(contextClone).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (System.Exception ex)
         {
             Logger.LogError(ex, "Function {Plugin}.{Function} execution failed with error {Error}", function!.SkillName, function.Name, ex.Message);
             throw;

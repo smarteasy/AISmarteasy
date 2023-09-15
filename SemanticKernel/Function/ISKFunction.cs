@@ -1,6 +1,7 @@
-﻿using SemanticKernel.Function;
+﻿using SemanticKernel.Context;
+using SemanticKernel.Service;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Function;
 
 public interface ISKFunction
 {

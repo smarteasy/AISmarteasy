@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Service;
+﻿using SemanticKernel.Function;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Service;
 
 public interface ITextCompletion : IAIService
 {

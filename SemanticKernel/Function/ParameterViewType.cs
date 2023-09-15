@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CA1720 // Identifier contains type name
 
-namespace SemanticKernel;
+
+namespace SemanticKernel.Function;
 
 public class ParameterViewType : IEquatable<ParameterViewType>
 {
@@ -20,30 +21,30 @@ public class ParameterViewType : IEquatable<ParameterViewType>
     {
         Verify.NotNullOrWhiteSpace(name, nameof(name));
 
-        this._name = name;
+        _name = name;
     }
 
-    public string Name => this._name;
+    public string Name => _name;
 
-    public override string ToString() => this._name;
+    public override string ToString() => _name;
 
-    public bool Equals(ParameterViewType other)
+    public bool Equals(ParameterViewType? other)
     {
         if (other is null)
         {
             return false;
         }
 
-        return string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
-        return obj is ParameterViewType other && this.Equals(other);
+        return obj is ParameterViewType other && Equals(other);
     }
 
     public override int GetHashCode()
     {
-        return this.Name.GetHashCode();
+        return Name.GetHashCode();
     }
 }
