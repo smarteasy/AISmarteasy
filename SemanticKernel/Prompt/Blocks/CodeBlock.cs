@@ -1,14 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
 using SemanticKernel.Function;
 
 namespace SemanticKernel.Prompt.Blocks;
 
-#pragma warning disable CA2254 // error strings are used also internally, not just for logging
-#pragma warning disable CA1031 // IsCriticalException is an internal utility and should not be used by extensions
-
-// ReSharper disable TemplateIsNotCompileTimeConstantProblem
 public sealed class CodeBlock : Block, ICodeRendering
 {
     public override BlockTypeKind Type => BlockTypeKind.Code;
@@ -190,5 +185,3 @@ public sealed class CodeBlock : Block, ICodeRendering
         return contextClone;
     }
 }
-// ReSharper restore TemplateIsNotCompileTimeConstantProblem
-#pragma warning restore CA2254

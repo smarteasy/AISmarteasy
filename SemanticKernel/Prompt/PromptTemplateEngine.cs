@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
 using SemanticKernel.Prompt.Blocks;
 
 namespace SemanticKernel.Prompt;

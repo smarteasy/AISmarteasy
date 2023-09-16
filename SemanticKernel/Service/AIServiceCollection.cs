@@ -1,4 +1,6 @@
-﻿namespace SemanticKernel.Service;
+﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
+
+namespace SemanticKernel.Service;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public class AIServiceCollection

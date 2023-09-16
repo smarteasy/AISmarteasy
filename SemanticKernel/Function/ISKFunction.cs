@@ -1,5 +1,5 @@
-﻿using SemanticKernel.Context;
-using SemanticKernel.Service;
+﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
+using SemanticKernel.Context;
 
 namespace SemanticKernel.Function;
 

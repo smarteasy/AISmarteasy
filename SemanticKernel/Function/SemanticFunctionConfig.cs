@@ -1,4 +1,5 @@
-﻿using SemanticKernel.Prompt;
+﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
+using SemanticKernel.Prompt;
 
 namespace SemanticKernel.Function;
 

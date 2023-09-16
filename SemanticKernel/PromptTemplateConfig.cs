@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
+using SemanticKernel.Prompt;
 
-namespace SemanticKernel.Prompt;
+namespace SemanticKernel;
 
 public class PromptTemplateConfig
 {
@@ -92,14 +93,14 @@ public class PromptTemplateConfig
 
     public PromptTemplateConfig Compact()
     {
-        if (this.Completion.StopSequences.Count == 0)
+        if (Completion.StopSequences.Count == 0)
         {
-            this.Completion.StopSequences = null!;
+            Completion.StopSequences = null!;
         }
 
-        if (this.DefaultServices.Count == 0)
+        if (DefaultServices.Count == 0)
         {
-            this.DefaultServices = null!;
+            DefaultServices = null!;
         }
 
         return this;

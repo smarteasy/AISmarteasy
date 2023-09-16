@@ -2,7 +2,7 @@
 
 #pragma warning disable IDE0130
 // ReSharper disable once CheckNamespace - Using NS of Exception
-namespace SemanticKernel.Exception;
+namespace SemanticKernel.Util;
 #pragma warning restore IDE0130
 
 internal static class ExceptionExtensions

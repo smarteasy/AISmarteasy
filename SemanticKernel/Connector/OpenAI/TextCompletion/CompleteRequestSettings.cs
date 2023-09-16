@@ -1,16 +1,14 @@
-﻿using SemanticKernel.Prompt;
-
-namespace SemanticKernel.Function;
+﻿namespace SemanticKernel.Connector.OpenAI.TextCompletion;
 
 public class CompleteRequestSettings
 {
-    public double Temperature { get; set; } = 0;
+    public double Temperature { get; set; }
 
-    public double TopP { get; set; } = 0;
+    public double TopP { get; set; }
 
-    public double PresencePenalty { get; set; } = 0;
+    public double PresencePenalty { get; set; }
 
-    public double FrequencyPenalty { get; set; } = 0;
+    public double FrequencyPenalty { get; set; }
 
     public int? MaxTokens { get; set; }
 

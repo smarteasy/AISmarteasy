@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
+using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -12,33 +12,40 @@ namespace SemanticKernel;
 
 public sealed class Kernel : IKernel, IDisposable
 {
-        public ILoggerFactory LoggerFactory { get; }
-
-        public ISemanticTextMemory Memory => this._memory;
-
-    public IReadOnlySkillCollection Skills => this._skillCollection;
+    private readonly ISkillCollection _skillCollection;
+    private ISemanticTextMemory _memory;
+    private readonly ILogger _logger;
 
     public IPromptTemplateEngine PromptTemplateEngine { get; }
+
+    public ILoggerFactory LoggerFactory { get; }
+
+    public ISemanticTextMemory Memory => _memory;
+
+    public IReadOnlySkillCollection Skills => _skillCollection;
 
     public static KernelBuilder Builder => new();
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
-    public Kernel(
-       ISkillCollection skillCollection,
-       IAIServiceProvider aiServiceProvider,
-       IPromptTemplateEngine promptTemplateEngine,
-       ISemanticTextMemory memory,
-       IDelegatingHandlerFactory httpHandlerFactory,
-       ILoggerFactory loggerFactory)
-    {
-        LoggerFactory = loggerFactory;
-        HttpHandlerFactory = httpHandlerFactory;
-        PromptTemplateEngine = promptTemplateEngine;
-        _memory = memory;
-        _aiServiceProvider = aiServiceProvider;
-        _promptTemplateEngine = promptTemplateEngine;
-        _skillCollection = skillCollection;
+    public IAIService AIService { get; }
 
+    public PromptTemplateConfig PromptTemplateConfig { get; }
+
+    public Kernel(
+        ISkillCollection skillCollection,
+        IAIService aiService,
+        PromptTemplateConfig promptTemplateConfig,
+        ISemanticTextMemory memory,
+        IDelegatingHandlerFactory httpHandlerFactory,
+        ILoggerFactory loggerFactory)
+    {
+        PromptTemplateEngine = new PromptTemplateEngine(loggerFactory);
+        _skillCollection = skillCollection;
+        AIService = aiService;
+        PromptTemplateConfig = promptTemplateConfig;
+        HttpHandlerFactory = httpHandlerFactory;
+        LoggerFactory = loggerFactory;
+        _memory = memory;
         _logger = loggerFactory.CreateLogger(typeof(Kernel));
     }
 
@@ -162,32 +169,12 @@ public sealed class Kernel : IKernel, IDisposable
             loggerFactory: LoggerFactory);
     }
 
-    public T GetService<T>(string? name = null) where T : IAIService
-    {
-        var service = _aiServiceProvider.GetService<T>(name);
-        if (service != null)
-        {
-            return service;
-        }
-
-        throw new SKException($"Service of type {typeof(T)} and name {name ?? "<NONE>"} not registered.");
-    }
 
     public void Dispose()
     {
-        // ReSharper disable once SuspiciousTypeConversion.Global
         if (_memory is IDisposable mem) { mem.Dispose(); }
-
-        // ReSharper disable once SuspiciousTypeConversion.Global
         if (_skillCollection is IDisposable reg) { reg.Dispose(); }
     }
-
-
-    private readonly ISkillCollection _skillCollection;
-    private ISemanticTextMemory _memory;
-    private readonly IPromptTemplateEngine _promptTemplateEngine;
-    private readonly IAIServiceProvider _aiServiceProvider;
-    private readonly ILogger _logger;
 
     private ISKFunction CreateSemanticFunction(
         string skillName,
@@ -210,8 +197,6 @@ public sealed class Kernel : IKernel, IDisposable
 
         func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
 
-        func.SetAIService(() => this.GetService<ITextCompletion>(functionConfig.PromptTemplateConfig.Completion.ServiceId));
-
         return func;
     }
 
@@ -220,7 +205,6 @@ public sealed class Kernel : IKernel, IDisposable
         MethodInfo[] methods = skillInstance.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
         logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", skillName, methods.Length);
 
-        // Filter out non-SKFunctions and fail if two functions have the same name
         Dictionary<string, ISKFunction> result = new(StringComparer.OrdinalIgnoreCase);
         foreach (MethodInfo method in methods)
         {

@@ -1,4 +1,4 @@
-﻿using SemanticKernel.Service;
+﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
 
 namespace SemanticKernel.Embedding;
 

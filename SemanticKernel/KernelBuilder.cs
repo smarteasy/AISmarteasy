@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Context;
-using SemanticKernel.Exception;
+using SemanticKernel.Connector.OpenAI;
+using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -13,34 +12,33 @@ namespace SemanticKernel;
 
 public sealed class KernelBuilder
 {
+    private readonly IPromptTemplateEngine _promptTemplateEngine;
+    private readonly AIServiceCollection _aiServices = new();
     private Func<ISemanticTextMemory> _memoryFactory = () => NullMemory.Instance;
     private ILoggerFactory _loggerFactory = NullLoggerFactory.Instance;
-    private Func<IMemoryStore>? _memoryStorageFactory = null;
     private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
-    private IPromptTemplateEngine? _promptTemplateEngine;
-    private readonly AIServiceCollection _aiServices = new();
 
-    private static bool _promptTemplateEngineInitialized = false;
-    private static Type? _promptTemplateEngineType = null;
+    private Func<IMemoryStore>? _memoryStorageFactory;
+    private IAIService? _service;
 
-    public static IKernel Create()
+    public PromptTemplateConfig? _promptTemplateConfig;
+
+    public KernelBuilder()
     {
-        var builder = new KernelBuilder();
-        return builder.Build();
+        _promptTemplateEngine = new PromptTemplateEngine(_loggerFactory);
     }
 
     public IKernel Build()
     {
         var instance = new Kernel(
             new SkillCollection(_loggerFactory),
-            _aiServices.Build(),
-            _promptTemplateEngine ?? CreateDefaultPromptTemplateEngine(_loggerFactory),
+            _service!,
+            _promptTemplateConfig,
             _memoryFactory.Invoke(),
             _httpHandlerFactory,
             _loggerFactory
         );
 
-        // TODO: decouple this from 'UseMemory' kernel extension
         if (_memoryStorageFactory != null)
         {
             instance.UseMemory(_memoryStorageFactory.Invoke());
@@ -48,6 +46,28 @@ public sealed class KernelBuilder
 
         return instance;
     }
+
+    public static IKernel BuildCompletionService(AIServiceKind aiService, string apiKey)
+    {
+        var model = ModelStringProvider.Provide(aiService);
+
+        var kernelBuilder = new KernelBuilder();
+        IKernel kernel;
+
+        switch (aiService)
+        {
+            case AIServiceKind.OpenAITextCompletion:
+                kernel = kernelBuilder
+                    .WithOpenAITextCompletionService(model, apiKey)
+                    .Build();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(aiService), aiService, null);
+        }
+
+        return kernel;
+    }
+
 
     public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
     {
@@ -84,17 +104,11 @@ public sealed class KernelBuilder
         return this;
     }
 
-    public KernelBuilder WithMemoryStorage<TStore>(Func<ILoggerFactory, IDelegatingHandlerFactory, TStore> factory) where TStore : IMemoryStore
+    public KernelBuilder WithMemoryStorage<TStore>(Func<ILoggerFactory, IDelegatingHandlerFactory, TStore> factory)
+        where TStore : IMemoryStore
     {
         Verify.NotNull(factory);
         this._memoryStorageFactory = () => factory(this._loggerFactory, this._httpHandlerFactory);
-        return this;
-    }
-
-    public KernelBuilder WithPromptTemplateEngine(IPromptTemplateEngine promptTemplateEngine)
-    {
-        Verify.NotNull(promptTemplateEngine);
-        _promptTemplateEngine = promptTemplateEngine;
         return this;
     }
 
@@ -105,94 +119,11 @@ public sealed class KernelBuilder
         return this;
     }
 
-    [Obsolete("This method is deprecated, use WithHttpHandlerFactory instead")]
-    public KernelBuilder WithRetryHandlerFactory(IDelegatingHandlerFactory httpHandlerFactory)
-    {
-        return WithHttpHandlerFactory(httpHandlerFactory);
-    }
 
-    public KernelBuilder WithDefaultAIService<TService>(TService instance) where TService : IAIService
+    private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
-        _aiServices.SetService<TService>(instance);
+        _service = new OpenAITextCompletion(model, apiKey);
+        _promptTemplateConfig = PromptTemplateConfigBuilder.Build();
         return this;
-    }
-
-    public KernelBuilder WithDefaultAIService<TService>(Func<ILoggerFactory, TService> factory) where TService : IAIService
-    {
-        _aiServices.SetService<TService>(() => factory(this._loggerFactory));
-        return this;
-    }
-
-    public KernelBuilder WithAIService<TService>(
-        string? serviceId,
-        TService instance,
-        bool setAsDefault = false) where TService : IAIService
-    {
-        _aiServices.SetService<TService>(serviceId, instance, setAsDefault);
-        return this;
-    }
-
-    public KernelBuilder WithAIService<TService>(
-        string? serviceId,
-        Func<ILoggerFactory, TService> factory,
-        bool setAsDefault = false) where TService : IAIService
-    {
-        _aiServices.SetService<TService>(serviceId, () => factory(_loggerFactory), setAsDefault);
-        return this;
-    }
-
-    public KernelBuilder WithAIService<TService>(
-        string? serviceId,
-        Func<ILoggerFactory, IDelegatingHandlerFactory, TService> factory,
-        bool setAsDefault = false) where TService : IAIService
-    {
-        _aiServices.SetService<TService>(serviceId, () => factory(_loggerFactory, _httpHandlerFactory), setAsDefault);
-        return this;
-    }
-
-    private IPromptTemplateEngine CreateDefaultPromptTemplateEngine(ILoggerFactory? loggerFactory = null)
-    {
-        if (!_promptTemplateEngineInitialized)
-        {
-            _promptTemplateEngineType = GetPromptTemplateEngineType();
-            _promptTemplateEngineInitialized = true;
-        }
-
-        if (_promptTemplateEngineType is not null)
-        {
-            var constructor = _promptTemplateEngineType.GetConstructor(new Type[] { typeof(ILoggerFactory) });
-            if (constructor is not null)
-            {
-#pragma warning disable CS8601 // Null logger factory is OK
-                return (IPromptTemplateEngine)constructor.Invoke(new object[] { loggerFactory });
-#pragma warning restore CS8601
-            }
-        }
-
-        return new NullPromptTemplateEngine();
-    }
-
-    private Type? GetPromptTemplateEngineType()
-    {
-        try
-        {
-            var assembly = Assembly.Load("Microsoft.SemanticKernel.TemplateEngine.PromptTemplateEngine");
-
-            return assembly.ExportedTypes.Single(type =>
-                type.Name.Equals("PromptTemplateEngine", StringComparison.Ordinal) &&
-                type.GetInterface(nameof(IPromptTemplateEngine)) is not null);
-        }
-        catch (System.Exception ex) when (!ex.IsCriticalException())
-        {
-            return null;
-        }
-    }
-}
-
-internal class NullPromptTemplateEngine : IPromptTemplateEngine
-{
-    public Task<string> RenderAsync(string templateText, SKContext context, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(templateText);
     }
 }

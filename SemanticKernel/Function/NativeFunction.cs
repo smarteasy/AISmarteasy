@@ -8,13 +8,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
-using SemanticKernel.Service;
+using SemanticKernel.Util;
 
 namespace SemanticKernel.Function;
-
-#pragma warning disable format
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class NativeFunction : ISKFunction, IDisposable
@@ -116,13 +114,11 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         }
     }
 
-    /// <inheritdoc/>
     public ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills)
     {
         return this;
     }
 
-    /// <inheritdoc/>
     public ISKFunction SetAIService(Func<ITextCompletion> serviceFactory)
     {
         this.ThrowNotSemantic();

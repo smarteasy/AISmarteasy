@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
 
 namespace SemanticKernel.Prompt.Blocks;
 
@@ -22,8 +21,6 @@ public sealed class VarBlock : Block, ITextRendering
         Name = Content[1..];
     }
 
-#pragma warning disable CA2254 // error strings are used also internally, not just for logging
-    // ReSharper disable TemplateIsNotCompileTimeConstantProblem
     public override bool IsValid(out string errorMsg)
     {
         errorMsg = string.Empty;
@@ -59,7 +56,6 @@ public sealed class VarBlock : Block, ITextRendering
 
         return true;
     }
-#pragma warning restore CA2254
 
     public string Render(ContextVariables? variables)
     {

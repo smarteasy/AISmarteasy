@@ -2,10 +2,11 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
-using SemanticKernel.Exception;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
+using SemanticKernel.Util;
 
 namespace SemanticKernel.Function;
 
@@ -115,7 +116,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
         this._logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(SemanticFunction)) : NullLogger.Instance;
 
-        this._promptTemplate = template;
+        this.PromptTemplate = template;
         this.Parameters = template.GetParameters();
         Verify.ParametersUniqueness(this.Parameters);
 
@@ -129,9 +130,9 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     private readonly ILogger _logger;
     private IReadOnlySkillCollection? _skillCollection;
     private Lazy<ITextCompletion>? _aiService = null;
-    public IPromptTemplate _promptTemplate { get; }
+    public IPromptTemplate PromptTemplate { get; }
 
-    private static async Task<string> GetCompletionsResultContentAsync(IReadOnlyList<ITextResult> completions, CancellationToken cancellationToken = default)
+    private static async Task<string> RunAsync(IReadOnlyList<ITextResult> completions, CancellationToken cancellationToken = default)
     {
         return await completions[0].GetCompletionAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -161,13 +162,12 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
         try
         {
-            string renderedPrompt = await this._promptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            var completionResults = await client.GetCompletionsAsync(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            string completion = await GetCompletionsResultContentAsync(completionResults, cancellationToken).ConfigureAwait(false);
-
+            string renderedPrompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+            var completionResults = (SemanticTextResult) await client.Run(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
+            string completion = await RunAsync(completionResults.Result!, cancellationToken).ConfigureAwait(false);
             context.Variables.Update(completion);
 
-            context.ModelResults = completionResults.Select(c => c.ModelResult).ToArray();
+            context.ModelResults = completionResults.Result!.Select(c => c.ModelResult).ToArray();
         }
         catch (System.Exception ex) when (!ex.IsCriticalException())
         {

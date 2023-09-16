@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Service;
+﻿namespace SemanticKernel.Connector.OpenAI.TextCompletion;
 
 public interface ITextResult
 {

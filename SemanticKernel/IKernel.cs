@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
+using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
 using SemanticKernel.Prompt;
-using SemanticKernel.Service;
 
 namespace SemanticKernel;
 
@@ -16,10 +16,12 @@ public interface IKernel
 
     IPromptTemplateEngine PromptTemplateEngine { get; }
 
+    PromptTemplateConfig PromptTemplateConfig { get; }
+
     IReadOnlySkillCollection Skills { get; }
 
     IDelegatingHandlerFactory HttpHandlerFactory { get; }
-
+    
     ISKFunction RegisterSemanticFunction(
         string functionName,
         SemanticFunctionConfig functionConfig);
@@ -68,6 +70,7 @@ public interface IKernel
     ISKFunction Func(string skillName, string functionName);
 
     SKContext CreateNewContext();
+    
 
-    T GetService<T>(string? name = null) where T : IAIService;
+    IAIService AIService { get; }
 }
