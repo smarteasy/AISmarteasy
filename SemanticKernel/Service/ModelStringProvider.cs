@@ -2,13 +2,13 @@ namespace SemanticKernel.Service;
 
 public static class ModelStringProvider
 {
-    public static string Provide(AIServiceKind aiService)
+    public static string Provide(AIServiceTypeKind aiService)
     {
         switch (aiService)
         {
-            case AIServiceKind.OpenAITextCompletion:
+            case AIServiceTypeKind.OpenAITextCompletion:
                 return "text-davinci-003";
-            case AIServiceKind.OpenAIChatCompletion:
+            case AIServiceTypeKind.OpenAIChatCompletion:
                 return "gpt-4";
             default:
                 throw new ArgumentOutOfRangeException(nameof(aiService), aiService, null);

@@ -97,7 +97,7 @@ public sealed class CodeBlock : Block, ICodeRendering
 
         try
         {
-            contextClone = await function!.InvokeAsync(contextClone).ConfigureAwait(false);
+            //TODO - contextClone = await function!.InvokeAsync(contextClone).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {

@@ -13,15 +13,12 @@ namespace SemanticKernel;
 public sealed class KernelBuilder
 {
     private readonly IPromptTemplateEngine _promptTemplateEngine;
-    private readonly AIServiceCollection _aiServices = new();
     private Func<ISemanticTextMemory> _memoryFactory = () => NullMemory.Instance;
     private ILoggerFactory _loggerFactory = NullLoggerFactory.Instance;
     private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
 
     private Func<IMemoryStore>? _memoryStorageFactory;
     private IAIService? _service;
-
-    public PromptTemplateConfig? _promptTemplateConfig;
 
     public KernelBuilder()
     {
@@ -30,14 +27,7 @@ public sealed class KernelBuilder
 
     public IKernel Build()
     {
-        var instance = new Kernel(
-            new SkillCollection(_loggerFactory),
-            _service!,
-            _promptTemplateConfig,
-            _memoryFactory.Invoke(),
-            _httpHandlerFactory,
-            _loggerFactory
-        );
+        var instance = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
 
         if (_memoryStorageFactory != null)
         {
@@ -47,7 +37,7 @@ public sealed class KernelBuilder
         return instance;
     }
 
-    public static IKernel BuildCompletionService(AIServiceKind aiService, string apiKey)
+    public static IKernel BuildCompletionService(AIServiceTypeKind aiService, string apiKey)
     {
         var model = ModelStringProvider.Provide(aiService);
 
@@ -56,7 +46,7 @@ public sealed class KernelBuilder
 
         switch (aiService)
         {
-            case AIServiceKind.OpenAITextCompletion:
+            case AIServiceTypeKind.OpenAITextCompletion:
                 kernel = kernelBuilder
                     .WithOpenAITextCompletionService(model, apiKey)
                     .Build();
@@ -123,7 +113,6 @@ public sealed class KernelBuilder
     private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
         _service = new OpenAITextCompletion(model, apiKey);
-        _promptTemplateConfig = PromptTemplateConfigBuilder.Build();
         return this;
     }
 }

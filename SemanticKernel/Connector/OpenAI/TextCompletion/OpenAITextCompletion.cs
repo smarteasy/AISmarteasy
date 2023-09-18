@@ -14,7 +14,7 @@ public sealed class OpenAITextCompletion : OpenAIClientBase, ITextCompletion
     {
     }
 
-    public Task<SemanticResult> Run(
+    public Task<SemanticAnswer> RunCompletion(
         string text,
         CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default)

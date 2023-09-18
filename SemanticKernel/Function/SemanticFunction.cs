@@ -59,15 +59,16 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         };
     }
 
-    public async Task<SKContext> InvokeAsync(
-        SKContext context,
-        CompleteRequestSettings? settings = null,
-        CancellationToken cancellationToken = default)
-    {
-        this.AddDefaultValues(context.Variables);
+  //TODO - 
+    //public async Task<SKContext> InvokeAsync(
+    //    SKContext context,
+    //    CompleteRequestSettings? settings = null,
+    //    CancellationToken cancellationToken = default)
+    //{
+    //    this.AddDefaultValues(context.Variables);
 
-        return await this.RunPromptAsync(this._aiService?.Value, settings ?? this.RequestSettings, context, cancellationToken).ConfigureAwait(false);
-    }
+    //    return await RunPromptAsync(_aiService?.Value, settings ?? this.RequestSettings, context, cancellationToken).ConfigureAwait(false);
+    //}
 
     public ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills)
     {
@@ -151,30 +152,29 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         }
     }
 
-    private async Task<SKContext> RunPromptAsync(
-        ITextCompletion? client,
-        CompleteRequestSettings? requestSettings,
-        SKContext context,
-        CancellationToken cancellationToken)
-    {
-        Verify.NotNull(client);
-        Verify.NotNull(requestSettings);
+    //private async Task<SKContext> RunPromptAsync(
+    //    ITextCompletion? client,
+    //    CompleteRequestSettings? requestSettings,
+    //    SKContext context,
+    //    CancellationToken cancellationToken)
+    //{
+    //    Verify.NotNull(client);
+    //    Verify.NotNull(requestSettings);
 
-        try
-        {
-            string renderedPrompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            var completionResults = (SemanticTextResult) await client.Run(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            string completion = await RunAsync(completionResults.Result!, cancellationToken).ConfigureAwait(false);
-            context.Variables.Update(completion);
+    //    try
+    //    {
+    //        string renderedPrompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+    //        var answer = (SemanticAnswer) await client.RunCompletion(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
+    //        context.Variables.Update(answer.Text);
 
-            context.ModelResults = completionResults.Result!.Select(c => c.ModelResult).ToArray();
-        }
-        catch (System.Exception ex) when (!ex.IsCriticalException())
-        {
-            this._logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, ex.Message);
-            throw;
-        }
+    //        context.ModelResults = completionResults.Result!.Select(c => c.ModelResult).ToArray();
+    //    }
+    //    catch (System.Exception ex) when (!ex.IsCriticalException())
+    //    {
+    //        this._logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, ex.Message);
+    //        throw;
+    //    }
 
-        return context;
-    }
+    //    return context;
+    //}
 }

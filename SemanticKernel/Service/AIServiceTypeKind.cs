@@ -1,6 +1,6 @@
 namespace SemanticKernel.Service;
 
-public enum AIServiceKind
+public enum AIServiceTypeKind
 {
     OpenAITextCompletion,
     OpenAIChatCompletion

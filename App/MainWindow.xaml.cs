@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace AISmarteasy
+namespace GPTApp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

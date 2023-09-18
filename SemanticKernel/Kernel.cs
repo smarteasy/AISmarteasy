@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
+using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
 using SemanticKernel.Function;
@@ -18,6 +19,8 @@ public sealed class Kernel : IKernel, IDisposable
 
     public IPromptTemplateEngine PromptTemplateEngine { get; }
 
+    public PromptTemplateConfig PromptTemplateConfig { get; }
+
     public ILoggerFactory LoggerFactory { get; }
 
     public ISemanticTextMemory Memory => _memory;
@@ -29,24 +32,32 @@ public sealed class Kernel : IKernel, IDisposable
 
     public IAIService AIService { get; }
 
-    public PromptTemplateConfig PromptTemplateConfig { get; }
+    public Task<SemanticAnswer> RunCompletion(string prompt)
+    {
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.RunCompletion(prompt, requestSetting);
+    }
 
     public Kernel(
-        ISkillCollection skillCollection,
         IAIService aiService,
-        PromptTemplateConfig promptTemplateConfig,
         ISemanticTextMemory memory,
         IDelegatingHandlerFactory httpHandlerFactory,
         ILoggerFactory loggerFactory)
     {
-        PromptTemplateEngine = new PromptTemplateEngine(loggerFactory);
-        _skillCollection = skillCollection;
-        AIService = aiService;
-        PromptTemplateConfig = promptTemplateConfig;
-        HttpHandlerFactory = httpHandlerFactory;
         LoggerFactory = loggerFactory;
+        _logger = LoggerFactory.CreateLogger(typeof(Kernel));
+
+        PromptTemplateEngine = new PromptTemplateEngine(LoggerFactory);
+        PromptTemplateConfig = PromptTemplateConfigBuilder.Build();
+
+        //TODO - 내용 정리
+        _skillCollection = new SkillCollection(LoggerFactory);
+        AIService = aiService;
+
+        //TODO - 세부적인 처리 과정 추적
+
+        HttpHandlerFactory = httpHandlerFactory;
         _memory = memory;
-        _logger = loggerFactory.CreateLogger(typeof(Kernel));
     }
 
     public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
@@ -143,7 +154,7 @@ public sealed class Kernel : IKernel, IDisposable
 
             try
             {
-                context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
+                //context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
             catch (System.Exception ex)
             {

@@ -42,15 +42,15 @@ public abstract class ClientBase
             name: "SK.Connectors.OpenAI.TotalTokens",
             description: "Total number of tokens used");
 
-    private protected async Task<SemanticResult> InternalGetTextResultsAsync(
-        string text,
+    private protected async Task<SemanticAnswer> InternalGetTextResultsAsync(
+        string prompt,
         CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         Verify.NotNull(requestSettings);
 
         ValidateMaxTokens(requestSettings.MaxTokens);
-        var options = CreateCompletionsOptions(text, requestSettings);
+        var options = CreateCompletionsOptions(prompt, requestSettings);
 
         Response<Completions>? response = await RunRequestAsync<Response<Completions>?>(
             () => Client.GetCompletionsAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
@@ -69,11 +69,7 @@ public abstract class ClientBase
 
         CaptureUsageDetails(responseData.Usage);
 
-        var result = new SemanticTextResult
-        {
-            Result = responseData.Choices.Select(choice => new TextResult(responseData, choice)).ToList()
-        };
-        return result;
+        return new SemanticAnswer(responseData.Choices[0].Text);
     }
 
     private protected async IAsyncEnumerable<TextStreamingResult> InternalGetTextStreamingResultsAsync(

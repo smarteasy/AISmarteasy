@@ -17,10 +17,10 @@ public interface ISKFunction
 
     FunctionView Describe();
 
-    Task<SKContext> InvokeAsync(
-        SKContext context,
-        CompleteRequestSettings? settings = null,
-        CancellationToken cancellationToken = default);
+    //Task<SKContext> InvokeAsync(
+    //    SKContext context,
+    //    CompleteRequestSettings? settings = null,
+    //    CancellationToken cancellationToken = default);
 
     ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills);
 
