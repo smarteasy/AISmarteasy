@@ -3,7 +3,7 @@ using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Service;
 using SemanticKernel;
 
-namespace ConsoleApp2
+namespace GPTConsole
 {
     internal class Program
     {
