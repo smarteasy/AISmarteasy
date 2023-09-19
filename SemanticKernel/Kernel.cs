@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
@@ -13,7 +14,7 @@ namespace SemanticKernel;
 
 public sealed class Kernel : IKernel, IDisposable
 {
-    private readonly ISkillCollection _skillCollection;
+    private readonly IPluginCollection _pluginCollection;
     private ISemanticTextMemory _memory;
     private readonly ILogger _logger;
 
@@ -25,17 +26,34 @@ public sealed class Kernel : IKernel, IDisposable
 
     public ISemanticTextMemory Memory => _memory;
 
-    public IReadOnlySkillCollection Skills => _skillCollection;
+    public IReadOnlyPluginCollection Plugins => _pluginCollection;
 
     public static KernelBuilder Builder => new();
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
     public IAIService AIService { get; }
+    public SKContext Context { get; set; }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)
     {
         var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return AIService.RunCompletion(prompt, requestSetting);
+    }
+
+    public async Task<SemanticAnswer> RunSemanticFunction(IKernel kernel, ISKFunction function,
+        IDictionary<string, string> parameters)
+    {
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        
+        foreach (var parameter in parameters)
+        {
+            Context.Variables[parameter.Key] = parameter.Value;
+        }
+
+        var answer= await function.InvokeAsync(kernel, requestSetting);
+
+        var result = new SemanticAnswer(answer.Result);
+        return result;
     }
 
     public Kernel(
@@ -51,7 +69,7 @@ public sealed class Kernel : IKernel, IDisposable
         PromptTemplateConfig = PromptTemplateConfigBuilder.Build();
 
         //TODO - 내용 정리
-        _skillCollection = new SkillCollection(LoggerFactory);
+        _pluginCollection = new PluginCollection(LoggerFactory);
         AIService = aiService;
 
         //TODO - 세부적인 처리 과정 추적
@@ -62,43 +80,43 @@ public sealed class Kernel : IKernel, IDisposable
 
     public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
     {
-        return RegisterSemanticFunction(SkillCollection.GlobalSkill, functionName, functionConfig);
+        return RegisterSemanticFunction(PluginCollection.GlobalPlugin, functionName, functionConfig);
     }
 
-    public ISKFunction RegisterSemanticFunction(string skillName, string functionName, SemanticFunctionConfig functionConfig)
+    public ISKFunction RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
     {
-        Verify.ValidSkillName(skillName);
+        Verify.ValidSkillName(pluginName);
         Verify.ValidFunctionName(functionName);
 
-        ISKFunction function = CreateSemanticFunction(skillName, functionName, functionConfig);
-        _skillCollection.AddFunction(function);
+        ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
+        _pluginCollection.AddFunction(function);
 
         return function;
     }
-    public IDictionary<string, ISKFunction> ImportSkill(object skillInstance, string? skillName = null)
+    public IDictionary<string, ISKFunction> ImportPlugin(object pluginInstance, string? pluginName = null)
     {
-        Verify.NotNull(skillInstance);
+        Verify.NotNull(pluginInstance);
 
-        if (string.IsNullOrWhiteSpace(skillName))
+        if (string.IsNullOrWhiteSpace(pluginName))
         {
-            skillName = SkillCollection.GlobalSkill;
-            _logger.LogTrace("Importing skill {0} in the global namespace", skillInstance.GetType().FullName);
+            pluginName = PluginCollection.GlobalPlugin;
+            _logger.LogTrace("Importing plugin {0} in the global namespace", pluginInstance.GetType().FullName);
         }
         else
         {
-            _logger.LogTrace("Importing skill {0}", skillName);
+            _logger.LogTrace("Importing plugin {0}", pluginName);
         }
 
-        Dictionary<string, ISKFunction> skill = ImportSkill(
-            skillInstance,
-            skillName!,
+        Dictionary<string, ISKFunction> skill = ImportPlugin(
+            pluginInstance,
+            pluginName!,
             _logger,
             LoggerFactory
         );
         foreach (KeyValuePair<string, ISKFunction> f in skill)
         {
-            f.Value.SetDefaultSkillCollection(this.Skills);
-            this._skillCollection.AddFunction(f.Value);
+            f.Value.SetDefaultSkillCollection(this.Plugins);
+            this._pluginCollection.AddFunction(f.Value);
         }
 
         return skill;
@@ -108,8 +126,8 @@ public sealed class Kernel : IKernel, IDisposable
     {
         Verify.NotNull(customFunction);
 
-        customFunction.SetDefaultSkillCollection(this.Skills);
-        _skillCollection.AddFunction(customFunction);
+        customFunction.SetDefaultSkillCollection(this.Plugins);
+        _pluginCollection.AddFunction(customFunction);
 
         return customFunction;
     }
@@ -143,7 +161,7 @@ public sealed class Kernel : IKernel, IDisposable
     {
         var context = new SKContext(
             variables,
-            _skillCollection,
+            _pluginCollection,
             LoggerFactory);
 
         int pipelineStepCount = 0;
@@ -158,7 +176,7 @@ public sealed class Kernel : IKernel, IDisposable
             }
             catch (System.Exception ex)
             {
-                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.SkillName, f.Name, pipelineStepCount, ex.Message);
+                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.PluginName, f.Name, pipelineStepCount, ex.Message);
                 throw;
             }
 
@@ -170,21 +188,23 @@ public sealed class Kernel : IKernel, IDisposable
 
     public ISKFunction Func(string skillName, string functionName)
     {
-        return this.Skills.GetFunction(skillName, functionName);
+        return this.Plugins.GetFunction(skillName, functionName);
     }
 
     public SKContext CreateNewContext()
     {
-        return new SKContext(
-            skills: _skillCollection,
+        Context = new SKContext(
+            plugins: _pluginCollection,
             loggerFactory: LoggerFactory);
+
+        return Context;
     }
 
 
     public void Dispose()
     {
         if (_memory is IDisposable mem) { mem.Dispose(); }
-        if (_skillCollection is IDisposable reg) { reg.Dispose(); }
+        if (_pluginCollection is IDisposable reg) { reg.Dispose(); }
     }
 
     private ISKFunction CreateSemanticFunction(
@@ -204,24 +224,24 @@ public sealed class Kernel : IKernel, IDisposable
             LoggerFactory
         );
 
-        func.SetDefaultSkillCollection(this.Skills);
+        func.SetDefaultSkillCollection(Plugins);
 
         func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
 
         return func;
     }
 
-   private static Dictionary<string, ISKFunction> ImportSkill(object skillInstance, string skillName, ILogger logger, ILoggerFactory loggerFactory)
+   private static Dictionary<string, ISKFunction> ImportPlugin(object plugin, string pluginName, ILogger logger, ILoggerFactory loggerFactory)
     {
-        MethodInfo[] methods = skillInstance.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
-        logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", skillName, methods.Length);
+        MethodInfo[] methods = plugin.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
+        logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", pluginName, methods.Length);
 
         Dictionary<string, ISKFunction> result = new(StringComparer.OrdinalIgnoreCase);
         foreach (MethodInfo method in methods)
         {
             if (method.GetCustomAttribute<SKFunctionAttribute>() is not null)
             {
-                ISKFunction function = SKFunction.FromNativeMethod(method, skillInstance, skillName, loggerFactory);
+                ISKFunction function = SKFunction.FromNativeMethod(method, plugin, pluginName, loggerFactory);
                 if (result.ContainsKey(function.Name))
                 {
                     throw new SKException("Function overloads are not supported, please differentiate function names");

@@ -7,5 +7,5 @@ public interface IPromptTemplate
 {
     IList<ParameterView> GetParameters();
 
-    public Task<string> RenderAsync(SKContext executionContext, CancellationToken cancellationToken = default);
+    public Task<string> RenderAsync(SKContext context, CancellationToken cancellationToken = default);
 }

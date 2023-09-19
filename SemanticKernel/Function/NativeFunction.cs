@@ -19,7 +19,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 {
     public string Name { get; }
 
-    public string SkillName { get; }
+    public string PluginName { get; }
 
     public string Description { get; }
 
@@ -42,7 +42,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
         if (string.IsNullOrWhiteSpace(skillName))
         {
-            skillName = SkillCollection.GlobalSkill;
+            skillName = PluginCollection.GlobalPlugin;
         }
 
         var logger = loggerFactory?.CreateLogger(method.DeclaringType ?? typeof(SKFunction)) ?? NullLogger.Instance;
@@ -59,7 +59,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
     public static ISKFunction FromNativeFunction(
         Delegate nativeFunction,
-        string? skillName = null,
+        string? pluginName = null,
         string? functionName = null,
         string? description = null,
         IEnumerable<ParameterView>? parameters = null,
@@ -72,16 +72,16 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         parameters ??= methodDetails.Parameters;
         description ??= methodDetails.Description;
 
-        if (string.IsNullOrWhiteSpace(skillName))
+        if (string.IsNullOrWhiteSpace(pluginName))
         {
-            skillName = SkillCollection.GlobalSkill;
+            pluginName = PluginCollection.GlobalPlugin;
         }
 
         return new NativeFunction(
             delegateFunction: methodDetails.Function,
             parameters: parameters?.ToList() ?? (IList<ParameterView>)Array.Empty<ParameterView>(),
             description: description,
-            skillName: skillName!,
+            skillName: pluginName!,
             functionName: functionName,
             logger: logger);
     }
@@ -92,29 +92,29 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         {
             IsSemantic = this.IsSemantic,
             Name = this.Name,
-            SkillName = this.SkillName,
+            SkillName = this.PluginName,
             Description = this.Description,
             Parameters = this.Parameters,
         };
     }
 
     public async Task<SKContext> InvokeAsync(
-        SKContext context,
+        IKernel kernel,
         CompleteRequestSettings? settings = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _function(null, settings, context, cancellationToken).ConfigureAwait(false);
+            return await _function(null, settings, kernel.Context, cancellationToken).ConfigureAwait(false);
         }
         catch (System.Exception e) when (!e.IsCriticalException())
         {
-            _logger.LogError(e, "Native function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, e.Message);
+            _logger.LogError(e, "Native function {Plugin}.{Name} execution failed with error {Error}", this.PluginName, this.Name, e.Message);
             throw;
         }
     }
 
-    public ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills)
+    public ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills)
     {
         return this;
     }
@@ -172,14 +172,14 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         Verify.ValidFunctionName(functionName);
         Verify.ParametersUniqueness(parameters);
 
-        this._logger = logger;
+        _logger = logger;
 
-        this._function = delegateFunction;
-        this.Parameters = parameters;
+        _function = delegateFunction;
+        Parameters = parameters;
 
-        this.Name = functionName;
-        this.SkillName = skillName;
-        this.Description = description;
+        Name = functionName;
+        PluginName = skillName;
+        Description = description;
     }
 
     [DoesNotReturn]

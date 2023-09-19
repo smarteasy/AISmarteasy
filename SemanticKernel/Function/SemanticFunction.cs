@@ -17,7 +17,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 {
     public string Name { get; }
 
-    public string SkillName { get; }
+    public string PluginName { get; }
 
     public string Description { get; }
 
@@ -51,26 +51,25 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     {
         return new FunctionView
         {
-            IsSemantic = this.IsSemantic,
-            Name = this.Name,
-            SkillName = this.SkillName,
-            Description = this.Description,
-            Parameters = this.Parameters,
+            IsSemantic = IsSemantic,
+            Name = Name,
+            SkillName = PluginName,
+            Description = Description,
+            Parameters = Parameters,
         };
     }
 
-  //TODO - 
-    //public async Task<SKContext> InvokeAsync(
-    //    SKContext context,
-    //    CompleteRequestSettings? settings = null,
-    //    CancellationToken cancellationToken = default)
-    //{
-    //    this.AddDefaultValues(context.Variables);
+    public async Task<SKContext> InvokeAsync(
+        IKernel kernel, 
+        CompleteRequestSettings? settings,
+        CancellationToken cancellationToken = default)
+    {
+        AddDefaultValues(kernel.Context.Variables);
+        return await RunPromptAsync(kernel.AIService, settings, kernel.Context, cancellationToken).ConfigureAwait(false);
+    }
 
-    //    return await RunPromptAsync(_aiService?.Value, settings ?? this.RequestSettings, context, cancellationToken).ConfigureAwait(false);
-    //}
 
-    public ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills)
+    public ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills)
     {
         this._skillCollection = skills;
         return this;
@@ -79,7 +78,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     public ISKFunction SetAIService(Func<ITextCompletion> serviceFactory)
     {
         Verify.NotNull(serviceFactory);
-        this._aiService = new Lazy<ITextCompletion>(serviceFactory);
+        this._textCompletion = new Lazy<ITextCompletion>(serviceFactory);
         return this;
     }
 
@@ -92,17 +91,17 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     public void Dispose()
     {
-        if (this._aiService is { IsValueCreated: true } aiService)
+        if (this._textCompletion is { IsValueCreated: true } aiService)
         {
             (aiService.Value as IDisposable)?.Dispose();
         }
     }
 
     public override string ToString()
-        => this.ToString(false);
+        => ToString(false);
 
     public string ToString(bool writeIndented)
-        => JsonSerializer.Serialize(this, options: writeIndented ? s_toStringIndentedSerialization : s_toStringStandardSerialization);
+        => JsonSerializer.Serialize(this, options: writeIndented ? ToStringIndentedSerialization : ToStringStandardSerialization);
 
     internal SemanticFunction(
         IPromptTemplate template,
@@ -122,15 +121,15 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         Verify.ParametersUniqueness(this.Parameters);
 
         this.Name = functionName;
-        this.SkillName = skillName;
+        this.PluginName = skillName;
         this.Description = description;
     }
 
-    private static readonly JsonSerializerOptions s_toStringStandardSerialization = new();
-    private static readonly JsonSerializerOptions s_toStringIndentedSerialization = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
+    private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
     private readonly ILogger _logger;
-    private IReadOnlySkillCollection? _skillCollection;
-    private Lazy<ITextCompletion>? _aiService = null;
+    private IReadOnlyPluginCollection? _skillCollection;
+    private Lazy<ITextCompletion>? _textCompletion = null;
     public IPromptTemplate PromptTemplate { get; }
 
     private static async Task<string> RunAsync(IReadOnlyList<ITextResult> completions, CancellationToken cancellationToken = default)
@@ -152,29 +151,38 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         }
     }
 
-    //private async Task<SKContext> RunPromptAsync(
-    //    ITextCompletion? client,
-    //    CompleteRequestSettings? requestSettings,
-    //    SKContext context,
-    //    CancellationToken cancellationToken)
-    //{
-    //    Verify.NotNull(client);
-    //    Verify.NotNull(requestSettings);
 
-    //    try
-    //    {
-    //        string renderedPrompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-    //        var answer = (SemanticAnswer) await client.RunCompletion(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
-    //        context.Variables.Update(answer.Text);
+    private async Task<SKContext> RunPromptAsync(
+        IAIService? client,
+        CompleteRequestSettings? requestSettings,
+        SKContext context,
+        CancellationToken cancellationToken)
+    {
+        Verify.NotNull(client);
+        Verify.NotNull(requestSettings);
 
-    //        context.ModelResults = completionResults.Result!.Select(c => c.ModelResult).ToArray();
-    //    }
-    //    catch (System.Exception ex) when (!ex.IsCriticalException())
-    //    {
-    //        this._logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", this.SkillName, this.Name, ex.Message);
-    //        throw;
-    //    }
+        try
+        {
+            var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+            var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
+            context.Variables.Update(answer.Text);
 
-    //    return context;
-    //}
+            //TODO - 아래 코드를 위와 같이 바꾸었을 때 문제점 파악
+            //string renderedPrompt = await this._promptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+            //var completionResults = await client.GetCompletionsAsync(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
+            //string completion = await GetCompletionsResultContentAsync(completionResults, cancellationToken).ConfigureAwait(false);
+
+            //// Update the result with the completion
+            //context.Variables.Update(completion);
+
+            //context.ModelResults = completionResults.Select(c => c.ModelResult).ToArray();
+        }
+        catch (Exception ex) when (!ex.IsCriticalException())
+        {
+            _logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", PluginName, Name, ex.Message);
+            throw;
+        }
+
+        return context;
+    }
 }

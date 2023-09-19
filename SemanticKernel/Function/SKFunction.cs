@@ -3,8 +3,6 @@ using Microsoft.Extensions.Logging;
 
 namespace SemanticKernel.Function;
 
-#pragma warning disable format
-
 public static class SKFunction
 {
     public static ISKFunction FromNativeMethod(

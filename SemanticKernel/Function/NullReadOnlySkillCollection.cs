@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace SemanticKernel.Function;
 
 [DebuggerDisplay("Count = 0")]
-internal sealed class NullReadOnlySkillCollection : IReadOnlySkillCollection
+internal sealed class NullReadOnlySkillCollection : IReadOnlyPluginCollection
 {
     public static readonly NullReadOnlySkillCollection Instance = new();
 

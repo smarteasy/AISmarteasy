@@ -2,14 +2,14 @@
 
 namespace SemanticKernel.Function;
 
-internal sealed class ReadOnlySkillCollectionTypeProxy
+internal sealed class ReadOnlyPluginCollectionTypeProxy
 {
-    private readonly IReadOnlySkillCollection _collection;
+    private readonly IReadOnlyPluginCollection _collection;
 
-    public ReadOnlySkillCollectionTypeProxy(IReadOnlySkillCollection collection) => this._collection = collection;
+    public ReadOnlyPluginCollectionTypeProxy(IReadOnlyPluginCollection collection) => this._collection = collection;
 
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public SkillProxy[] Items
+    public PluginProxy[] Items
     {
         get
         {
@@ -17,17 +17,17 @@ internal sealed class ReadOnlySkillCollectionTypeProxy
             return view.NativeFunctions
                 .Concat(view.SemanticFunctions)
                 .GroupBy(f => f.Key)
-                .Select(g => new SkillProxy(g.SelectMany(f => f.Value)) { Name = g.Key })
+                .Select(g => new PluginProxy(g.SelectMany(f => f.Value)) { Name = g.Key })
                 .ToArray();
         }
     }
 
     [DebuggerDisplay("{Name}")]
-    public sealed class SkillProxy : List<FunctionView>
+    public sealed class PluginProxy : List<FunctionView>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string? Name;
 
-        public SkillProxy(IEnumerable<FunctionView> functions) : base(functions) { }
+        public PluginProxy(IEnumerable<FunctionView> functions) : base(functions) { }
     }
 }

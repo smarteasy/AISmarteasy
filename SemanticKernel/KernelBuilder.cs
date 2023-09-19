@@ -27,14 +27,14 @@ public sealed class KernelBuilder
 
     public IKernel Build()
     {
-        var instance = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
+        var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
 
         if (_memoryStorageFactory != null)
         {
-            instance.UseMemory(_memoryStorageFactory.Invoke());
+            kernel.UseMemory(_memoryStorageFactory.Invoke());
         }
 
-        return instance;
+        return kernel;
     }
 
     public static IKernel BuildCompletionService(AIServiceTypeKind aiService, string apiKey)

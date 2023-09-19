@@ -10,6 +10,8 @@ namespace SemanticKernel;
 
 public interface IKernel
 {
+    public SKContext Context { get; set; }
+
     ILoggerFactory LoggerFactory { get; }
 
     ISemanticTextMemory Memory { get; }
@@ -18,7 +20,7 @@ public interface IKernel
 
     PromptTemplateConfig PromptTemplateConfig { get; }
 
-    IReadOnlySkillCollection Skills { get; }
+    IReadOnlyPluginCollection Plugins { get; }
 
     IDelegatingHandlerFactory HttpHandlerFactory { get; }
     
@@ -33,7 +35,7 @@ public interface IKernel
 
     ISKFunction RegisterCustomFunction(ISKFunction customFunction);
 
-    IDictionary<string, ISKFunction> ImportSkill(object skillInstance, string? skillName = null);
+    IDictionary<string, ISKFunction> ImportPlugin(object pluginInstance, string? pluginName = null);
 
     void RegisterMemory(ISemanticTextMemory memory);
 
@@ -75,4 +77,6 @@ public interface IKernel
     IAIService AIService { get; }
 
     Task<SemanticAnswer> RunCompletion(string prompt);
+    Task<SemanticAnswer> RunSemanticFunction(IKernel kernel, ISKFunction function,
+        IDictionary<string, string> parameters);
 }

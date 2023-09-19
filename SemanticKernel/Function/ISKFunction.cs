@@ -7,7 +7,7 @@ public interface ISKFunction
 {
     string Name { get; }
 
-    string SkillName { get; }
+    string PluginName { get; }
 
     string Description { get; }
 
@@ -17,12 +17,12 @@ public interface ISKFunction
 
     FunctionView Describe();
 
-    //Task<SKContext> InvokeAsync(
-    //    SKContext context,
-    //    CompleteRequestSettings? settings = null,
-    //    CancellationToken cancellationToken = default);
+    Task<SKContext> InvokeAsync(
+        IKernel kernel,
+        CompleteRequestSettings? settings = null,
+        CancellationToken cancellationToken = default);
 
-    ISKFunction SetDefaultSkillCollection(IReadOnlySkillCollection skills);
+    ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills);
 
     ISKFunction SetAIService(Func<ITextCompletion> serviceFactory);
 

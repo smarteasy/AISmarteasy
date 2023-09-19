@@ -11,4 +11,8 @@
     <ProjectReference Include="..\SemanticKernel\SemanticKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="bin\Debug\net7.0\plugins\Fun\Joke\" />
+  </ItemGroup>
+
 </Project>

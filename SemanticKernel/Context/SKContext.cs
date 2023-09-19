@@ -24,17 +24,17 @@ public sealed class SKContext
 
     public ContextVariables Variables { get; }
 
-    public IReadOnlySkillCollection Skills { get; }
+    public IReadOnlyPluginCollection Plugins { get; }
 
     public ILoggerFactory LoggerFactory { get; }
 
     public SKContext(
         ContextVariables? variables = null,
-        IReadOnlySkillCollection? skills = null,
+        IReadOnlyPluginCollection? plugins = null,
         ILoggerFactory? loggerFactory = null)
     {
         Variables = variables ?? new();
-        Skills = skills ?? NullReadOnlySkillCollection.Instance;
+        Plugins = plugins ?? NullReadOnlySkillCollection.Instance;
         LoggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
         _culture = CultureInfo.CurrentCulture;
     }
@@ -48,7 +48,7 @@ public sealed class SKContext
     {
         return new SKContext(
             variables: Variables.Clone(),
-            skills: Skills,
+            plugins: Plugins,
             loggerFactory: LoggerFactory)
         {
             Culture = Culture,
@@ -62,7 +62,7 @@ public sealed class SKContext
         {
             string display = Variables.DebuggerDisplay;
 
-            if (Skills is IReadOnlySkillCollection skills)
+            if (Plugins is IReadOnlyPluginCollection skills)
             {
                 var view = skills.GetFunctionsView();
                 display += $", Skills = {view.NativeFunctions.Count + view.SemanticFunctions.Count}";

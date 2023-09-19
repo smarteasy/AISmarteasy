@@ -76,12 +76,12 @@ public sealed class CodeBlock : Block, ICodeRendering
 
     private async Task<string> RenderFunctionCallAsync(FunctionIdBlock fBlock, SKContext context)
     {
-        if (context.Skills == null)
+        if (context.Plugins == null)
         {
             throw new SKException("Skill collection not found in the context");
         }
 
-        if (!GetFunctionFromSkillCollection(context.Skills!, fBlock, out ISKFunction? function))
+        if (!GetFunctionFromSkillCollection(context.Plugins!, fBlock, out ISKFunction? function))
         {
             var errorMsg = $"Function `{fBlock.Content}` not found";
             Logger.LogError(errorMsg);
@@ -101,7 +101,7 @@ public sealed class CodeBlock : Block, ICodeRendering
         }
         catch (System.Exception ex)
         {
-            Logger.LogError(ex, "Function {Plugin}.{Function} execution failed with error {Error}", function!.SkillName, function.Name, ex.Message);
+            Logger.LogError(ex, "Function {Plugin}.{Function} execution failed with error {Error}", function!.PluginName, function.Name, ex.Message);
             throw;
         }
 
@@ -109,7 +109,7 @@ public sealed class CodeBlock : Block, ICodeRendering
     }
 
     private bool GetFunctionFromSkillCollection(
-        IReadOnlySkillCollection skills,
+        IReadOnlyPluginCollection skills,
         FunctionIdBlock functionBlock,
         out ISKFunction? function)
     {
