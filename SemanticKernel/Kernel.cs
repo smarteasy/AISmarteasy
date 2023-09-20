@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Threading;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
@@ -14,10 +12,15 @@ namespace SemanticKernel;
 
 public sealed class Kernel : IKernel, IDisposable
 {
+    private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
+    private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
+    private readonly string SEMANTIC_PLUGIN_DIRECTORY;
+
     private readonly IPluginCollection _pluginCollection;
     private ISemanticTextMemory _memory;
     private readonly ILogger _logger;
 
+    public IReadOnlyPluginCollection Plugins => _pluginCollection;
     public ISemanticTextMemory Memory => _memory;
 
     public IPromptTemplate PromptTemplate { get; }
@@ -26,8 +29,6 @@ public sealed class Kernel : IKernel, IDisposable
 
     public ILoggerFactory LoggerFactory { get; }
 
-
-    public IReadOnlyPluginCollection Plugins => _pluginCollection;
 
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
@@ -38,6 +39,8 @@ public sealed class Kernel : IKernel, IDisposable
         ISemanticTextMemory memory, IDelegatingHandlerFactory httpHandlerFactory,
         ILoggerFactory loggerFactory)
     {
+        SEMANTIC_PLUGIN_DIRECTORY = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
+
         LoggerFactory = loggerFactory;
         _logger = LoggerFactory.CreateLogger(typeof(Kernel));
 
@@ -53,115 +56,11 @@ public sealed class Kernel : IKernel, IDisposable
         HttpHandlerFactory = httpHandlerFactory;
         _memory = memory;
 
-        ImportPluginFromDirectory();
+        LoadPlugin();
 
         Context = new SKContext(
             plugins: _pluginCollection,
             loggerFactory: loggerFactory);
-    }
-
-    public IDictionary<string, ISKFunction> ImportPluginFromDirectory()
-    {
-        const string ConfigFile = "config.json";
-        const string PromptFile = "skprompt.txt";
-
-        var pluginsDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins");
-        var plugin = new Dictionary<string, ISKFunction>();
-
-        ILogger? logger = null;
-        //foreach (var pluginDirectoryName in pluginDirectoryNames)
-        //{
-            //Verify.ValidSkillName(pluginDirectoryName);
-            //var pluginDirectory = Path.Combine(pluginsDirectory, pluginDirectoryName);
-            //Verify.DirectoryExists(pluginDirectory);
-
-            string[] directories = Directory.GetDirectories(pluginsDirectory);
-            foreach (string directory in directories)
-            {
-                var directoryName = Path.GetFileName(directory);
-                var promptPath = Path.Combine(directory, PromptFile);
-
-                if (!File.Exists(promptPath))
-                {
-                    ImportPlugin(directoryName, directory);
-                    continue;
-                }
-
-                var config = new PromptTemplateConfig();
-                var configPath = Path.Combine(directory, ConfigFile);
-                if (File.Exists(configPath))
-                {
-                    config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
-                }
-
-                //logger ??= LoggerFactory.CreateLogger(typeof(IKernel));
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace("Config {0}: {1}", directoryName, config.ToJson());
-                }
-
-                var template = new PromptTemplate(File.ReadAllText(promptPath), config);
-                var functionConfig = new SemanticFunctionConfig(config, template);
-
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace("Registering function {0}.{1} loaded from {2}", directory, directoryName,
-                        directory);
-                }
-
-                //plugin[functionName] =
-                RegisterSemanticFunction(directory, directoryName, functionConfig);
-                //}
-            }
-
-            //kernel.CreateNewContext();
-
-        return plugin;
-    }
-
-    private void ImportPlugin(string pluginName, string directory)
-    {
-        const string ConfigFile = "config.json";
-        const string PromptFile = "skprompt.txt";
-
-        ILogger? logger = null;
-
-        string[] subDirectories = Directory.GetDirectories(directory);
-        foreach (var subDirectory in subDirectories)
-        {
-            var functionName = Path.GetFileName(subDirectory);
-            var promptPath = Path.Combine(subDirectory, PromptFile);
-
-            if (!File.Exists(promptPath))
-            {
-                ImportPlugin(subDirectory);
-                continue;
-            }
-
-            var config = new PromptTemplateConfig();
-            var configPath = Path.Combine(subDirectory, ConfigFile);
-            if (File.Exists(configPath))
-            {
-                config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
-            }
-
-            logger ??= LoggerFactory.CreateLogger(typeof(IKernel));
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
-            }
-
-            var template = new PromptTemplate(File.ReadAllText(promptPath), config);
-            var functionConfig = new SemanticFunctionConfig(config, template);
-
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace("Registering function {0}.{1} loaded from {2}", subDirectory, functionName,
-                    subDirectory);
-            }
-
-            RegisterSemanticFunction(pluginName, functionName, functionConfig);
-        }
     }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)
@@ -170,7 +69,7 @@ public sealed class Kernel : IKernel, IDisposable
         return AIService.RunCompletion(prompt, requestSetting);
     }
 
-    public async Task<SemanticAnswer> RunSemanticFunction(IKernel kernel, ISKFunction function,
+    public async Task<SemanticAnswer> RunFunction(IKernel kernel, ISKFunction function,
         IDictionary<string, string> parameters)
     {
         var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
@@ -186,48 +85,23 @@ public sealed class Kernel : IKernel, IDisposable
         return result;
     }
 
-    public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
+    public void RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
     {
-        return RegisterSemanticFunction(PluginCollection.GlobalPlugin, functionName, functionConfig);
+        RegisterSemanticFunction(PluginCollection.GlobalPlugin, functionName, functionConfig);
     }
 
-    public ISKFunction RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
+    public void RegisterNativeFunction(ISKFunction function)
     {
-        Verify.ValidSkillName(pluginName);
+        _pluginCollection.AddFunction(function);
+    }
+
+    public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
+    {
+        Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(functionName);
 
         ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
         _pluginCollection.AddFunction(function);
-
-        return function;
-    }
-    public IDictionary<string, ISKFunction> ImportPlugin(object pluginInstance, string? pluginName = null)
-    {
-        Verify.NotNull(pluginInstance);
-
-        if (string.IsNullOrWhiteSpace(pluginName))
-        {
-            pluginName = PluginCollection.GlobalPlugin;
-            _logger.LogTrace("Importing plugin {0} in the global namespace", pluginInstance.GetType().FullName);
-        }
-        else
-        {
-            _logger.LogTrace("Importing plugin {0}", pluginName);
-        }
-
-        Dictionary<string, ISKFunction> skill = ImportPlugin(
-            pluginInstance,
-            pluginName!,
-            _logger,
-            LoggerFactory
-        );
-        foreach (KeyValuePair<string, ISKFunction> f in skill)
-        {
-            f.Value.SetDefaultSkillCollection(this.Plugins);
-            this._pluginCollection.AddFunction(f.Value);
-        }
-
-        return skill;
     }
 
     public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
@@ -294,19 +168,13 @@ public sealed class Kernel : IKernel, IDisposable
         return context;
     }
 
-    public ISKFunction Func(string skillName, string functionName)
+    public ISKFunction Func(string pluginName, string functionName)
     {
-        return this.Plugins.GetFunction(skillName, functionName);
-    }
-
-    public void Dispose()
-    {
-        if (_memory is IDisposable mem) { mem.Dispose(); }
-        if (_pluginCollection is IDisposable reg) { reg.Dispose(); }
+        return this.Plugins.GetFunction(pluginName, functionName);
     }
 
     private ISKFunction CreateSemanticFunction(
-        string skillName,
+        string pluginName,
         string functionName,
         SemanticFunctionConfig functionConfig)
     {
@@ -316,7 +184,7 @@ public sealed class Kernel : IKernel, IDisposable
         }
 
         ISKFunction func = SemanticFunction.FromSemanticConfig(
-            skillName,
+            pluginName,
             functionName,
             functionConfig,
             LoggerFactory
@@ -329,28 +197,82 @@ public sealed class Kernel : IKernel, IDisposable
         return func;
     }
 
-   private static Dictionary<string, ISKFunction> ImportPlugin(object plugin, string pluginName, ILogger logger, ILoggerFactory loggerFactory)
+
+    private IDictionary<string, ISKFunction> LoadPlugin()
     {
-        MethodInfo[] methods = plugin.GetType().GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
-        logger.LogTrace("Importing skill name: {0}. Potential methods found: {1}", pluginName, methods.Length);
+        LoadSemanticPlugin();
 
-        Dictionary<string, ISKFunction> result = new(StringComparer.OrdinalIgnoreCase);
-        foreach (MethodInfo method in methods)
+
+        var plugin = new Dictionary<string, ISKFunction>();
+
+        ILogger? logger = null;
+        //foreach (var pluginDirectoryName in pluginDirectoryNames)
+        //{
+        //Verify.ValidSkillName(pluginDirectoryName);
+        //var pluginDirectory = Path.Combine(pluginsDirectory, pluginDirectoryName);
+        //Verify.DirectoryExists(pluginDirectory);
+
+
+
+
+        //kernel.CreateNewContext();
+
+        return plugin;
+    }
+
+    private void LoadSemanticPlugin()
+    {
+        string[] subDirectories = Directory.GetDirectories(SEMANTIC_PLUGIN_DIRECTORY);
+        LoadSemanticPlugin(subDirectories);
+    }
+
+    private void LoadSemanticPlugin(string[] subDirectories)
+    {
+        foreach (var subDirectory in subDirectories)
         {
-            if (method.GetCustomAttribute<SKFunctionAttribute>() is not null)
-            {
-                ISKFunction function = SKFunction.FromNativeMethod(method, plugin, pluginName, loggerFactory);
-                if (result.ContainsKey(function.Name))
-                {
-                    throw new SKException("Function overloads are not supported, please differentiate function names");
-                }
+            var directoryName = Path.GetFileName(subDirectory);
+            LoadSemanticSubPlugin(directoryName, Directory.GetDirectories(subDirectory));
+        }
+    }
 
-                result.Add(function.Name, function);
+    private void LoadSemanticSubPlugin(string parentDirectoryName, string[] subDirectories)
+    {
+        foreach (var subDirectory in subDirectories)
+        {
+            var directoryName = Path.GetFileName(subDirectory);
+            var promptPath = Path.Combine(subDirectory, SEMANTIC_PLUGIN_PROMPT_FILE);
+            if (File.Exists(promptPath))
+            {
+                LoadSemanticFunction(subDirectory, parentDirectoryName, directoryName);
+            }
+            else
+            {
+                LoadSemanticSubPlugin(parentDirectoryName, Directory.GetDirectories(subDirectory));
             }
         }
+    }
 
-        logger.LogTrace("Methods imported {0}", result.Count);
+    private void LoadSemanticFunction(string directoryPath, string pluginName, string functionName)
+    {
+        var promptPath = Path.Combine(directoryPath, SEMANTIC_PLUGIN_PROMPT_FILE);
+        var configPath = Path.Combine(directoryPath, SEMANTIC_PLUGIN_CONFIG_FILE);
 
-        return result;
+        var config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
+        var template = new PromptTemplate(File.ReadAllText(promptPath), config);
+        var functionConfig = new SemanticFunctionConfig(config, template);
+
+        RegisterSemanticFunction(pluginName, functionName, functionConfig);
+
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            _logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
+            _logger.LogTrace("Registering function {0}.{1}", pluginName, functionName);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_memory is IDisposable mem) { mem.Dispose(); }
+        if (_pluginCollection is IDisposable reg) { reg.Dispose(); }
     }
 }

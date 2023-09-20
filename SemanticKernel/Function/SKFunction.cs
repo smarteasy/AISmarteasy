@@ -8,9 +8,9 @@ public static class SKFunction
     public static ISKFunction FromNativeMethod(
         MethodInfo method,
         object? target = null,
-        string? skillName = null,
+        string? pluginName = null,
         ILoggerFactory? loggerFactory = null)
-            => NativeFunction.FromNativeMethod(method, target, skillName, loggerFactory);
+            => NativeFunction.FromNativeMethod(method, target, pluginName, loggerFactory);
 
     public static ISKFunction FromNativeFunction(
         Delegate nativeFunction,

@@ -168,7 +168,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         ILogger logger)
     {
         Verify.NotNull(delegateFunction);
-        Verify.ValidSkillName(skillName);
+        Verify.ValidPluginName(skillName);
         Verify.ValidFunctionName(functionName);
         Verify.ParametersUniqueness(parameters);
 

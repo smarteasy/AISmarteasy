@@ -111,7 +111,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         ILoggerFactory? loggerFactory = null)
     {
         Verify.NotNull(template);
-        Verify.ValidSkillName(skillName);
+        Verify.ValidPluginName(skillName);
         Verify.ValidFunctionName(functionName);
 
         _logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(SemanticFunction)) : NullLogger.Instance;

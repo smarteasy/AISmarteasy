@@ -23,19 +23,19 @@ public interface IKernel
     IReadOnlyPluginCollection Plugins { get; }
 
     IDelegatingHandlerFactory HttpHandlerFactory { get; }
-    
-    ISKFunction RegisterSemanticFunction(
+
+    void RegisterSemanticFunction(
         string functionName,
         SemanticFunctionConfig functionConfig);
 
-    ISKFunction RegisterSemanticFunction(
-        string skillName,
+    void RegisterSemanticFunction(
+        string pluginName,
         string functionName,
         SemanticFunctionConfig functionConfig);
+
+    void RegisterNativeFunction(ISKFunction function);
 
     ISKFunction RegisterCustomFunction(ISKFunction customFunction);
-
-    IDictionary<string, ISKFunction> ImportPlugin(object pluginInstance, string? pluginName = null);
 
     void RegisterMemory(ISemanticTextMemory memory);
 
@@ -74,6 +74,6 @@ public interface IKernel
     IAIService AIService { get; }
 
     Task<SemanticAnswer> RunCompletion(string prompt);
-    Task<SemanticAnswer> RunSemanticFunction(IKernel kernel, ISKFunction function,
+    Task<SemanticAnswer> RunFunction(IKernel kernel, ISKFunction function,
         IDictionary<string, string> parameters);
 }

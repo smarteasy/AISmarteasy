@@ -28,7 +28,7 @@ internal static class Verify
         }
     }
 
-    internal static void ValidSkillName([NotNull] string? pluginName)
+    internal static void ValidPluginName([NotNull] string? pluginName)
     {
         NotNullOrWhiteSpace(pluginName);
         if (!s_asciiLettersDigitsUnderscoresRegex.IsMatch(pluginName))

@@ -8,11 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="bin\Debug\net7.0\plugins\Native\MathSkill\Math.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SemanticKernel\SemanticKernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="bin\Debug\net7.0\plugins\Fun\Joke\" />
+    <Folder Include="bin\Debug\net7.0\plugins\Semantic\FunSkill\Joke\" />
+    <Folder Include="bin\Debug\net7.0\plugins\Semantic\" />
   </ItemGroup>
 
 </Project>
