@@ -11,14 +11,17 @@ namespace GPTConsole
     {
         public static async Task Main(string[] args)
         {
-            await RunSemanticFunction();
+            await RunTextCompletionSimply();
             Console.ReadLine();
         }
 
 
-        public static async void RunTextCompletionSimply()
+        public static async Task RunTextCompletionSimply()
         {
-            var kernel = KernelBuilder.BuildCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key");
+            var kernel = new KernelBuilder()
+                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key")
+                .Build();
+
             var prompt = "ChatGPT?";
             var answer = await kernel.RunCompletion(prompt);
             Console.WriteLine(answer.Text);
@@ -26,11 +29,14 @@ namespace GPTConsole
 
         public static async Task RunSemanticFunction()
         {
-            var kernel = KernelBuilder.BuildCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key");
-            var plugin = SemanticPluginImporter.ImportFromDirectory(kernel, "Fun");
+            var kernel = new KernelBuilder()
+                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key")
+                .Build();
+
+            var function = kernel.Plugins.GetFunction("Fun", "Joke");
             var parameters = new Dictionary<string, string> { { "input", "time travel to dinosaur age" } };
 
-            var answer = await kernel.RunSemanticFunction(kernel, plugin["Joke"], parameters);
+            var answer = await kernel.RunSemanticFunction(kernel, function, parameters);
             Console.WriteLine(answer.Text);
         }
     }

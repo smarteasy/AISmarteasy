@@ -5,7 +5,10 @@ namespace SemanticKernel.Prompt;
 
 public interface IPromptTemplate
 {
-    IList<ParameterView> GetParameters();
+    Task<string> RenderAsync(
+        string templateText,
+        SKContext context,
+        CancellationToken cancellationToken = default);
 
-    public Task<string> RenderAsync(SKContext context, CancellationToken cancellationToken = default);
+    IList<ParameterView> Parameters { get; }
 }

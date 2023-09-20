@@ -4,11 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 namespace SemanticKernel.Function;
 
 [DebuggerDisplay("Count = 0")]
-internal sealed class NullReadOnlySkillCollection : IReadOnlyPluginCollection
+internal sealed class NullReadOnlyPluginCollection : IReadOnlyPluginCollection
 {
-    public static readonly NullReadOnlySkillCollection Instance = new();
+    public static readonly NullReadOnlyPluginCollection Instance = new();
 
-    /// <inheritdoc/>
     public ISKFunction GetFunction(string functionName)
     {
         return ThrowFunctionNotAvailable(functionName);
@@ -36,7 +35,7 @@ internal sealed class NullReadOnlySkillCollection : IReadOnlyPluginCollection
         return new();
     }
 
-    private NullReadOnlySkillCollection()
+    private NullReadOnlyPluginCollection()
     {
     }
 

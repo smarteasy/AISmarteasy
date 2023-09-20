@@ -6,11 +6,17 @@ namespace SemanticKernel.Prompt;
 
 public sealed class TemplateTokenizer
 {
-    public TemplateTokenizer(ILoggerFactory? loggerFactory = null)
+    public TemplateTokenizer()
+        : this(new NullLoggerFactory())
     {
-        _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
-        _codeTokenizer = new CodeTokenizer(loggerFactory);
     }
+
+    public TemplateTokenizer(ILoggerFactory loggerFactory)
+    {
+        _loggerFactory = loggerFactory;
+        _codeTokenizer = new CodeTokenizer(_loggerFactory);
+    }
+
 
     public IList<Block> Tokenize(string? text)
     {

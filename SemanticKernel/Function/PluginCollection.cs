@@ -34,7 +34,7 @@ public class PluginCollection : IPluginCollection
 
     public ISKFunction GetFunction(string pluginName, string functionName)
     {
-        if (!this.TryGetFunction(pluginName, functionName, out ISKFunction? functionInstance))
+        if (!TryGetFunction(pluginName, functionName, out ISKFunction? functionInstance))
         {
             this.ThrowFunctionNotAvailable(pluginName, functionName);
         }
@@ -50,7 +50,7 @@ public class PluginCollection : IPluginCollection
         Verify.NotNull(pluginName);
         Verify.NotNull(functionName);
 
-        if (this._pluginCollection.TryGetValue(pluginName, out ConcurrentDictionary<string, ISKFunction>? skill))
+        if (_pluginCollection.TryGetValue(pluginName, out ConcurrentDictionary<string, ISKFunction>? skill))
         {
             return skill.TryGetValue(functionName, out availableFunction);
         }

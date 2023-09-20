@@ -16,7 +16,7 @@ public interface IKernel
 
     ISemanticTextMemory Memory { get; }
 
-    IPromptTemplateEngine PromptTemplateEngine { get; }
+    IPromptTemplate PromptTemplate { get; }
 
     PromptTemplateConfig PromptTemplateConfig { get; }
 
@@ -70,9 +70,6 @@ public interface IKernel
         params ISKFunction[] pipeline);
 
     ISKFunction Func(string skillName, string functionName);
-
-    SKContext CreateNewContext();
-    
 
     IAIService AIService { get; }
 

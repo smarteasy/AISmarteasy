@@ -18,21 +18,154 @@ public sealed class Kernel : IKernel, IDisposable
     private ISemanticTextMemory _memory;
     private readonly ILogger _logger;
 
-    public IPromptTemplateEngine PromptTemplateEngine { get; }
+    public ISemanticTextMemory Memory => _memory;
+
+    public IPromptTemplate PromptTemplate { get; }
 
     public PromptTemplateConfig PromptTemplateConfig { get; }
 
     public ILoggerFactory LoggerFactory { get; }
 
-    public ISemanticTextMemory Memory => _memory;
 
     public IReadOnlyPluginCollection Plugins => _pluginCollection;
 
-    public static KernelBuilder Builder => new();
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
     public IAIService AIService { get; }
     public SKContext Context { get; set; }
+
+    public Kernel(IAIService aiService, 
+        ISemanticTextMemory memory, IDelegatingHandlerFactory httpHandlerFactory,
+        ILoggerFactory loggerFactory)
+    {
+        LoggerFactory = loggerFactory;
+        _logger = LoggerFactory.CreateLogger(typeof(Kernel));
+
+        PromptTemplate = new PromptTemplate(LoggerFactory);
+        PromptTemplateConfig = PromptTemplateConfigBuilder.Build();
+
+        //TODO - 내용 정리
+        _pluginCollection = new PluginCollection(LoggerFactory);
+        AIService = aiService;
+
+        //TODO - 세부적인 처리 과정 추적
+
+        HttpHandlerFactory = httpHandlerFactory;
+        _memory = memory;
+
+        ImportPluginFromDirectory();
+
+        Context = new SKContext(
+            plugins: _pluginCollection,
+            loggerFactory: loggerFactory);
+    }
+
+    public IDictionary<string, ISKFunction> ImportPluginFromDirectory()
+    {
+        const string ConfigFile = "config.json";
+        const string PromptFile = "skprompt.txt";
+
+        var pluginsDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins");
+        var plugin = new Dictionary<string, ISKFunction>();
+
+        ILogger? logger = null;
+        //foreach (var pluginDirectoryName in pluginDirectoryNames)
+        //{
+            //Verify.ValidSkillName(pluginDirectoryName);
+            //var pluginDirectory = Path.Combine(pluginsDirectory, pluginDirectoryName);
+            //Verify.DirectoryExists(pluginDirectory);
+
+            string[] directories = Directory.GetDirectories(pluginsDirectory);
+            foreach (string directory in directories)
+            {
+                var functionName = Path.GetFileName(directory);
+                var promptPath = Path.Combine(directory, PromptFile);
+
+                if (!File.Exists(promptPath))
+                {
+                    ImportPlugin(directory);
+                    continue;
+                }
+
+                var config = new PromptTemplateConfig();
+                var configPath = Path.Combine(directory, ConfigFile);
+                if (File.Exists(configPath))
+                {
+                    config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
+                }
+
+                //logger ??= LoggerFactory.CreateLogger(typeof(IKernel));
+                if (logger.IsEnabled(LogLevel.Trace))
+                {
+                    logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
+                }
+
+                var template = new PromptTemplate(File.ReadAllText(promptPath), config);
+                var functionConfig = new SemanticFunctionConfig(config, template);
+
+                if (logger.IsEnabled(LogLevel.Trace))
+                {
+                    logger.LogTrace("Registering function {0}.{1} loaded from {2}", directory, functionName,
+                        directory);
+                }
+
+                //plugin[functionName] =
+                RegisterSemanticFunction(directory, functionName, functionConfig);
+                //}
+            }
+
+            //kernel.CreateNewContext();
+
+        return plugin;
+    }
+
+    private void ImportPlugin(string directory)
+    {
+        const string ConfigFile = "config.json";
+        const string PromptFile = "skprompt.txt";
+
+        var pluginsDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins");
+        ILogger? logger = null;
+
+        string[] subDirectories = Directory.GetDirectories(directory);
+        foreach (var subDirectory in subDirectories)
+        {
+            var functionName = Path.GetFileName(subDirectory);
+            var promptPath = Path.Combine(subDirectory, PromptFile);
+
+            if (!File.Exists(promptPath))
+            {
+                ImportPlugin(subDirectory);
+                continue;
+            }
+
+            var config = new PromptTemplateConfig();
+            var configPath = Path.Combine(subDirectory, ConfigFile);
+            if (File.Exists(configPath))
+            {
+                config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
+            }
+
+            logger ??= LoggerFactory.CreateLogger(typeof(IKernel));
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
+            }
+
+            var template = new PromptTemplate(File.ReadAllText(promptPath), config);
+            var functionConfig = new SemanticFunctionConfig(config, template);
+
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("Registering function {0}.{1} loaded from {2}", subDirectory, functionName,
+                    subDirectory);
+            }
+
+            //plugin[functionName] =
+            RegisterSemanticFunction(directory, functionName, functionConfig);
+            //}
+        }
+    }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)
     {
@@ -54,28 +187,6 @@ public sealed class Kernel : IKernel, IDisposable
 
         var result = new SemanticAnswer(answer.Result);
         return result;
-    }
-
-    public Kernel(
-        IAIService aiService,
-        ISemanticTextMemory memory,
-        IDelegatingHandlerFactory httpHandlerFactory,
-        ILoggerFactory loggerFactory)
-    {
-        LoggerFactory = loggerFactory;
-        _logger = LoggerFactory.CreateLogger(typeof(Kernel));
-
-        PromptTemplateEngine = new PromptTemplateEngine(LoggerFactory);
-        PromptTemplateConfig = PromptTemplateConfigBuilder.Build();
-
-        //TODO - 내용 정리
-        _pluginCollection = new PluginCollection(LoggerFactory);
-        AIService = aiService;
-
-        //TODO - 세부적인 처리 과정 추적
-
-        HttpHandlerFactory = httpHandlerFactory;
-        _memory = memory;
     }
 
     public ISKFunction RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
@@ -190,16 +301,6 @@ public sealed class Kernel : IKernel, IDisposable
     {
         return this.Plugins.GetFunction(skillName, functionName);
     }
-
-    public SKContext CreateNewContext()
-    {
-        Context = new SKContext(
-            plugins: _pluginCollection,
-            loggerFactory: LoggerFactory);
-
-        return Context;
-    }
-
 
     public void Dispose()
     {

@@ -114,15 +114,15 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         Verify.ValidSkillName(skillName);
         Verify.ValidFunctionName(functionName);
 
-        this._logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(SemanticFunction)) : NullLogger.Instance;
+        _logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(SemanticFunction)) : NullLogger.Instance;
 
-        this.PromptTemplate = template;
-        this.Parameters = template.GetParameters();
-        Verify.ParametersUniqueness(this.Parameters);
+        PromptTemplate = template;
+        Parameters = template.Parameters;
+        Verify.ParametersUniqueness(Parameters);
 
-        this.Name = functionName;
-        this.PluginName = skillName;
-        this.Description = description;
+        Name = functionName;
+        PluginName = skillName;
+        Description = description;
     }
 
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
@@ -163,9 +163,9 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
         try
         {
-            var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            context.Variables.Update(answer.Text);
+            //var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+            //var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
+            //context.Variables.Update(answer.Text);
 
             //TODO - 아래 코드를 위와 같이 바꾸었을 때 문제점 파악
             //string renderedPrompt = await this._promptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);

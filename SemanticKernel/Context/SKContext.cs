@@ -28,14 +28,26 @@ public sealed class SKContext
 
     public ILoggerFactory LoggerFactory { get; }
 
-    public SKContext(
-        ContextVariables? variables = null,
-        IReadOnlyPluginCollection? plugins = null,
-        ILoggerFactory? loggerFactory = null)
+    public SKContext()
+    : this(new ContextVariables(), NullReadOnlyPluginCollection.Instance, NullLoggerFactory.Instance)   
     {
-        Variables = variables ?? new();
-        Plugins = plugins ?? NullReadOnlySkillCollection.Instance;
-        LoggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+    }
+
+    public SKContext(ContextVariables variables, IReadOnlyPluginCollection plugins)
+        : this(variables, plugins, NullLoggerFactory.Instance)
+    {
+    }
+    public SKContext(IReadOnlyPluginCollection plugins, ILoggerFactory loggerFactory)
+        : this(new ContextVariables(), plugins, loggerFactory)
+    {
+    }
+    public SKContext(ContextVariables variables,
+        IReadOnlyPluginCollection plugins,
+        ILoggerFactory loggerFactory)
+    {
+        Variables = variables;
+        Plugins = plugins;
+        LoggerFactory = loggerFactory;
         _culture = CultureInfo.CurrentCulture;
     }
 

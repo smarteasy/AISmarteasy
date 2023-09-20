@@ -5,14 +5,14 @@ using SemanticKernel.Prompt;
 
 namespace TestSemanticKernel
 {
-    public class PromptTemplateEngineTest
+    public class PromptTemplateTest
     {
-        private PromptTemplateEngine? _target;
+        private PromptTemplate? _target;
 
         [SetUp]
         public void Setup()
         {
-            _target = new PromptTemplateEngine();
+            _target = new PromptTemplate();
         }
 
 

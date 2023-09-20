@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
+using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -12,7 +13,7 @@ namespace SemanticKernel;
 
 public sealed class KernelBuilder
 {
-    private readonly IPromptTemplateEngine _promptTemplateEngine;
+    private readonly IPromptTemplate _promptTemplateEngine;
     private Func<ISemanticTextMemory> _memoryFactory = () => NullMemory.Instance;
     private ILoggerFactory _loggerFactory = NullLoggerFactory.Instance;
     private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
@@ -22,7 +23,7 @@ public sealed class KernelBuilder
 
     public KernelBuilder()
     {
-        _promptTemplateEngine = new PromptTemplateEngine(_loggerFactory);
+        _promptTemplateEngine = new PromptTemplate(_loggerFactory);
     }
 
     public IKernel Build()
@@ -33,37 +34,27 @@ public sealed class KernelBuilder
         {
             kernel.UseMemory(_memoryStorageFactory.Invoke());
         }
-
+  
         return kernel;
     }
 
-    public static IKernel BuildCompletionService(AIServiceTypeKind aiService, string apiKey)
+    public KernelBuilder WithCompletionService(AIServiceTypeKind aiServiceType, string apiKey)
     {
-        var model = ModelStringProvider.Provide(aiService);
+        var model = ModelStringProvider.Provide(aiServiceType);
 
         var kernelBuilder = new KernelBuilder();
-        IKernel kernel;
 
-        switch (aiService)
+        switch (aiServiceType)
         {
             case AIServiceTypeKind.OpenAITextCompletion:
-                kernel = kernelBuilder
-                    .WithOpenAITextCompletionService(model, apiKey)
-                    .Build();
+                kernelBuilder
+                    .WithOpenAITextCompletionService(model, apiKey);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(aiService), aiService, null);
+                throw new ArgumentOutOfRangeException(nameof(aiServiceType), aiServiceType, null);
         }
 
-        return kernel;
-    }
-
-
-    public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
-    {
-        Verify.NotNull(loggerFactory);
-        _loggerFactory = loggerFactory;
-        return this;
+        return kernelBuilder;
     }
 
     public KernelBuilder WithMemory(ISemanticTextMemory memory)
@@ -113,6 +104,13 @@ public sealed class KernelBuilder
     private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
         _service = new OpenAITextCompletion(model, apiKey);
+        return this;
+    }
+
+    public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
+    {
+        Verify.NotNull(loggerFactory);
+        _loggerFactory = loggerFactory;
         return this;
     }
 }
