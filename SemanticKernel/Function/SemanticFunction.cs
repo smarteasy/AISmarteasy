@@ -163,9 +163,9 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
         try
         {
-            //var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            //var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            //context.Variables.Update(answer.Text);
+            var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+            var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
+            context.Variables.Update(answer.Text);
 
             //TODO - 아래 코드를 위와 같이 바꾸었을 때 문제점 파악
             //string renderedPrompt = await this._promptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);

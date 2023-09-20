@@ -57,10 +57,10 @@ public class PromptTemplate : IPromptTemplate
         }
     }
 
-    public async Task<string> RenderAsync(string template, SKContext context, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(SKContext context, CancellationToken cancellationToken = default)
     {
-        _logger.LogTrace("Rendering string template: {0}", template);
-        var blocks = ExtractBlocks(template);
+       _logger.LogTrace("Rendering string template: {0}", _template);
+        var blocks = ExtractBlocks(_template);
         return await RenderAsync(blocks, context, cancellationToken).ConfigureAwait(false);
     }
 

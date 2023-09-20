@@ -6,7 +6,6 @@ namespace SemanticKernel.Prompt;
 public interface IPromptTemplate
 {
     Task<string> RenderAsync(
-        string templateText,
         SKContext context,
         CancellationToken cancellationToken = default);
 
