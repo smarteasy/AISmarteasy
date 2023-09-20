@@ -78,12 +78,12 @@ public sealed class Kernel : IKernel, IDisposable
             string[] directories = Directory.GetDirectories(pluginsDirectory);
             foreach (string directory in directories)
             {
-                var functionName = Path.GetFileName(directory);
+                var directoryName = Path.GetFileName(directory);
                 var promptPath = Path.Combine(directory, PromptFile);
 
                 if (!File.Exists(promptPath))
                 {
-                    ImportPlugin(directory);
+                    ImportPlugin(directoryName, directory);
                     continue;
                 }
 
@@ -97,7 +97,7 @@ public sealed class Kernel : IKernel, IDisposable
                 //logger ??= LoggerFactory.CreateLogger(typeof(IKernel));
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
+                    logger.LogTrace("Config {0}: {1}", directoryName, config.ToJson());
                 }
 
                 var template = new PromptTemplate(File.ReadAllText(promptPath), config);
@@ -105,12 +105,12 @@ public sealed class Kernel : IKernel, IDisposable
 
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace("Registering function {0}.{1} loaded from {2}", directory, functionName,
+                    logger.LogTrace("Registering function {0}.{1} loaded from {2}", directory, directoryName,
                         directory);
                 }
 
                 //plugin[functionName] =
-                RegisterSemanticFunction(directory, functionName, functionConfig);
+                RegisterSemanticFunction(directory, directoryName, functionConfig);
                 //}
             }
 
@@ -119,12 +119,11 @@ public sealed class Kernel : IKernel, IDisposable
         return plugin;
     }
 
-    private void ImportPlugin(string directory)
+    private void ImportPlugin(string pluginName, string directory)
     {
         const string ConfigFile = "config.json";
         const string PromptFile = "skprompt.txt";
 
-        var pluginsDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins");
         ILogger? logger = null;
 
         string[] subDirectories = Directory.GetDirectories(directory);
@@ -161,9 +160,7 @@ public sealed class Kernel : IKernel, IDisposable
                     subDirectory);
             }
 
-            //plugin[functionName] =
-            RegisterSemanticFunction(directory, functionName, functionConfig);
-            //}
+            RegisterSemanticFunction(pluginName, functionName, functionConfig);
         }
     }
 

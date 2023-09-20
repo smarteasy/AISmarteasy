@@ -19,7 +19,7 @@ namespace GPTConsole
         public static async Task RunTextCompletionSimply()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key")
+                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "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")
                 .Build();
 
             var prompt = "ChatGPT?";
@@ -30,7 +30,7 @@ namespace GPTConsole
         public static async Task RunSemanticFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "api key")
+                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, "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")
                 .Build();
 
             var function = kernel.Plugins.GetFunction("Fun", "Joke");
