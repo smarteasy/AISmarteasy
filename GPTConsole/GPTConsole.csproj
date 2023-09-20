@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="bin\Debug\net7.0\plugins\Native\MathSkill\Math.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\MathSkill\Math.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="bin\Debug\net7.0\plugins\Semantic\FunSkill\Joke\" />
-    <Folder Include="bin\Debug\net7.0\plugins\Semantic\" />
+    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\FunSkill\Joke\" />
+    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
 {
     public override BlockTypeKind Type => BlockTypeKind.FunctionId;
 
-    internal string SkillName { get; } = string.Empty;
+    internal string PluginName { get; } = string.Empty;
 
     internal string FunctionName { get; } = string.Empty;
 
@@ -26,7 +26,7 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
 
         if (functionNameParts.Length == 2)
         {
-            SkillName = functionNameParts[0];
+            PluginName = functionNameParts[0];
             FunctionName = functionNameParts[1];
             return;
         }

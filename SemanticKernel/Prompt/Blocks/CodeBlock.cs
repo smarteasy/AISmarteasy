@@ -81,7 +81,7 @@ public sealed class CodeBlock : Block, ICodeRendering
             throw new SKException("Skill collection not found in the context");
         }
 
-        if (!GetFunctionFromSkillCollection(context.Plugins!, fBlock, out ISKFunction? function))
+        if (!GetFunctionFromPluginCollection(context.Plugins!, fBlock, out ISKFunction? function))
         {
             var errorMsg = $"Function `{fBlock.Content}` not found";
             Logger.LogError(errorMsg);
@@ -108,17 +108,12 @@ public sealed class CodeBlock : Block, ICodeRendering
         return contextClone.Result;
     }
 
-    private bool GetFunctionFromSkillCollection(
-        IReadOnlyPluginCollection skills,
+    private bool GetFunctionFromPluginCollection(
+        IReadOnlyPluginCollection plugins,
         FunctionIdBlock functionBlock,
         out ISKFunction? function)
     {
-        if (string.IsNullOrEmpty(functionBlock.SkillName))
-        {
-            return skills.TryGetFunction(functionBlock.FunctionName, out function);
-        }
-
-        return skills.TryGetFunction(functionBlock.SkillName, functionBlock.FunctionName, out function);
+        return plugins.TryGetFunction(functionBlock.PluginName, functionBlock.FunctionName, out function);
     }
 
     private bool IsValidFunctionCall(out string errorMsg)

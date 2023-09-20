@@ -32,6 +32,7 @@ public sealed class Kernel : IKernel, IDisposable
 
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
+
     public IAIService AIService { get; }
     public SKContext Context { get; set; }
 
@@ -56,7 +57,8 @@ public sealed class Kernel : IKernel, IDisposable
         HttpHandlerFactory = httpHandlerFactory;
         _memory = memory;
 
-        LoadPlugin();
+
+        LoadSemanticPlugin(); 
 
         Context = new SKContext(
             plugins: _pluginCollection,
@@ -85,16 +87,6 @@ public sealed class Kernel : IKernel, IDisposable
         return result;
     }
 
-    public void RegisterSemanticFunction(string functionName, SemanticFunctionConfig functionConfig)
-    {
-        RegisterSemanticFunction(PluginCollection.GlobalPlugin, functionName, functionConfig);
-    }
-
-    public void RegisterNativeFunction(ISKFunction function)
-    {
-        _pluginCollection.AddFunction(function);
-    }
-
     public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
     {
         Verify.ValidPluginName(pluginName);
@@ -104,11 +96,16 @@ public sealed class Kernel : IKernel, IDisposable
         _pluginCollection.AddFunction(function);
     }
 
+    public void RegisterNativeFunction(ISKFunction function)
+    {
+        _pluginCollection.AddFunction(function);
+    }
+
     public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
     {
         Verify.NotNull(customFunction);
 
-        customFunction.SetDefaultSkillCollection(this.Plugins);
+        customFunction.SetDefaultSkillCollection(Plugins);
         _pluginCollection.AddFunction(customFunction);
 
         return customFunction;
@@ -168,11 +165,6 @@ public sealed class Kernel : IKernel, IDisposable
         return context;
     }
 
-    public ISKFunction Func(string pluginName, string functionName)
-    {
-        return this.Plugins.GetFunction(pluginName, functionName);
-    }
-
     private ISKFunction CreateSemanticFunction(
         string pluginName,
         string functionName,
@@ -195,29 +187,6 @@ public sealed class Kernel : IKernel, IDisposable
         func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
 
         return func;
-    }
-
-
-    private IDictionary<string, ISKFunction> LoadPlugin()
-    {
-        LoadSemanticPlugin();
-
-
-        var plugin = new Dictionary<string, ISKFunction>();
-
-        ILogger? logger = null;
-        //foreach (var pluginDirectoryName in pluginDirectoryNames)
-        //{
-        //Verify.ValidSkillName(pluginDirectoryName);
-        //var pluginDirectory = Path.Combine(pluginsDirectory, pluginDirectoryName);
-        //Verify.DirectoryExists(pluginDirectory);
-
-
-
-
-        //kernel.CreateNewContext();
-
-        return plugin;
     }
 
     private void LoadSemanticPlugin()

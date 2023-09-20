@@ -41,7 +41,7 @@ public class NativePluginLoader
         }
     }
 
-    private void LoadFunction(string plugin, string pluginPath,string[] fileNames)
+    private void LoadFunction(string plugin, string pluginPath, string[] fileNames)
     {
         Dictionary<string, ISKFunction> functions = new(StringComparer.OrdinalIgnoreCase);
         var logger = _kernel.LoggerFactory.CreateLogger("NativeFunction");

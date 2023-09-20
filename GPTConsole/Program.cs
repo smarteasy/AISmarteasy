@@ -4,6 +4,7 @@ using SemanticKernel.Service;
 using SemanticKernel;
 using SemanticKernel.Function;
 using Azure;
+using SemanticKernel.Context;
 
 namespace GPTConsole
 {
@@ -53,6 +54,16 @@ namespace GPTConsole
             var parameters = new Dictionary<string, string> { { "input", "12" } };
 
             var answer = await kernel.RunFunction(kernel, function, parameters);
+            Console.WriteLine(answer.Text);
+            
+            parameters = new Dictionary<string, string>
+            {
+                { "first", "12.34" },
+                { "second", "56.78" }
+            };
+
+            function = kernel.Plugins.GetFunction("MathSkill", "Multiply");
+            answer = await kernel.RunFunction(kernel, function, parameters);
             Console.WriteLine(answer.Text);
         }
     }

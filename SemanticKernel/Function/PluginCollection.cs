@@ -6,12 +6,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace SemanticKernel.Function;
 
-[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
-[DebuggerTypeProxy(typeof(ReadOnlyPluginCollectionTypeProxy))]
-[DebuggerDisplay("{DebuggerDisplay,nq}")]
 public class PluginCollection : IPluginCollection
 {
+    private readonly ILogger _logger;
     internal const string GlobalPlugin = "_GLOBAL_FUNCTIONS_";
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ISKFunction>> _pluginCollection;
 
     public PluginCollection(ILoggerFactory? loggerFactory = null)
     {
@@ -29,21 +28,15 @@ public class PluginCollection : IPluginCollection
         return this;
     }
 
-    public ISKFunction GetFunction(string functionName) =>
-        this.GetFunction(GlobalPlugin, functionName);
-
     public ISKFunction GetFunction(string pluginName, string functionName)
     {
-        if (!TryGetFunction(pluginName, functionName, out ISKFunction? functionInstance))
+        if (!TryGetFunction(pluginName, functionName, out ISKFunction? function))
         {
-            this.ThrowFunctionNotAvailable(pluginName, functionName);
+            ThrowFunctionNotAvailable(pluginName, functionName);
         }
 
-        return functionInstance;
+        return function;
     }
-
-    public bool TryGetFunction(string functionName, [NotNullWhen(true)] out ISKFunction? availableFunction) =>
-        this.TryGetFunction(GlobalPlugin, functionName, out availableFunction);
 
     public bool TryGetFunction(string pluginName, string functionName, [NotNullWhen(true)] out ISKFunction? availableFunction)
     {
@@ -67,11 +60,11 @@ public class PluginCollection : IPluginCollection
         {
             foreach (var plugin in this._pluginCollection)
             {
-                foreach (KeyValuePair<string, ISKFunction> f in plugin.Value)
+                foreach (KeyValuePair<string, ISKFunction> function in plugin.Value)
                 {
-                    if (f.Value.IsSemantic ? includeSemantic : includeNative)
+                    if (function.Value.IsSemantic ? includeSemantic : includeNative)
                     {
-                        result.AddFunction(f.Value.Describe());
+                        result.AddFunction(function.Value.Describe());
                     }
                 }
             }
@@ -80,17 +73,9 @@ public class PluginCollection : IPluginCollection
         return result;
     }
 
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    internal string DebuggerDisplay => $"Count = {_pluginCollection.Count}";
-
-    [DoesNotReturn]
     private void ThrowFunctionNotAvailable(string pluginName, string functionName)
     {
         this._logger.LogError("Function not available: skill:{0} function:{1}", pluginName, functionName);
         throw new SKException($"Function not available {pluginName}.{functionName}");
     }
-
-    private readonly ILogger _logger;
-
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ISKFunction>> _pluginCollection;
 }

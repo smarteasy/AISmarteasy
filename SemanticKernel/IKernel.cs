@@ -25,15 +25,11 @@ public interface IKernel
     IDelegatingHandlerFactory HttpHandlerFactory { get; }
 
     void RegisterSemanticFunction(
-        string functionName,
-        SemanticFunctionConfig functionConfig);
-
-    void RegisterSemanticFunction(
         string pluginName,
         string functionName,
         SemanticFunctionConfig functionConfig);
 
-    void RegisterNativeFunction(ISKFunction function);
+   void RegisterNativeFunction(ISKFunction function);
 
     ISKFunction RegisterCustomFunction(ISKFunction customFunction);
 
@@ -69,11 +65,10 @@ public interface IKernel
         CancellationToken cancellationToken,
         params ISKFunction[] pipeline);
 
-    ISKFunction Func(string skillName, string functionName);
-
     IAIService AIService { get; }
 
     Task<SemanticAnswer> RunCompletion(string prompt);
+
     Task<SemanticAnswer> RunFunction(IKernel kernel, ISKFunction function,
         IDictionary<string, string> parameters);
 }
