@@ -69,6 +69,7 @@ public interface IKernel
 
     Task<SemanticAnswer> RunCompletion(string prompt);
 
-    Task<SemanticAnswer> RunFunction(IKernel kernel, ISKFunction function,
-        IDictionary<string, string> parameters);
+    Task<SemanticAnswer> RunFunction(ISKFunction function);
+
+    Task<SemanticAnswer> RunFunction(ISKFunction function, IDictionary<string, string> parameters);
 }

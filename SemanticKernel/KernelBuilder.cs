@@ -34,7 +34,9 @@ public sealed class KernelBuilder
         {
             kernel.UseMemory(_memoryStorageFactory.Invoke());
         }
-  
+
+        KernelProvider.Kernel = kernel;
+
         return kernel;
     }
 

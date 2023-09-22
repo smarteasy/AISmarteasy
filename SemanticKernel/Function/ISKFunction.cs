@@ -18,7 +18,6 @@ public interface ISKFunction
     FunctionView Describe();
 
     Task<SKContext> InvokeAsync(
-        IKernel kernel,
         CompleteRequestSettings? settings = null,
         CancellationToken cancellationToken = default);
 

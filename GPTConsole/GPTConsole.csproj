@@ -8,16 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="bin\Debug\net7.0\Plugins\**" />
+    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\**" />
+    <None Remove="bin\Debug\net7.0\Plugins\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="bin\Debug\net7.0\Plugins\Native\MathSkill\Math.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\OrchestratorSkill\Orchestrator.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SemanticKernel\SemanticKernel.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\FunSkill\Joke\" />
-    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\" />
   </ItemGroup>
 
 </Project>

@@ -60,10 +60,10 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     }
 
     public async Task<SKContext> InvokeAsync(
-        IKernel kernel, 
         CompleteRequestSettings? settings,
         CancellationToken cancellationToken = default)
     {
+        var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
         return await RunPromptAsync(kernel.AIService, settings, kernel.Context, cancellationToken).ConfigureAwait(false);
     }

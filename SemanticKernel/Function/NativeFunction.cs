@@ -32,7 +32,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     public static ISKFunction FromNativeMethod(
         MethodInfo method,
         object? target = null,
-        string? skillName = null,
+        string? pluginName = null,
         ILoggerFactory? loggerFactory = null)
     {
         if (!method.IsStatic && target is null)
@@ -40,9 +40,9 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
             throw new ArgumentNullException(nameof(target), "Argument cannot be null for non-static methods");
         }
 
-        if (string.IsNullOrWhiteSpace(skillName))
+        if (string.IsNullOrWhiteSpace(pluginName))
         {
-            skillName = PluginCollection.GlobalPlugin;
+            pluginName = PluginCollection.GlobalPlugin;
         }
 
         var logger = loggerFactory?.CreateLogger(method.DeclaringType ?? typeof(SKFunction)) ?? NullLogger.Instance;
@@ -51,7 +51,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         return new NativeFunction(
             delegateFunction: methodDetails.Function,
             parameters: methodDetails.Parameters,
-            skillName: skillName!,
+            pluginName: pluginName!,
             functionName: methodDetails.Name,
             description: methodDetails.Description,
             logger: logger);
@@ -81,7 +81,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
             delegateFunction: methodDetails.Function,
             parameters: parameters?.ToList() ?? (IList<ParameterView>)Array.Empty<ParameterView>(),
             description: description,
-            skillName: pluginName!,
+            pluginName: pluginName!,
             functionName: functionName,
             logger: logger);
     }
@@ -90,22 +90,21 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     {
         return new FunctionView
         {
-            IsSemantic = this.IsSemantic,
-            Name = this.Name,
-            SkillName = this.PluginName,
-            Description = this.Description,
-            Parameters = this.Parameters,
+            IsSemantic = IsSemantic,
+            Name = Name,
+            SkillName = PluginName,
+            Description = Description,
+            Parameters = Parameters,
         };
     }
 
     public async Task<SKContext> InvokeAsync(
-        IKernel kernel,
         CompleteRequestSettings? settings = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _function(null, settings, kernel.Context, cancellationToken).ConfigureAwait(false);
+            return await _function(null, settings, KernelProvider.Kernel.Context, cancellationToken).ConfigureAwait(false);
         }
         catch (System.Exception e) when (!e.IsCriticalException())
         {
@@ -162,13 +161,13 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     internal NativeFunction(
         Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> delegateFunction,
         IList<ParameterView> parameters,
-        string skillName,
+        string pluginName,
         string functionName,
         string description,
         ILogger logger)
     {
         Verify.NotNull(delegateFunction);
-        Verify.ValidPluginName(skillName);
+        Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(functionName);
         Verify.ParametersUniqueness(parameters);
 
@@ -178,7 +177,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         Parameters = parameters;
 
         Name = functionName;
-        PluginName = skillName;
+        PluginName = pluginName;
         Description = description;
     }
 

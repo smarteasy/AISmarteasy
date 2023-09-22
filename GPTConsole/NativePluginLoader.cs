@@ -10,25 +10,23 @@ public class NativePluginLoader
 {
     private readonly IKernel _kernel;
 
-    public NativePluginLoader(IKernel kernel)
+    public NativePluginLoader()
     {
-        _kernel = kernel;
+        _kernel = KernelProvider.Kernel;
     }
     
     public void Load()
     {
         var nativeDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "native");
-        string[] subDirectories = Directory.GetDirectories(nativeDirectory);
-        Load("Plugins", subDirectories);
+        var pluginPath = "Plugins";
+
+        Load(pluginPath, Directory.GetDirectories(nativeDirectory));
     }
 
     private void Load(string pluginPath, string[] subDirectories)
     {
         foreach (var subDirectory in subDirectories)
         {
-            var directoryName = Path.GetFileName(subDirectory);
-            pluginPath += "." + directoryName;
-
             var fileNames = new List<string>();
             foreach (var file in Directory.GetFiles(subDirectory))
             {
@@ -36,13 +34,23 @@ public class NativePluginLoader
                 fileNames.Add(fileNameWithExt.Substring(0, fileNameWithExt.Length - 3));
             }
 
-            Load(pluginPath, Directory.GetDirectories(subDirectory));
-            LoadFunction(directoryName, pluginPath, fileNames.ToArray());
+            var directoryName = Path.GetFileName(subDirectory);
+
+            if (fileNames.Count == 0)
+            {
+                pluginPath += "." + directoryName;
+                Load(pluginPath, Directory.GetDirectories(subDirectory));
+            }
+            else
+            {
+                LoadFunction(directoryName, pluginPath, fileNames.ToArray());
+            }
         }
     }
 
     private void LoadFunction(string plugin, string pluginPath, string[] fileNames)
     {
+        pluginPath += "." + plugin;
         Dictionary<string, ISKFunction> functions = new(StringComparer.OrdinalIgnoreCase);
         var logger = _kernel.LoggerFactory.CreateLogger("NativeFunction");
 

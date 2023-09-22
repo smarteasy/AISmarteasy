@@ -71,8 +71,12 @@ public sealed class Kernel : IKernel, IDisposable
         return AIService.RunCompletion(prompt, requestSetting);
     }
 
-    public async Task<SemanticAnswer> RunFunction(IKernel kernel, ISKFunction function,
-        IDictionary<string, string> parameters)
+    public Task<SemanticAnswer> RunFunction(ISKFunction function)
+    {
+        return RunFunction(function, new Dictionary<string, string>());
+    }
+
+    public async Task<SemanticAnswer> RunFunction(ISKFunction function, IDictionary<string, string> parameters)
     {
         var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         
@@ -81,7 +85,7 @@ public sealed class Kernel : IKernel, IDisposable
             Context.Variables[parameter.Key] = parameter.Value;
         }
 
-        var answer= await function.InvokeAsync(kernel, requestSetting);
+        var answer= await function.InvokeAsync(requestSetting);
 
         var result = new SemanticAnswer(answer.Result);
         return result;
@@ -197,31 +201,28 @@ public sealed class Kernel : IKernel, IDisposable
 
     private void LoadSemanticPlugin(string[] subDirectories)
     {
-        foreach (var subDirectory in subDirectories)
-        {
-            var directoryName = Path.GetFileName(subDirectory);
-            LoadSemanticSubPlugin(directoryName, Directory.GetDirectories(subDirectory));
-        }
+        LoadSemanticSubPlugin(SEMANTIC_PLUGIN_DIRECTORY, subDirectories);
     }
 
     private void LoadSemanticSubPlugin(string parentDirectoryName, string[] subDirectories)
     {
         foreach (var subDirectory in subDirectories)
         {
-            var directoryName = Path.GetFileName(subDirectory);
             var promptPath = Path.Combine(subDirectory, SEMANTIC_PLUGIN_PROMPT_FILE);
             if (File.Exists(promptPath))
             {
-                LoadSemanticFunction(subDirectory, parentDirectoryName, directoryName);
+                var pluginName = Path.GetFileName(parentDirectoryName);
+                var functionName = Path.GetFileName(subDirectory);
+                LoadSemanticFunction(pluginName, functionName, subDirectory);
             }
             else
             {
-                LoadSemanticSubPlugin(parentDirectoryName, Directory.GetDirectories(subDirectory));
+                LoadSemanticSubPlugin(subDirectory, Directory.GetDirectories(subDirectory));
             }
         }
     }
 
-    private void LoadSemanticFunction(string directoryPath, string pluginName, string functionName)
+    private void LoadSemanticFunction(string pluginName, string functionName, string directoryPath)
     {
         var promptPath = Path.Combine(directoryPath, SEMANTIC_PLUGIN_PROMPT_FILE);
         var configPath = Path.Combine(directoryPath, SEMANTIC_PLUGIN_CONFIG_FILE);
