@@ -28,11 +28,6 @@ public sealed class SKContext
 
     public ILoggerFactory LoggerFactory { get; }
 
-    public SKContext()
-    : this(new ContextVariables(), NullReadOnlyPluginCollection.Instance, NullLoggerFactory.Instance)   
-    {
-    }
-
     public SKContext(ContextVariables variables, IReadOnlyPluginCollection plugins)
         : this(variables, plugins, NullLoggerFactory.Instance)
     {

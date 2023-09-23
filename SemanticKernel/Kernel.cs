@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
@@ -7,6 +8,7 @@ using SemanticKernel.Handler;
 using SemanticKernel.Memory;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SemanticKernel;
 
@@ -91,82 +93,30 @@ public sealed class Kernel : IKernel, IDisposable
         return result;
     }
 
-    public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
+
+    public async Task<SemanticAnswer> RunPipeline(params ISKFunction[] pipeline)
     {
-        Verify.ValidPluginName(pluginName);
-        Verify.ValidFunctionName(functionName);
-
-        ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
-        _pluginCollection.AddFunction(function);
-    }
-
-    public void RegisterNativeFunction(ISKFunction function)
-    {
-        _pluginCollection.AddFunction(function);
-    }
-
-    public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
-    {
-        Verify.NotNull(customFunction);
-
-        customFunction.SetDefaultSkillCollection(Plugins);
-        _pluginCollection.AddFunction(customFunction);
-
-        return customFunction;
-    }
-
-    public void RegisterMemory(ISemanticTextMemory memory)
-    {
-        _memory = memory;
-    }
-
-    public Task<SKContext> RunAsync(ISKFunction skFunction,
-        ContextVariables? variables = null,
-        CancellationToken cancellationToken = default)
-        => this.RunAsync(variables ?? new(), cancellationToken, skFunction);
-
-    public Task<SKContext> RunAsync(params ISKFunction[] pipeline)
-        => this.RunAsync(new ContextVariables(), pipeline);
-
-    public Task<SKContext> RunAsync(string input, params ISKFunction[] pipeline)
-        => this.RunAsync(new ContextVariables(input), pipeline);
-
-    public Task<SKContext> RunAsync(ContextVariables variables, params ISKFunction[] pipeline)
-        => this.RunAsync(variables, CancellationToken.None, pipeline);
-
-    public Task<SKContext> RunAsync(CancellationToken cancellationToken, params ISKFunction[] pipeline)
-        => this.RunAsync(new ContextVariables(), cancellationToken, pipeline);
-
-    public Task<SKContext> RunAsync(string input, CancellationToken cancellationToken, params ISKFunction[] pipeline)
-        => this.RunAsync(new ContextVariables(input), cancellationToken, pipeline);
-
-    public async Task<SKContext> RunAsync(ContextVariables variables, CancellationToken cancellationToken, params ISKFunction[] pipeline)
-    {
-        var context = new SKContext(
-            variables,
-            _pluginCollection,
-            LoggerFactory);
-
+        var variables = Context.Variables;
         int pipelineStepCount = 0;
+        SemanticAnswer answer = new SemanticAnswer(string.Empty);
 
-        foreach (ISKFunction f in pipeline)
+        foreach (ISKFunction function in pipeline)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             try
             {
-                //context = await f.InvokeAsync(context, cancellationToken: cancellationToken).ConfigureAwait(false);
+                answer = await RunFunction(function);
             }
             catch (System.Exception ex)
             {
-                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", f.PluginName, f.Name, pipelineStepCount, ex.Message);
+                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", function.PluginName, function.Name, pipelineStepCount, ex.Message);
                 throw;
             }
 
             pipelineStepCount++;
         }
 
-        return context;
+        var result = new SemanticAnswer(answer.Text);
+        return result;
     }
 
     private ISKFunction CreateSemanticFunction(
@@ -238,6 +188,36 @@ public sealed class Kernel : IKernel, IDisposable
             _logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
             _logger.LogTrace("Registering function {0}.{1}", pluginName, functionName);
         }
+    }
+
+
+    public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
+    {
+        Verify.ValidPluginName(pluginName);
+        Verify.ValidFunctionName(functionName);
+
+        ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
+        _pluginCollection.AddFunction(function);
+    }
+
+    public void RegisterNativeFunction(ISKFunction function)
+    {
+        _pluginCollection.AddFunction(function);
+    }
+
+    public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
+    {
+        Verify.NotNull(customFunction);
+
+        customFunction.SetDefaultSkillCollection(Plugins);
+        _pluginCollection.AddFunction(customFunction);
+
+        return customFunction;
+    }
+
+    public void RegisterMemory(ISemanticTextMemory memory)
+    {
+        _memory = memory;
     }
 
     public void Dispose()

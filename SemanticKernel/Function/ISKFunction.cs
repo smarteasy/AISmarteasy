@@ -21,7 +21,7 @@ public interface ISKFunction
         CompleteRequestSettings? settings = null,
         CancellationToken cancellationToken = default);
 
-    ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills);
+    ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection plugins);
 
     ISKFunction SetAIService(Func<ITextCompletion> serviceFactory);
 

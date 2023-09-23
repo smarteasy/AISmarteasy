@@ -9,8 +9,14 @@
 
   <ItemGroup>
     <Compile Remove="bin\Debug\net7.0\Plugins\**" />
+    <Compile Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
+    <Compile Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
     <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\**" />
+    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
+    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
     <None Remove="bin\Debug\net7.0\Plugins\**" />
+    <None Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
+    <None Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +26,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SemanticKernel\SemanticKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -35,7 +34,7 @@ public class PluginCollection : IPluginCollection
             ThrowFunctionNotAvailable(pluginName, functionName);
         }
 
-        return function;
+        return function!;
     }
 
     public bool TryGetFunction(string pluginName, string functionName, [NotNullWhen(true)] out ISKFunction? availableFunction)
@@ -75,7 +74,7 @@ public class PluginCollection : IPluginCollection
 
     private void ThrowFunctionNotAvailable(string pluginName, string functionName)
     {
-        this._logger.LogError("Function not available: skill:{0} function:{1}", pluginName, functionName);
+        _logger.LogError("Function not available: skill:{0} function:{1}", pluginName, functionName);
         throw new SKException($"Function not available {pluginName}.{functionName}");
     }
 }

@@ -35,35 +35,6 @@ public interface IKernel
 
     void RegisterMemory(ISemanticTextMemory memory);
 
-    Task<SKContext> RunAsync(
-        ISKFunction skFunction,
-        ContextVariables? variables = null,
-        CancellationToken cancellationToken = default);
-
-    Task<SKContext> RunAsync(
-        params ISKFunction[] pipeline);
-
-    Task<SKContext> RunAsync(
-        string input,
-        params ISKFunction[] pipeline);
-
-    Task<SKContext> RunAsync(
-        ContextVariables variables,
-        params ISKFunction[] pipeline);
-
-    Task<SKContext> RunAsync(
-        CancellationToken cancellationToken,
-        params ISKFunction[] pipeline);
-
-    Task<SKContext> RunAsync(
-        string input,
-        CancellationToken cancellationToken,
-        params ISKFunction[] pipeline);
-
-    Task<SKContext> RunAsync(
-        ContextVariables variables,
-        CancellationToken cancellationToken,
-        params ISKFunction[] pipeline);
 
     IAIService AIService { get; }
 
@@ -72,4 +43,6 @@ public interface IKernel
     Task<SemanticAnswer> RunFunction(ISKFunction function);
 
     Task<SemanticAnswer> RunFunction(ISKFunction function, IDictionary<string, string> parameters);
+
+    Task<SemanticAnswer> RunPipeline(params ISKFunction[] pipeline);
 }
