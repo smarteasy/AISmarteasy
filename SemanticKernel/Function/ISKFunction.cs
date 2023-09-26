@@ -11,19 +11,15 @@ public interface ISKFunction
 
     string Description { get; }
 
-    bool IsSemantic { get; }
-
-    CompleteRequestSettings RequestSettings { get; }
+    AIRequestSettings RequestSettings { get; }
 
     FunctionView Describe();
 
     Task<SKContext> InvokeAsync(
-        CompleteRequestSettings? settings = null,
+        AIRequestSettings? settings = null,
         CancellationToken cancellationToken = default);
 
-    ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection plugins);
+    ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins);
 
-    ISKFunction SetAIService(Func<ITextCompletion> serviceFactory);
-
-    ISKFunction SetAIConfiguration(CompleteRequestSettings settings);
+    ISKFunction SetAIConfiguration(AIRequestSettings settings);
 }

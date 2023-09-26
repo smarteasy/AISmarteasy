@@ -7,11 +7,9 @@ public sealed class FunctionView
 {
     public string Name { get; set; } = string.Empty;
 
-    public string SkillName { get; set; } = string.Empty;
+    public string PluginName { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
-
-    public bool IsSemantic { get; set; }
 
     public bool IsAsynchronous { get; set; }
 
@@ -23,20 +21,41 @@ public sealed class FunctionView
 
     public FunctionView(
         string name,
-        string skillName,
+        string pluginName,
         string description,
         IList<ParameterView> parameters,
-        bool isSemantic,
         bool isAsynchronous = true)
     {
         Name = name;
-        SkillName = skillName;
+        PluginName = pluginName;
         Description = description;
         Parameters = parameters;
-        IsSemantic = isSemantic;
         IsAsynchronous = isAsynchronous;
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string DebuggerDisplay => $"{Name} ({Description})";
+
+    public string ToManualString()
+    {
+        var inputs = string.Join("\n", Parameters.Select(parameter =>
+        {
+            var defaultValueString = string.IsNullOrEmpty(parameter.DefaultValue) ? string.Empty : $" (default value: {parameter.DefaultValue})";
+            return $"  - {parameter.Name}: {parameter.Description}{defaultValueString}";
+        }));
+
+        return $@"{ToFullyQualifiedName()}:
+  description: {Description}
+  inputs:
+  {inputs}";
+    }
+    public string ToFullyQualifiedName()
+    {
+        return $"{PluginName}.{Name}";
+    }
+    public string ToEmbeddingString()
+    {
+        var inputs = string.Join("\n", Parameters.Select(p => $"    - {p.Name}: {p.Description}"));
+        return $"{Name}:\n  description: {Description}\n  inputs:\n{inputs}";
+    }
 }

@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Context;
+using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -51,6 +50,10 @@ public sealed class KernelBuilder
             case AIServiceTypeKind.OpenAITextCompletion:
                 kernelBuilder
                     .WithOpenAITextCompletionService(model, apiKey);
+                break;
+            case AIServiceTypeKind.OpenAIChatCompletion:
+                kernelBuilder
+                    .WithOpenAIChatCompletionService(model, apiKey);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(aiServiceType), aiServiceType, null);
@@ -106,6 +109,12 @@ public sealed class KernelBuilder
     private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
         _service = new OpenAITextCompletion(model, apiKey);
+        return this;
+    }
+
+    private KernelBuilder WithOpenAIChatCompletionService(string model, string apiKey)
+    {
+        _service = new OpenAIChatCompletion(model, apiKey);
         return this;
     }
 

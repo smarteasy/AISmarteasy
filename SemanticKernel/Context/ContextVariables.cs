@@ -4,12 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using SemanticKernel.Function;
 
-
-#pragma warning disable CA1710 // ContextVariables doesn't end in Dictionary or Collection
-#pragma warning disable CA1725, RCS1168 // Uses "name" instead of "key" for some public APIs
-#pragma warning disable CS8767 // Reference type nullability doesn't match because netstandard2.0 surface area isn't nullable reference type annotated
-// TODO: support more complex data types, and plan for rendering these values into prompt templates.
-
 namespace SemanticKernel.Context;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
@@ -42,14 +36,13 @@ public sealed class ContextVariables : IDictionary<string, string>
 
     public ContextVariables Update(ContextVariables newData, bool merge = true)
     {
-        if (!ReferenceEquals(this, newData))
-        {
-            if (!merge) { _variables.Clear(); }
+        if (ReferenceEquals(this, newData)) return this;
 
-            foreach (KeyValuePair<string, string> varData in newData._variables)
-            {
-                _variables[varData.Key] = varData.Value;
-            }
+        if (!merge) { _variables.Clear(); }
+
+        foreach (KeyValuePair<string, string> varData in newData._variables)
+        {
+            _variables[varData.Key] = varData.Value;
         }
 
         return this;
@@ -82,10 +75,7 @@ public sealed class ContextVariables : IDictionary<string, string>
     public string this[string name]
     {
         get => _variables[name];
-        set
-        {
-            if (_variables != null) _variables[name] = value;
-        }
+        set => _variables[name] = value;
     }
 
     public bool ContainsKey(string name)

@@ -2,5 +2,6 @@
 
 public interface IPluginCollection : IReadOnlyPluginCollection
 {
-    IPluginCollection AddFunction(ISKFunction function);
+    void AddFunction(ISKFunction function);
+    IList<ISKFunction> GetAllFunctions();
 }

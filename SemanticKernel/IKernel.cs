@@ -3,6 +3,7 @@ using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
+using SemanticKernel.Planner;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
 
@@ -38,6 +39,8 @@ public interface IKernel
 
     IAIService AIService { get; }
 
+    Task<Plan> RunPlan(string prompt);
+
     Task<SemanticAnswer> RunCompletion(string prompt);
 
     Task<SemanticAnswer> RunFunction(ISKFunction function);
@@ -45,4 +48,8 @@ public interface IKernel
     Task<SemanticAnswer> RunFunction(ISKFunction function, IDictionary<string, string> parameters);
 
     Task<SemanticAnswer> RunPipeline(params ISKFunction[] pipeline);
+
+    ISKFunction CreateSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig);
+
+    SKContext CreateNewContext(ContextVariables variables);
 }

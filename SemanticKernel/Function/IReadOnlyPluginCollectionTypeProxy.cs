@@ -14,8 +14,7 @@ internal sealed class ReadOnlyPluginCollectionTypeProxy
         get
         {
             var view = this._collection.GetFunctionsView();
-            return view.NativeFunctions
-                .Concat(view.SemanticFunctions)
+            return view.FunctionViews
                 .GroupBy(f => f.Key)
                 .Select(g => new PluginProxy(g.SelectMany(f => f.Value)) { Name = g.Key })
                 .ToArray();

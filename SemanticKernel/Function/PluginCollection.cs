@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,14 +18,26 @@ public class PluginCollection : IPluginCollection
         _pluginCollection = new(StringComparer.OrdinalIgnoreCase);
     }
 
-    public IPluginCollection AddFunction(ISKFunction function)
+    public void AddFunction(ISKFunction function)
     {
         Verify.NotNull(function);
 
         ConcurrentDictionary<string, ISKFunction> plugin = _pluginCollection.GetOrAdd(function.PluginName, static _ => new(StringComparer.OrdinalIgnoreCase));
         plugin[function.Name] = function;
+    }
 
-        return this;
+    public IList<ISKFunction> GetAllFunctions()
+    {
+        var result = new List<ISKFunction>();
+        foreach (var plugin in _pluginCollection)
+        {
+            foreach (var pluginValue in plugin.Value)
+            {
+                result.Add(pluginValue.Value);
+            }
+        }
+
+        return result;
     }
 
     public ISKFunction GetFunction(string pluginName, string functionName)
@@ -42,30 +55,24 @@ public class PluginCollection : IPluginCollection
         Verify.NotNull(pluginName);
         Verify.NotNull(functionName);
 
-        if (_pluginCollection.TryGetValue(pluginName, out ConcurrentDictionary<string, ISKFunction>? skill))
+        if (_pluginCollection.TryGetValue(pluginName, out ConcurrentDictionary<string, ISKFunction>? plugin))
         {
-            return skill.TryGetValue(functionName, out availableFunction);
+            return plugin.TryGetValue(functionName, out availableFunction);
         }
 
         availableFunction = null;
         return false;
     }
 
-    public FunctionsView GetFunctionsView(bool includeSemantic = true, bool includeNative = true)
+    public FunctionsView GetFunctionsView()
     {
         var result = new FunctionsView();
 
-        if (includeSemantic || includeNative)
+        foreach (var plugin in this._pluginCollection)
         {
-            foreach (var plugin in this._pluginCollection)
+            foreach (KeyValuePair<string, ISKFunction> function in plugin.Value)
             {
-                foreach (KeyValuePair<string, ISKFunction> function in plugin.Value)
-                {
-                    if (function.Value.IsSemantic ? includeSemantic : includeNative)
-                    {
-                        result.AddFunction(function.Value.Describe());
-                    }
-                }
+                result.AddFunction(function.Value.Describe());
             }
         }
 

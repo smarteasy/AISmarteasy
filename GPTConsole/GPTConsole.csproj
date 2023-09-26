@@ -32,4 +32,8 @@
     <Folder Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\SequencePlanner\skprompt.txt" />
+  </ItemGroup>
+
 </Project>

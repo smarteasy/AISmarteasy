@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
+using SemanticKernel.Service;
 using SemanticKernel.Util;
 
 namespace SemanticKernel.Function;
@@ -25,7 +26,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
     public bool IsSemantic { get; } = false;
 
-    public CompleteRequestSettings RequestSettings { get; } = new();
+    public AIRequestSettings RequestSettings { get; } = new();
 
     public IList<ParameterView> Parameters { get; }
 
@@ -90,16 +91,15 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     {
         return new FunctionView
         {
-            IsSemantic = IsSemantic,
             Name = Name,
-            SkillName = PluginName,
+            PluginName = PluginName,
             Description = Description,
             Parameters = Parameters,
         };
     }
 
     public async Task<SKContext> InvokeAsync(
-        CompleteRequestSettings? settings = null,
+        AIRequestSettings? settings = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -113,22 +113,16 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         }
     }
 
-    public ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills)
+    public ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins)
     {
         return this;
     }
 
-    public ISKFunction SetAIService(Func<ITextCompletion> serviceFactory)
+    public ISKFunction SetAIConfiguration(AIRequestSettings settings)
     {
-        this.ThrowNotSemantic();
         return this;
     }
 
-    public ISKFunction SetAIConfiguration(CompleteRequestSettings settings)
-    {
-        this.ThrowNotSemantic();
-        return this;
-    }
 
     public void Dispose()
     {
@@ -142,12 +136,12 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
     private static readonly JsonSerializerOptions s_toStringStandardSerialization = new();
     private static readonly JsonSerializerOptions s_toStringIndentedSerialization = new() { WriteIndented = true };
-    private Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> _function;
+    private readonly Func<IAIService, AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> _function;
     private readonly ILogger _logger;
 
     private struct MethodDetails
     {
-        public Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> Function { get; set; }
+        public Func<IAIService?, AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> Function { get; set; }
         public List<ParameterView> Parameters { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
@@ -159,7 +153,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     }
 
     internal NativeFunction(
-        Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> delegateFunction,
+        Func<IAIService?, AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> delegateFunction,
         IList<ParameterView> parameters,
         string pluginName,
         string functionName,
@@ -247,7 +241,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         return false;
     }
 
-    private static (Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> function, List<ParameterView>) GetDelegateInfo(object? instance, MethodInfo method)
+    private static (Func<IAIService?, AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> function, List<ParameterView>) GetDelegateInfo(object? instance, MethodInfo method)
     {
         ThrowForInvalidSignatureIf(method.IsGenericMethodDefinition, method, "Generic methods are not supported");
 
@@ -269,7 +263,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
         Func<object?, SKContext, Task<SKContext>> returnFunc = GetReturnValueMarshalerDelegate(method);
 
-        Func<ITextCompletion?, CompleteRequestSettings?, SKContext, CancellationToken, Task<SKContext>> function = (_, _, context, cancellationToken) =>
+        Func<IAIService?, AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> function = (_, _, context, cancellationToken) =>
         {
             object?[] args = parameterFuncs.Length != 0 ? new object?[parameterFuncs.Length] : Array.Empty<object?>();
             for (int i = 0; i < args.Length; i++)

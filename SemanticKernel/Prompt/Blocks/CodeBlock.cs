@@ -76,12 +76,8 @@ public sealed class CodeBlock : Block, ICodeRendering
 
     private async Task<string> RenderFunctionCallAsync(FunctionIdBlock fBlock, SKContext context)
     {
-        if (context.Plugins == null)
-        {
-            throw new SKException("Skill collection not found in the context");
-        }
-
-        if (!GetFunctionFromPluginCollection(context.Plugins!, fBlock, out ISKFunction? function))
+        var plugins = KernelProvider.Kernel.Plugins;
+        if (!GetFunctionFromPluginCollection(plugins!, fBlock, out ISKFunction? function))
         {
             var errorMsg = $"Function `{fBlock.Content}` not found";
             Logger.LogError(errorMsg);
@@ -97,7 +93,6 @@ public sealed class CodeBlock : Block, ICodeRendering
 
         try
         {
-            //TODO - contextClone = await function!.InvokeAsync(contextClone).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {

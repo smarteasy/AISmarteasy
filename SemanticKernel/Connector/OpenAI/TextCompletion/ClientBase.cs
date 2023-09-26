@@ -72,6 +72,44 @@ public abstract class ClientBase
         return new SemanticAnswer(responseData.Choices[0].Text);
     }
 
+    private protected async Task<IReadOnlyList<IChatResult>> InternalGetChatResultsAsync(
+        ChatHistory chatHistory,
+        ChatRequestSettings? chatSettings,
+        CancellationToken cancellationToken = default)
+    {
+        Verify.NotNull(chatHistory);
+        chatSettings ??= new();
+
+        ValidateMaxTokens(chatSettings.MaxTokens);
+        var chatOptions = CreateChatCompletionsOptions(chatSettings, chatHistory);
+
+        Response<ChatCompletions>? response = await RunRequestAsync<Response<ChatCompletions>?>(
+            () => Client.GetChatCompletionsAsync(ModelId, chatOptions, cancellationToken)).ConfigureAwait(false);
+
+        if (response is null)
+        {
+            throw new SKException("Chat completions null response");
+        }
+
+        var responseData = response.Value;
+
+        if (responseData.Choices.Count == 0)
+        {
+            throw new SKException("Chat completions not found");
+        }
+
+        CaptureUsageDetails(responseData.Usage);
+
+        return responseData.Choices.Select(chatChoice => new ChatResult(responseData, chatChoice)).ToList();
+    }
+
+    private protected static OpenAIChatHistory InternalCreateNewChat(string? instructions = null)
+    {
+        return new OpenAIChatHistory(instructions);
+    }
+
+
+
     private protected async IAsyncEnumerable<TextStreamingResult> InternalGetTextStreamingResultsAsync(
         string text,
         CompleteRequestSettings requestSettings,
@@ -120,36 +158,7 @@ public abstract class ClientBase
         return result;
     }
 
-    private protected async Task<IReadOnlyList<IChatResult>> InternalGetChatResultsAsync(
-        ChatHistory chat,
-        ChatRequestSettings? chatSettings,
-        CancellationToken cancellationToken = default)
-    {
-        Verify.NotNull(chat);
-        chatSettings ??= new();
 
-        ValidateMaxTokens(chatSettings.MaxTokens);
-        var chatOptions = CreateChatCompletionsOptions(chatSettings, chat);
-
-        Response<ChatCompletions>? response = await RunRequestAsync<Response<ChatCompletions>?>(
-            () => Client.GetChatCompletionsAsync(ModelId, chatOptions, cancellationToken)).ConfigureAwait(false);
-
-        if (response is null)
-        {
-            throw new SKException("Chat completions null response");
-        }
-
-        var responseData = response.Value;
-
-        if (responseData.Choices.Count == 0)
-        {
-            throw new SKException("Chat completions not found");
-        }
-
-        CaptureUsageDetails(responseData.Usage);
-
-        return responseData.Choices.Select(chatChoice => new ChatResult(responseData, chatChoice)).ToList();
-    }
 
     private protected async IAsyncEnumerable<IChatStreamingResult> InternalGetChatStreamingResultsAsync(
         IEnumerable<ChatMessageBase> chat,
@@ -176,11 +185,6 @@ public abstract class ClientBase
         {
             yield return new ChatStreamingResult(response.Value, choice);
         }
-    }
-
-    private protected static OpenAIChatHistory InternalCreateNewChat(string? instructions = null)
-    {
-        return new OpenAIChatHistory(instructions);
     }
 
     private protected async Task<IReadOnlyList<ITextResult>> InternalGetChatResultsAsTextAsync(

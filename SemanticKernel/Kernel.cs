@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
+using SemanticKernel.Planner;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SemanticKernel;
 
@@ -16,13 +16,18 @@ public sealed class Kernel : IKernel, IDisposable
 {
     private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
     private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
-    private readonly string SEMANTIC_PLUGIN_DIRECTORY;
+    private const string AVAILABLE_FUNCTIONS_KEY = "available_functions";
+
+    private readonly string _semanticPluginDirectory;
 
     private readonly IPluginCollection _pluginCollection;
+
     private ISemanticTextMemory _memory;
     private readonly ILogger _logger;
 
     public IReadOnlyPluginCollection Plugins => _pluginCollection;
+
+
     public ISemanticTextMemory Memory => _memory;
 
     public IPromptTemplate PromptTemplate { get; }
@@ -42,7 +47,7 @@ public sealed class Kernel : IKernel, IDisposable
         ISemanticTextMemory memory, IDelegatingHandlerFactory httpHandlerFactory,
         ILoggerFactory loggerFactory)
     {
-        SEMANTIC_PLUGIN_DIRECTORY = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
+        _semanticPluginDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
 
         LoggerFactory = loggerFactory;
         _logger = LoggerFactory.CreateLogger(typeof(Kernel));
@@ -62,15 +67,26 @@ public sealed class Kernel : IKernel, IDisposable
 
         LoadSemanticPlugin(); 
 
-        Context = new SKContext(
-            plugins: _pluginCollection,
-            loggerFactory: loggerFactory);
+        Context = new SKContext(loggerFactory: loggerFactory);
+    }
+
+    public async Task<Plan> RunPlan(string prompt)
+    {
+        var plan = await CreatePlanAsync(prompt);
+
+        while (plan.HasNextStep)
+        {
+            KernelProvider.Kernel.Context = KernelProvider.Kernel.CreateNewContext(new ContextVariables(KernelProvider.Kernel.Context.Variables.Input));
+            await plan.RunNextStepAsync();
+        }
+
+        return plan;
     }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)
     {
         var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunCompletion(prompt, requestSetting);
+        return AIService.RunTextCompletion(prompt, requestSetting);
     }
 
     public Task<SemanticAnswer> RunFunction(ISKFunction function)
@@ -87,10 +103,9 @@ public sealed class Kernel : IKernel, IDisposable
             Context.Variables[parameter.Key] = parameter.Value;
         }
 
-        var answer= await function.InvokeAsync(requestSetting);
+        var context = await function.InvokeAsync(requestSetting);
 
-        var result = new SemanticAnswer(answer.Result);
-        return result;
+        return new SemanticAnswer(context.Variables.Input);
     }
 
 
@@ -119,7 +134,7 @@ public sealed class Kernel : IKernel, IDisposable
         return result;
     }
 
-    private ISKFunction CreateSemanticFunction(
+    public ISKFunction CreateSemanticFunction(
         string pluginName,
         string functionName,
         SemanticFunctionConfig functionConfig)
@@ -136,22 +151,106 @@ public sealed class Kernel : IKernel, IDisposable
             LoggerFactory
         );
 
-        func.SetDefaultSkillCollection(Plugins);
-
         func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
 
         return func;
     }
 
+
+
+    public async Task<Plan> CreatePlanAsync(string goal, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(goal))
+        {
+            throw new SKException("The goal specified is empty");
+        }
+
+        var functionsManual = BuildFunctionsManual();
+
+        var parameters = new Dictionary<string, string>
+        {
+            { AVAILABLE_FUNCTIONS_KEY, functionsManual },
+            { "input", goal }
+        };
+
+        var planner = Plugins.GetFunction("OrchestratorSkill", "SequencePlanner");
+        var answerPlan = await RunFunction(planner, parameters).ConfigureAwait(false);
+
+        var planText  = answerPlan.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(planText))
+        {
+            throw new SKException(
+                "Unable to create plan. No response from Function Flow function. " +
+                $"\nGoal:{goal}\nFunctions:\n{planText}");
+        }
+
+        var functions = _pluginCollection.GetAllFunctions();
+
+        Plan plan;
+        try
+        {
+            plan = planText!.ToPlanFromXml(goal);
+        }
+        catch (SKException e)
+        {
+            throw new SKException($"Unable to create plan for goal with available functions.\nGoal:{goal}\nFunctions:\n{planText}", e);
+        }
+
+        if (plan.Steps.Count == 0)
+        {
+            throw new SKException($"Not possible to create plan for goal with available functions.\nGoal:{goal}\nFunctions:\n{planText}");
+        }
+        
+        return plan;
+    }
+
+    private static string BuildFunctionsManual()
+    {
+        var functionsView = KernelProvider.Kernel.Plugins.GetFunctionsView();
+        var result = string.Empty;
+        foreach (var functionViews in functionsView.FunctionViews.Values)
+        {
+            result += string.Join("\n\n", functionViews.Select(x => x.ToManualString()));
+            result += "\n\n";
+        }
+
+        return result;
+    }
+
+
+    public void CreateSemanticFunction(string promptTemplate, string pluginName, string functionName, string? description = null, 
+        AIRequestSettings? requestSettings = null)
+    {
+        functionName ??= RandomFunctionName();
+
+        var config = new PromptTemplateConfig
+        {
+            Description = description ?? "Generic function, unknown purpose",
+            Type = "completion",
+            //Completion = CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
+    };
+
+        functionName ??= RandomFunctionName();
+        Verify.ValidFunctionName(functionName);
+        if (!string.IsNullOrEmpty(pluginName)) { Verify.ValidPluginName(pluginName); }
+
+        var template = new PromptTemplate(promptTemplate, config);
+        var functionConfig = new SemanticFunctionConfig(config, template);
+
+        RegisterSemanticFunction(pluginName!, functionName, functionConfig);
+    }
+
+
     private void LoadSemanticPlugin()
     {
-        string[] subDirectories = Directory.GetDirectories(SEMANTIC_PLUGIN_DIRECTORY);
+        string[] subDirectories = Directory.GetDirectories(_semanticPluginDirectory);
         LoadSemanticPlugin(subDirectories);
     }
 
     private void LoadSemanticPlugin(string[] subDirectories)
     {
-        LoadSemanticSubPlugin(SEMANTIC_PLUGIN_DIRECTORY, subDirectories);
+        LoadSemanticSubPlugin(_semanticPluginDirectory, subDirectories);
     }
 
     private void LoadSemanticSubPlugin(string parentDirectoryName, string[] subDirectories)
@@ -205,14 +304,14 @@ public sealed class Kernel : IKernel, IDisposable
         _pluginCollection.AddFunction(function);
     }
 
-    public ISKFunction RegisterCustomFunction(ISKFunction customFunction)
+    public ISKFunction RegisterCustomFunction(ISKFunction function)
     {
-        Verify.NotNull(customFunction);
+        Verify.NotNull(function);
 
-        customFunction.SetDefaultSkillCollection(Plugins);
-        _pluginCollection.AddFunction(customFunction);
+        function.SetDefaultPluginCollection(Plugins);
+        _pluginCollection.AddFunction(function);
 
-        return customFunction;
+        return function;
     }
 
     public void RegisterMemory(ISemanticTextMemory memory)
@@ -220,9 +319,16 @@ public sealed class Kernel : IKernel, IDisposable
         _memory = memory;
     }
 
+    private static string RandomFunctionName() => "func" + Guid.NewGuid().ToString("N");
+
+    public SKContext CreateNewContext(ContextVariables variables)
+    {
+        return new SKContext(variables);
+    }
+
     public void Dispose()
     {
         if (_memory is IDisposable mem) { mem.Dispose(); }
-        if (_pluginCollection is IDisposable reg) { reg.Dispose(); }
+        if (_pluginCollection is IDisposable plugins) { plugins.Dispose(); }
     }
 }

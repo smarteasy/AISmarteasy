@@ -1,6 +1,6 @@
 ﻿namespace SemanticKernel.Connector.OpenAI.TextCompletion;
 
-public class CompleteRequestSettings
+public class CompleteRequestSettings : AIRequestSettings
 {
     public double Temperature { get; set; }
 

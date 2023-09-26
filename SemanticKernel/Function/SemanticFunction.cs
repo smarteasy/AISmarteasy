@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using Azure.AI.OpenAI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
@@ -23,7 +24,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     public bool IsSemantic => true;
 
-    public CompleteRequestSettings RequestSettings { get; private set; } = new();
+    public AIRequestSettings RequestSettings { get; private set; } = new();
 
     public IList<ParameterView> Parameters { get; }
 
@@ -51,38 +52,36 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     {
         return new FunctionView
         {
-            IsSemantic = IsSemantic,
             Name = Name,
-            SkillName = PluginName,
+            PluginName = PluginName,
             Description = Description,
             Parameters = Parameters,
         };
     }
 
-    public async Task<SKContext> InvokeAsync(
-        CompleteRequestSettings? settings,
+  public async Task<SKContext> InvokeAsync(
+        AIRequestSettings? settings,
         CancellationToken cancellationToken = default)
     {
         var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
-        return await RunPromptAsync(kernel.AIService, settings, kernel.Context, cancellationToken).ConfigureAwait(false);
+        return await RunPromptAsync(kernel.AIService, settings, cancellationToken).ConfigureAwait(false);
     }
 
+  public ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins)
+  {
+      return this;
+  }
 
-    public ISKFunction SetDefaultSkillCollection(IReadOnlyPluginCollection skills)
-    {
-        this._skillCollection = skills;
-        return this;
-    }
 
-    public ISKFunction SetAIService(Func<ITextCompletion> serviceFactory)
+  public ISKFunction SetAIService(Func<IAIService> serviceFactory)
     {
         Verify.NotNull(serviceFactory);
-        this._textCompletion = new Lazy<ITextCompletion>(serviceFactory);
+        _textCompletion = new Lazy<IAIService>(serviceFactory);
         return this;
     }
 
-    public ISKFunction SetAIConfiguration(CompleteRequestSettings settings)
+    public ISKFunction SetAIConfiguration(AIRequestSettings settings)
     {
         Verify.NotNull(settings);
         this.RequestSettings = settings;
@@ -128,8 +127,8 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
     private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
     private readonly ILogger _logger;
-    private IReadOnlyPluginCollection? _skillCollection;
-    private Lazy<ITextCompletion>? _textCompletion = null;
+    private IReadOnlyPluginCollection? _pluginCollection;
+    private Lazy<IAIService>? _textCompletion;
     public IPromptTemplate PromptTemplate { get; }
 
     private static async Task<string> RunAsync(IReadOnlyList<ITextResult> completions, CancellationToken cancellationToken = default)
@@ -138,11 +137,11 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     }
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"{this.Name} ({this.Description})";
+    private string DebuggerDisplay => $"{Name} ({Description})";
 
      private void AddDefaultValues(ContextVariables variables)
     {
-        foreach (var parameter in this.Parameters)
+        foreach (var parameter in Parameters)
         {
             if (!variables.ContainsKey(parameter.Name) && parameter.DefaultValue != null)
             {
@@ -154,28 +153,30 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     private async Task<SKContext> RunPromptAsync(
         IAIService? client,
-        CompleteRequestSettings? requestSettings,
-        SKContext context,
+        AIRequestSettings? requestSettings,
         CancellationToken cancellationToken)
     {
+
+        var context = KernelProvider.Kernel.Context;
+
         Verify.NotNull(client);
         Verify.NotNull(requestSettings);
 
         try
         {
-            var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            var answer = await client.RunCompletion(prompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            context.Variables.Update(answer.Text);
+            if (client is OpenAITextCompletion)
+            {
+                var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+                var answer = await client.RunTextCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
+                context.Variables.Update(answer.Text);
+            }
+            else
+            {
 
-            //TODO - 아래 코드를 위와 같이 바꾸었을 때 문제점 파악
-            //string renderedPrompt = await this._promptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-            //var completionResults = await client.GetCompletionsAsync(renderedPrompt, requestSettings, cancellationToken).ConfigureAwait(false);
-            //string completion = await GetCompletionsResultContentAsync(completionResults, cancellationToken).ConfigureAwait(false);
-
-            //// Update the result with the completion
-            //context.Variables.Update(completion);
-
-            //context.ModelResults = completionResults.Select(c => c.ModelResult).ToArray();
+                var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+                var chtHistory = await client.RunChatCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
+                context.Variables.Update(chtHistory.Messages[1].Content);
+            }
         }
         catch (Exception ex) when (!ex.IsCriticalException())
         {
