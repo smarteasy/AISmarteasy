@@ -6,20 +6,26 @@ namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "";
+        private const string API_KEY = "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";
 
         public static async Task Main(string[] args)
         {
-            await RunPlanner();
+            await RunTextCompletionSimply();
             Console.ReadLine();
         }
 
 
         public static async Task RunTextCompletionSimply()
         {
-            var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
-                .Build();
+            AIServiceConfig config = new AIServiceConfig
+            {
+                Service = AIServiceKind.TextCompletion,
+                Vendor = AIServiceVendorKind.OpenAI,
+                ServiceFeature = AIServiceFeatureKind.Normal,
+                APIKey = API_KEY
+            };
+
+            var kernel = new KernelBuilder().Build(config);
 
             var prompt = "ChatGPT?";
             var answer = await kernel.RunCompletion(prompt);
@@ -29,7 +35,7 @@ namespace GPTConsole
         public static async Task RunSemanticFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var function = kernel.Plugins.GetFunction("Fun", "Joke");
@@ -42,7 +48,7 @@ namespace GPTConsole
         public static async Task RunNativeFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -68,7 +74,7 @@ namespace GPTConsole
         public static async Task RunGetIntentFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var function = kernel.Plugins.GetFunction("OrchestratorSkill", "GetIntent");
@@ -96,7 +102,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunOrchestratorFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -112,7 +118,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPipeline()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAITextCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
 
@@ -130,7 +136,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPlanner()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceTypeKind.OpenAIChatCompletion, API_KEY)
+                .WithCompletionService(AIServiceKind.ChatCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();

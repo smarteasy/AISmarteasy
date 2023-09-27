@@ -25,6 +25,37 @@ public sealed class KernelBuilder
         _promptTemplateEngine = new PromptTemplate(_loggerFactory);
     }
 
+    public IKernel Build(AIServiceConfig config)
+    {
+        var model = ModelStringProvider.Provide(config.Service);
+
+        switch (config.Service)
+        {
+            case AIServiceKind.TextCompletion:
+                WithOpenAITextCompletionService(model, config.APIKey);
+                break;
+            case AIServiceKind.ChatCompletion:
+                WithOpenAIChatCompletionService(model, config.APIKey);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(config.Service), config.Service, null);
+        }
+
+        var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
+
+        if (_memoryStorageFactory != null)
+        {
+            kernel.UseMemory(_memoryStorageFactory.Invoke());
+        }
+
+        KernelProvider.Kernel = kernel;
+
+        return kernel;
+    }
+
+
+
+
     public IKernel Build()
     {
         var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
@@ -39,7 +70,7 @@ public sealed class KernelBuilder
         return kernel;
     }
 
-    public KernelBuilder WithCompletionService(AIServiceTypeKind aiServiceType, string apiKey)
+    public KernelBuilder WithCompletionService(AIServiceKind aiServiceType, string apiKey)
     {
         var model = ModelStringProvider.Provide(aiServiceType);
 
@@ -47,11 +78,11 @@ public sealed class KernelBuilder
 
         switch (aiServiceType)
         {
-            case AIServiceTypeKind.OpenAITextCompletion:
+            case AIServiceKind.TextCompletion:
                 kernelBuilder
                     .WithOpenAITextCompletionService(model, apiKey);
                 break;
-            case AIServiceTypeKind.OpenAIChatCompletion:
+            case AIServiceKind.ChatCompletion:
                 kernelBuilder
                     .WithOpenAIChatCompletionService(model, apiKey);
                 break;
