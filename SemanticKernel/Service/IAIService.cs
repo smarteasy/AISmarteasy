@@ -8,6 +8,6 @@ public interface IAIService
     Task<SemanticAnswer> RunTextCompletion(string prompt, CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default);
 
-    Task<ChatHistory> RunChatCompletion(string prompt,CompleteRequestSettings requestSettings,
+    Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default);
 }

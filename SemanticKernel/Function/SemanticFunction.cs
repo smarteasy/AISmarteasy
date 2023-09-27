@@ -4,6 +4,7 @@ using Azure.AI.OpenAI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
+using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Context;
 using SemanticKernel.Prompt;
 using SemanticKernel.Service;
@@ -174,7 +175,9 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
             {
 
                 var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-                var chtHistory = await client.RunChatCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
+                var chatHistory = new ChatHistory();
+                chatHistory.AddUserMessage(prompt);
+                var chtHistory = await client.RunChatCompletion(chatHistory, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
                 context.Variables.Update(chtHistory.Messages[1].Content);
             }
         }

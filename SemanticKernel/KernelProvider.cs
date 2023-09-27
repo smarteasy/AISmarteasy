@@ -8,11 +8,11 @@ namespace SemanticKernel
 {
     public static class KernelProvider
     {
-        static void Initialize(IKernel kernel)
+        static void Initialize(Kernel kernel)
         {
             Kernel = kernel;
         }
 
-        public static IKernel Kernel { get; set; } = null!;
+        public static Kernel Kernel { get; set; } = null!;
     }
 }

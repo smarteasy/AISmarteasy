@@ -9,14 +9,14 @@ namespace SemanticKernel.Memory;
 
 public static class MemoryConfiguration
 {
-    public static void UseMemory(this IKernel kernel, IMemoryStore storage, string? embeddingsServiceId = null)
+    public static void UseMemory(this Kernel kernel, IMemoryStore storage, string? embeddingsServiceId = null)
     {
         //r embeddingGenerator = kernel.GetService<ITextEmbeddingGeneration>(embeddingsServiceId);
         //eMemory(kernel, embeddingGenerator, storage);
     }
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "The embeddingGenerator object is disposed by the kernel")]
-    public static void UseMemory(this IKernel kernel, ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
+    public static void UseMemory(this Kernel kernel, ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
     {
         Verify.NotNull(storage);
         Verify.NotNull(embeddingGenerator);

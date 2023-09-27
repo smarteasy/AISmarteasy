@@ -1,21 +1,22 @@
 ﻿using System.Text.Json;
 using SemanticKernel.Service;
 using SemanticKernel;
+using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 
 namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "...";
+        private const string API_KEY = "";
 
         public static async Task Main(string[] args)
         {
-            await RunTextCompletionSimply();
+            await RunChatCompletion();
             Console.ReadLine();
         }
 
 
-        public static async Task RunTextCompletionSimply()
+        public static async Task RunTextCompletion()
         {
             AIServiceConfig config = new AIServiceConfig
             {
@@ -30,6 +31,40 @@ namespace GPTConsole
             var prompt = "ChatGPT?";
             var answer = await kernel.RunCompletion(prompt);
             Console.WriteLine(answer.Text);
+        }
+
+        public static async Task RunChatCompletion()
+        {
+            AIServiceConfig config = new AIServiceConfig
+            {
+                Service = AIServiceKind.ChatCompletion,
+                Vendor = AIServiceVendorKind.OpenAI,
+                ServiceFeature = AIServiceFeatureKind.Normal,
+                APIKey = API_KEY
+            };
+
+            var kernel = new KernelBuilder().Build(config);
+
+            var history = new ChatHistory();
+            history.AddUserMessage("Hi, I'm looking for book suggestions");
+            history = await kernel.RunChatCompletion(history);
+            Console.WriteLine(history.LastContent);
+
+            history.AddUserMessage("I would like a non-fiction book suggestion about Greece history. Please only list one book.");
+            history = await kernel.RunChatCompletion(history);
+            Console.WriteLine(history.LastContent);
+
+            history.AddUserMessage("that sounds interesting, what are some of the topics I will learn about?");
+            history = await kernel.RunChatCompletion(history);
+            Console.WriteLine(history.LastContent);
+
+            history.AddUserMessage("Which topic from the ones you listed do you think most people find interesting?");
+            history = await kernel.RunChatCompletion(history);
+            Console.WriteLine(history.LastContent);
+
+            history.AddUserMessage("could you list some more books I could read about the topic(s) you mentioned?");
+            history = await kernel.RunChatCompletion(history);
+            Console.WriteLine(history.LastContent);
         }
 
         public static async Task RunSemanticFunction()

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
+using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
@@ -12,7 +13,7 @@ using SemanticKernel.Service;
 
 namespace SemanticKernel;
 
-public sealed class Kernel : IKernel, IDisposable
+public sealed class Kernel : IDisposable
 {
     private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
     private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
@@ -81,6 +82,12 @@ public sealed class Kernel : IKernel, IDisposable
         }
 
         return plan;
+    }
+
+    public Task<ChatHistory> RunChatCompletion(ChatHistory history)
+    {
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.RunChatCompletion(history, requestSetting);
     }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)

@@ -73,7 +73,7 @@ public abstract class OpenAIClientBase : ClientBase
         return Task.FromResult<SemanticAnswer>(null!);
     }
 
-    public virtual Task<ChatHistory> RunChatCompletion(string prompt, CompleteRequestSettings requestSettings,
+    public virtual Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult<ChatHistory>(null!);

@@ -8,7 +8,7 @@ namespace GPTConsole;
 
 public class NativePluginLoader
 {
-    private readonly IKernel _kernel;
+    private readonly Kernel _kernel;
 
     public NativePluginLoader()
     {

@@ -16,16 +16,13 @@ public sealed class OpenAIChatCompletion : OpenAIClientBase, IChatCompletion
     }
 
 
-    public override async Task<ChatHistory> RunChatCompletion(string prompt, CompleteRequestSettings requestSettings,
+    public override async Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         LogActionDetails();
-
-        var chatHistory = new ChatHistory();
-        chatHistory.AddUserMessage(prompt);
         var chatResult = await InternalGetChatResultsAsync(chatHistory, new ChatRequestSettings(), cancellationToken);
-        
-        chatHistory.AddAssistantMessage(chatResult[0].ModelResult.GetResult<ChatModelResult>().Choice.Message.Content);
+        var answer = chatResult[0].ModelResult.GetResult<ChatModelResult>().Choice.Message.Content;
+        chatHistory.AddAssistantMessage(answer);
         return chatHistory;
     }
 }

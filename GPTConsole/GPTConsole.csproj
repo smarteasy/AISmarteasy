@@ -9,27 +9,38 @@
 
   <ItemGroup>
     <Compile Remove="bin\Debug\net7.0\Plugins\**" />
-    <Compile Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
-    <Compile Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
     <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\**" />
-    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
-    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
     <None Remove="bin\Debug\net7.0\Plugins\**" />
-    <None Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\**" />
-    <None Remove="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\Joke\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="bin\Debug\net7.0\Plugins\Native\MathSkill\Math.cs" />
-    <Compile Include="bin\Debug\net7.0\Plugins\Native\OrchestratorSkill\Orchestrator.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\MathNativeSkill\Math.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\OrchestratorNativeSkill\Orchestrator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ChatSkill\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ChatSkill\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\ConversationActionItems\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\ConversationActionItems\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\ConversationTopicsFunction\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\ConversationTopicsFunction\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\SummarizeConversation\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\ConversationSummarySkill\SummarizeConversation\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Menu\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Menu\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\skprompt.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SemanticKernel\SemanticKernel.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\" />
   </ItemGroup>
 
   <ItemGroup>

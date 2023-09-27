@@ -25,7 +25,7 @@ public sealed class KernelBuilder
         _promptTemplateEngine = new PromptTemplate(_loggerFactory);
     }
 
-    public IKernel Build(AIServiceConfig config)
+    public Kernel Build(AIServiceConfig config)
     {
         var model = ModelStringProvider.Provide(config.Service);
 
@@ -45,7 +45,7 @@ public sealed class KernelBuilder
 
         if (_memoryStorageFactory != null)
         {
-            kernel.UseMemory(_memoryStorageFactory.Invoke());
+            //kernel.UseMemory(_memoryStorageFactory.Invoke());
         }
 
         KernelProvider.Kernel = kernel;
@@ -56,13 +56,13 @@ public sealed class KernelBuilder
 
 
 
-    public IKernel Build()
+    public Kernel Build()
     {
         var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
 
         if (_memoryStorageFactory != null)
         {
-            kernel.UseMemory(_memoryStorageFactory.Invoke());
+            //kernel.UseMemory(_memoryStorageFactory.Invoke());
         }
 
         KernelProvider.Kernel = kernel;

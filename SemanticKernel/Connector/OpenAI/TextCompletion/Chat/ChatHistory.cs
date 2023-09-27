@@ -28,7 +28,10 @@ public class ChatHistory : List<ChatMessageBase>
     public void AddAssistantMessage(string content)
     {
         AddMessage(AuthorRole.Assistant, content);
+        LastContent = content;
     }
+
+    public string LastContent { get; set; } = string.Empty;
 
     public void AddSystemMessage(string content)
     {
