@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using SemanticKernel;
 using SemanticKernel.Function;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GPTConsole;
 
@@ -17,57 +16,35 @@ public class NativePluginLoader
     
     public void Load()
     {
-        var nativeDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "native");
-        var pluginPath = "Plugins";
+        var nativeDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Plugins", "Native");
+        var pluginNamespace = "Plugins.Native.Skills";
 
-        Load(pluginPath, Directory.GetDirectories(nativeDirectory));
+        LoadPlugin(nativeDirectory, pluginNamespace);
     }
 
-    private void Load(string pluginPath, string[] subDirectories)
+    private void LoadPlugin(string nativeDirectory, string pluginNamespace)
     {
-        foreach (var subDirectory in subDirectories)
-        {
-            var fileNames = new List<string>();
-            foreach (var file in Directory.GetFiles(subDirectory))
-            {
-                var fileNameWithExt = Path.GetFileName(file);
-                fileNames.Add(fileNameWithExt.Substring(0, fileNameWithExt.Length - 3));
-            }
-
-            var directoryName = Path.GetFileName(subDirectory);
-
-            if (fileNames.Count == 0)
-            {
-                pluginPath += "." + directoryName;
-                Load(pluginPath, Directory.GetDirectories(subDirectory));
-            }
-            else
-            {
-                LoadFunction(directoryName, pluginPath, fileNames.ToArray());
-            }
-        }
-    }
-
-    private void LoadFunction(string plugin, string pluginPath, string[] fileNames)
-    {
-        pluginPath += "." + plugin;
-        Dictionary<string, ISKFunction> functions = new(StringComparer.OrdinalIgnoreCase);
         var logger = _kernel.LoggerFactory.CreateLogger("NativeFunction");
 
-        foreach (var fileName in fileNames)
+        foreach (var file in Directory.GetFiles(nativeDirectory))
         {
-            string typeName = pluginPath + "." + fileName;
+            var fileNameWithExt = Path.GetFileName(file);
+            var pluginName  = fileNameWithExt.Substring(0, fileNameWithExt.Length - 3);
+            var typeName = pluginNamespace + "." + pluginName;
+
             var type = Type.GetType(typeName);
+
             var instance = Activator.CreateInstance(type!);
             MethodInfo[] methods = type!.GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public);
+            Dictionary<string, ISKFunction> functions = new(StringComparer.OrdinalIgnoreCase);
 
-            logger.LogTrace("Importing plugin name: {0}. Potential methods found: {1}", type.Name, methods.Length);
+            logger.LogTrace("Importing plugin name: {0}.", typeName);
 
             foreach (var method in methods)
             {
                 if (method.GetCustomAttribute<SKFunctionAttribute>() is not null)
                 {
-                    ISKFunction function = SKFunction.FromNativeMethod(method, instance, plugin);
+                    ISKFunction function = SKFunction.FromNativeMethod(method, instance, pluginName);
                     if (functions.ContainsKey(function.Name))
                     {
                         throw new SKException("Function overloads are not supported, please differentiate function names");
@@ -76,12 +53,11 @@ public class NativePluginLoader
                     functions.Add(function.Name, function);
 
                     _kernel.RegisterNativeFunction(function);
+
+                    logger.LogTrace("Methods imported {0}", functions.Count);
                 }
             }
-
         }
-
-        logger.LogTrace("Methods imported {0}", functions.Count);
     }
 }
 

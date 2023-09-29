@@ -7,11 +7,19 @@ namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "";
+        private const string API_KEY = "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";
 
         public static async Task Main(string[] args)
         {
-            await RunChatCompletion();
+            //const string endpoint = "http://localhost:8000";
+
+            //ChromaMemoryStore memoryStore = new(endpoint);
+
+            //await RunChatCompletion();
+            //await RunNativeFunction();
+            //await RunTextSkill(); 
+            //await RunTextSkillPipeline();
+            await TimeSkillNow();
             Console.ReadLine();
         }
 
@@ -97,12 +105,64 @@ namespace GPTConsole
 
             parameters = new Dictionary<string, string>
             {
-                { "first", "12.34" },
-                { "second", "56.78" }
+                { "input", "12.34" },
+                { "number", "56.78" }
             };
 
             function = kernel.Plugins.GetFunction("MathSkill", "Multiply");
             answer = await kernel.RunFunction(function, parameters);
+            Console.WriteLine(answer.Text);
+        }
+
+        public static async Task RunTextSkill()
+        {
+            var kernel = new KernelBuilder()
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .Build();
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var function = kernel.Plugins.GetFunction("TextSkill", "Uppercase");
+            var parameters = new Dictionary<string, string> { { "input", "ciao" } };
+            var answer = await kernel.RunFunction(function, parameters);
+
+            Console.WriteLine(answer.Text);
+        }
+
+        public static async Task RunTextSkillPipeline()
+        {
+            var kernel = new KernelBuilder()
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .Build();
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var trimStart = kernel.Plugins.GetFunction("TextSkill", "TrimStart");
+            var trimEnd = kernel.Plugins.GetFunction("TextSkill", "TrimEnd");
+            var uppercase = kernel.Plugins.GetFunction("TextSkill", "Uppercase");
+
+            kernel.Context.Variables["input"] = "    i n f i n i t e     s p a c e     ";
+
+            var answer = await kernel.RunPipeline(trimStart, trimEnd, uppercase);
+            Console.WriteLine(answer.Text);
+        }
+
+        public static async Task TimeSkillNow()
+        {
+            var kernel = new KernelBuilder()
+                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .Build();
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var function = kernel.Plugins.GetFunction("TimeSkill", "Now");
+
+            var parameters = new Dictionary<string, string> { };
+            var answer = await kernel.RunFunction(function, parameters);
+
             Console.WriteLine(answer.Text);
         }
 
@@ -191,6 +251,7 @@ Bot: Would you like to write one for you?",
         }
     }
 }
+
 
 
 

@@ -1,8 +1,4 @@
-﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-#pragma warning disable CA1510 // Use 'ArgumentNullException.ThrowIfNull' (.NET 8)
-
-
-namespace SemanticKernel.Memory;
+﻿namespace SemanticKernel.Memory;
 
 internal static class AsyncEnumerable
 {
