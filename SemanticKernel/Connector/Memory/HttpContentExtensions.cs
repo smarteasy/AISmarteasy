@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.Memory.Pinecone;
+﻿namespace SemanticKernel.Connector.Memory;
 
 internal static class HttpContentExtensions
 {

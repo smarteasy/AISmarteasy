@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace SemanticKernel.Connector.Memory.Pinecone;
+namespace SemanticKernel.Connector.Memory;
 
 internal static class HttpRequest
 {

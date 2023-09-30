@@ -1,10 +1,10 @@
-﻿namespace SemanticKernel.Connector.Memory.Pinecone;
+﻿namespace SemanticKernel.Connector.Memory;
 
 internal sealed class NonDisposableHttpClientHandler : HttpClientHandler
 {
     private NonDisposableHttpClientHandler()
     {
-        this.CheckCertificateRevocationList = true;
+        CheckCertificateRevocationList = true;
     }
 
     public static NonDisposableHttpClientHandler Instance { get; } = new();

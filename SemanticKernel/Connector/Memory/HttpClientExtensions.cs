@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SemanticKernel.Connector.Memory.Pinecone;
+namespace SemanticKernel.Connector.Memory;
 
 internal static class HttpClientExtensions
 {
@@ -25,7 +25,7 @@ internal static class HttpClientExtensions
             {
                 responseContent = await response!.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
-            catch { } // We want to suppress any exceptions that occur while reading the content, ensuring that an HttpOperationException is thrown instead.
+            catch { } 
 
             throw new HttpOperationException(response?.StatusCode ?? HttpStatusCode.BadRequest, responseContent, e.Message, e);
         }

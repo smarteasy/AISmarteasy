@@ -7,7 +7,7 @@ namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "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";
+        private const string API_KEY = "";
 
         public static async Task Main(string[] args)
         {
