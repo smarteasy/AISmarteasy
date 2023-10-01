@@ -11,15 +11,63 @@ namespace SemanticKernel.Connector.Memory;
 
 public sealed class PineconeClient : IPineconeClient
 {
-    public PineconeClient(string pineconeEnvironment, string apiKey, ILoggerFactory? loggerFactory = null, HttpClient? httpClient = null)
+    public PineconeClient(string environment, string apiKey, ILoggerFactory? loggerFactory = null)
     {
-        _pineconeEnvironment = pineconeEnvironment;
+        _environment = environment;
         _authHeader = new KeyValuePair<string, string>("Api-Key", apiKey);
         _jsonSerializerOptions = PineconeUtils.DefaultSerializerOptions;
-        _logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(PineconeClient)) : NullLogger.Instance;
-        _httpClient = httpClient ?? new HttpClient(NonDisposableHttpClientHandler.Instance, disposeHandler: false);
         _indexHostMapping = new ConcurrentDictionary<string, string>();
+
+        _logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(PineconeClient)) : NullLogger.Instance;
+
+        _httpClient = new HttpClient(NonDisposableHttpClientHandler.Instance, disposeHandler: false);
     }
+
+    public async IAsyncEnumerable<string?> ListIndexesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        using HttpRequestMessage request = ListIndexesRequest.Create().Build();
+
+        (HttpResponseMessage _, string responseContent) = await ExecuteHttpRequestAsync(GetIndexOperationsApiBasePath(), request, cancellationToken).ConfigureAwait(false);
+
+        string[]? indices = JsonSerializer.Deserialize<string[]?>(responseContent, _jsonSerializerOptions);
+
+        if (indices == null)
+        {
+            yield break;
+        }
+
+        foreach (string? index in indices)
+        {
+            yield return index;
+        }
+    }
+
+    private string GetIndexOperationsApiBasePath()
+    {
+        return $"https://controller.{_environment}.pinecone.io";
+    }
+
+    private async Task<(HttpResponseMessage response, string responseContent)> ExecuteHttpRequestAsync(
+        string baseUrl,
+        HttpRequestMessage request,
+        CancellationToken cancellationToken = default)
+    {
+        request.Headers.Add(this._authHeader.Key, this._authHeader.Value);
+        request.RequestUri = new Uri(baseUrl + request.RequestUri);
+
+        using HttpResponseMessage response = await this._httpClient.SendWithSuccessCheckAsync(request, cancellationToken).ConfigureAwait(false);
+
+        string responseContent = await response.Content.ReadAsStringWithExceptionMappingAsync().ConfigureAwait(false);
+
+        return (response, responseContent);
+    }
+
+
+
+
+
+
+
 
     public async IAsyncEnumerable<PineconeDocument?> FetchVectorsAsync(
         string indexName,
@@ -187,7 +235,7 @@ public sealed class PineconeClient : IPineconeClient
         string basePath = await GetVectorOperationsApiBasePathAsync(indexName).ConfigureAwait(false);
         IAsyncEnumerable<PineconeDocument> validVectors = PineconeUtils.EnsureValidMetadataAsync(vectors.ToAsyncEnumerable());
 
-        await foreach (UpsertRequest? batch in PineconeUtils.GetUpsertBatchesAsync(validVectors, MaxBatchSize).WithCancellation(cancellationToken))
+        await foreach (UpsertRequest? batch in PineconeUtils.GetUpsertBatchesAsync(validVectors, MAX_BATCH_SIZE).WithCancellation(cancellationToken))
         {
             totalBatches++;
 
@@ -324,24 +372,7 @@ public sealed class PineconeClient : IPineconeClient
         return result;
     }
 
-    public async IAsyncEnumerable<string?> ListIndexesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        using HttpRequestMessage request = ListIndexesRequest.Create().Build();
 
-        (HttpResponseMessage _, string responseContent) = await ExecuteHttpRequestAsync(GetIndexOperationsApiBasePath(), request, cancellationToken).ConfigureAwait(false);
-
-        string[]? indices = JsonSerializer.Deserialize<string[]?>(responseContent, _jsonSerializerOptions);
-
-        if (indices == null)
-        {
-            yield break;
-        }
-
-        foreach (string? index in indices)
-        {
-            yield return index;
-        }
-    }
 
     public async Task CreateIndexAsync(IndexDefinition indexDefinition, CancellationToken cancellationToken = default)
     {
@@ -400,16 +431,16 @@ public sealed class PineconeClient : IPineconeClient
     {
         _logger.LogDebug("Checking for index {0}", indexName);
 
-        List<string?>? indexNames = await ListIndexesAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+        var indexNames = ListIndexesAsync();//.ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        if (indexNames == null || !indexNames.Any(name => name == indexName))
-        {
-            return false;
-        }
+        //if (indexNames.All(name => name != indexName))
+        //{
+        //    return false;
+        //}
 
         PineconeIndex? index = await DescribeIndexAsync(indexName, cancellationToken).ConfigureAwait(false);
 
-        return index != null && index.Status.State == IndexState.Ready;
+        return index is { Status.State: IndexState.Ready };
     }
 
     public async Task<PineconeIndex?> DescribeIndexAsync(string indexName, CancellationToken cancellationToken = default)
@@ -478,14 +509,14 @@ public sealed class PineconeClient : IPineconeClient
         _logger.LogDebug("Collection created. {0}", indexName);
     }
 
-    private readonly string _pineconeEnvironment;
+    private readonly string _environment;
     private readonly ILogger _logger;
     private readonly HttpClient _httpClient;
 
     private readonly KeyValuePair<string, string> _authHeader;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly ConcurrentDictionary<string, string> _indexHostMapping;
-    private const int MaxBatchSize = 100;
+    private const int MAX_BATCH_SIZE = 100;
 
     private async Task<string> GetVectorOperationsApiBasePathAsync(string indexName)
     {
@@ -494,29 +525,11 @@ public sealed class PineconeClient : IPineconeClient
         return $"https://{indexHost}";
     }
 
-    private string GetIndexOperationsApiBasePath()
-    {
-        return $"https://controller.{_pineconeEnvironment}.pinecone.io";
-    }
 
-    private async Task<(HttpResponseMessage response, string responseContent)> ExecuteHttpRequestAsync(
-        string baseURL,
-        HttpRequestMessage request,
-        CancellationToken cancellationToken = default)
-    {
-        request.Headers.Add(_authHeader.Key, _authHeader.Value);
-        request.RequestUri = new Uri(baseURL + request.RequestUri);
-
-        using HttpResponseMessage response = await _httpClient.SendWithSuccessCheckAsync(request, cancellationToken).ConfigureAwait(false);
-
-        string responseContent = await response.Content.ReadAsStringWithExceptionMappingAsync().ConfigureAwait(false);
-
-        return (response, responseContent);
-    }
 
     private async Task<string> GetIndexHostAsync(string indexName, CancellationToken cancellationToken = default)
     {
-        if (_indexHostMapping.TryGetValue(indexName, out string indexHost))
+        if (_indexHostMapping.TryGetValue(indexName, out string? indexHost))
         {
             return indexHost;
         }

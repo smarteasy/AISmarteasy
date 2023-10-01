@@ -8,13 +8,20 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
     private readonly ITextEmbeddingGeneration _embeddingGenerator;
     private readonly IMemoryStore _storage;
 
-    public SemanticTextMemory(
-        IMemoryStore storage,
-        ITextEmbeddingGeneration embeddingGenerator)
+    public SemanticTextMemory(ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
     {
-        this._embeddingGenerator = embeddingGenerator;
-        this._storage = storage;
+        _embeddingGenerator = embeddingGenerator;
+        _storage = storage;
     }
+
+    public Task<IList<string>> GetCollectionsAsync()
+    {
+        return null;//await this._storage.GetCollectionsAsync().ToListAsync().ConfigureAwait(false);
+    }
+
+
+
+
 
     public async Task<string> SaveInformationAsync(
         string collection,
@@ -28,12 +35,12 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
         MemoryRecord data = MemoryRecord.LocalRecord(
             id: id, text: text, description: description, additionalMetadata: additionalMetadata, embedding: embedding);
 
-        if (!(await this._storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
+        if (!(await _storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
         {
-            await this._storage.CreateCollectionAsync(collection, cancellationToken).ConfigureAwait(false);
+            await _storage.CreateCollectionAsync(collection, cancellationToken).ConfigureAwait(false);
         }
 
-        return await this._storage.UpsertAsync(collection, data, cancellationToken).ConfigureAwait(false);
+        return await _storage.UpsertAsync(collection, data, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<string> SaveReferenceAsync(
@@ -49,10 +56,10 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
         var data = MemoryRecord.ReferenceRecord(externalId: externalId, sourceName: externalSourceName, description: description,
             additionalMetadata: additionalMetadata, embedding: embedding);
 
-        if (!(await _storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
-        {
+        //if (!(await _storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
+        //{
             await _storage.CreateCollectionAsync(collection, cancellationToken).ConfigureAwait(false);
-        }
+        //}
 
         return await _storage.UpsertAsync(collection, data, cancellationToken).ConfigureAwait(false);
     }
@@ -102,17 +109,10 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
         }
     }
 
-    public async Task<IList<string>> GetCollectionsAsync(CancellationToken cancellationToken = default)
-    {
-        return await this._storage.GetCollectionsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
-    }
 
     public void Dispose()
     {
-        // ReSharper disable once SuspiciousTypeConversion.Global
         if (this._embeddingGenerator is IDisposable emb) { emb.Dispose(); }
-
-        // ReSharper disable once SuspiciousTypeConversion.Global
         if (this._storage is IDisposable storage) { storage.Dispose(); }
     }
 }

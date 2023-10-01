@@ -4,6 +4,7 @@ using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Context;
+using SemanticKernel.Embedding;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -37,15 +38,13 @@ public sealed class Kernel : IDisposable
 
     public ILoggerFactory LoggerFactory { get; }
 
-
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
-
 
     public IAIService AIService { get; }
     public SKContext Context { get; set; }
 
     public Kernel(IAIService aiService, 
-        ISemanticTextMemory memory, IDelegatingHandlerFactory httpHandlerFactory,
+        IDelegatingHandlerFactory httpHandlerFactory,
         ILoggerFactory loggerFactory)
     {
         _semanticPluginDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
@@ -63,12 +62,18 @@ public sealed class Kernel : IDisposable
         //TODO - 세부적인 처리 과정 추적
 
         HttpHandlerFactory = httpHandlerFactory;
-        _memory = memory;
 
 
         LoadSemanticPlugin(); 
 
         Context = new SKContext(loggerFactory: loggerFactory);
+    }
+
+    public void UseMemory(ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
+    {
+        Verify.NotNull(storage);
+        Verify.NotNull(embeddingGenerator);
+        RegisterMemory(embeddingGenerator, storage);
     }
 
     public async Task<Plan> RunPlan(string prompt)
@@ -321,9 +326,9 @@ public sealed class Kernel : IDisposable
         return function;
     }
 
-    public void RegisterMemory(ISemanticTextMemory memory)
+    public void RegisterMemory(ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
     {
-        _memory = memory;
+        _memory = new SemanticTextMemory(embeddingGenerator, storage);
     }
 
     private static string RandomFunctionName() => "func" + Guid.NewGuid().ToString("N");

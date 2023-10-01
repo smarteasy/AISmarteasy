@@ -42,52 +42,50 @@ public class IndexDefinition
 
     public IndexDefinition WithDimension(int dimension)
     {
-        this.Dimension = dimension;
+        Dimension = dimension;
         return this;
     }
 
     public IndexDefinition WithMetric(IndexMetric metric)
     {
-        this.Metric = metric;
+        Metric = metric;
         return this;
     }
 
     public IndexDefinition NumberOfPods(int pods)
     {
-        this.Pods = pods;
+        Pods = pods;
         return this;
     }
 
     public IndexDefinition NumberOfReplicas(int replicas)
     {
-        this.Replicas = replicas;
+        Replicas = replicas;
         return this;
     }
 
     public IndexDefinition WithPodType(PodType podType)
     {
-        this.PodType = podType;
+        PodType = podType;
         return this;
     }
 
     public IndexDefinition WithMetadataIndex(MetadataIndexConfig? config = default)
     {
-        this.MetadataConfig = config;
+        MetadataConfig = config;
         return this;
     }
 
     public IndexDefinition FromSourceCollection(string sourceCollection)
     {
-        this.SourceCollection = sourceCollection;
+        SourceCollection = sourceCollection;
         return this;
     }
 
     public HttpRequestMessage Build()
     {
         HttpRequestMessage request = HttpRequest.CreatePostRequest("/databases", this);
-
         request.Headers.Add("accept", "text/plain");
-
         return request;
     }
 
@@ -109,21 +107,21 @@ public class IndexDefinition
         StringBuilder builder = new();
 
         builder.Append("Configuration :");
-        builder.AppendLine($"Name: {this.Name}, ");
-        builder.AppendLine($"Dimension: {this.Dimension}, ");
-        builder.AppendLine($"Metric: {this.Metric}, ");
-        builder.AppendLine($"Pods: {this.Pods}, ");
-        builder.AppendLine($"Replicas: {this.Replicas}, ");
-        builder.AppendLine($"PodType: {this.PodType}, ");
+        builder.AppendLine($"Name: {Name}, ");
+        builder.AppendLine($"Dimension: {Dimension}, ");
+        builder.AppendLine($"Metric: {Metric}, ");
+        builder.AppendLine($"Pods: {Pods}, ");
+        builder.AppendLine($"Replicas: {Replicas}, ");
+        builder.AppendLine($"PodType: {PodType}, ");
 
-        if (this.MetadataConfig != null)
+        if (MetadataConfig != null)
         {
-            builder.AppendLine($"MetaIndex: {string.Join(",", this.MetadataConfig)}, ");
+            builder.AppendLine($"MetaIndex: {string.Join(",", MetadataConfig)}, ");
         }
 
-        if (this.SourceCollection != null)
+        if (SourceCollection != null)
         {
-            builder.AppendLine($"SourceCollection: {this.SourceCollection}, ");
+            builder.AppendLine($"SourceCollection: {SourceCollection}, ");
         }
 
         return builder.ToString();
@@ -132,6 +130,6 @@ public class IndexDefinition
     [JsonConstructor]
     public IndexDefinition(string name)
     {
-        this.Name = name;
+        Name = name;
     }
 }

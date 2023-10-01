@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using SemanticKernel.Connector.Memory.Pinecone;
 
 namespace SemanticKernel.Memory;
 
@@ -93,6 +94,41 @@ public class MemoryRecord : DataEntryBase
         DateTimeOffset? timestamp = null)
     {
         return new MemoryRecord(metadata, embedding, key, timestamp);
+    }
+
+    public PineconeDocument ToPineconeDocument()
+    {
+        string key = !string.IsNullOrEmpty(Key)
+            ? Key
+            : Metadata.Id;
+
+        Dictionary<string, object> metadata = new()
+        {
+            ["document_Id"] = Metadata.Id,
+            ["text"] = Metadata.Text,
+            ["source_Id"] = Metadata.ExternalSourceName,
+            ["created_at"] = HasTimestamp
+                ? Timestamp?.ToString("o") ?? DateTimeOffset.UtcNow.ToString("o")
+                : DateTimeOffset.UtcNow.ToString("o")
+        };
+
+        if (!string.IsNullOrEmpty(Metadata.AdditionalMetadata))
+        {
+            JsonSerializerOptions options = PineconeUtils.DefaultSerializerOptions;
+            var additionalMetaData = JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalMetadata, options);
+
+            if (additionalMetaData != null)
+            {
+                foreach (var item in additionalMetaData)
+                {
+                    metadata[item.Key] = item.Value;
+                }
+            }
+        }
+
+        return PineconeDocument
+            .Create(key, Embedding)
+            .WithMetadata(metadata);
     }
 
     public string GetSerializedMetadata()

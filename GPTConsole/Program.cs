@@ -2,12 +2,17 @@
 using SemanticKernel.Service;
 using SemanticKernel;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+using SemanticKernel.Connector.Memory;
+using SemanticKernel.Connector.Memory.Pinecone;
+using SemanticKernel.Memory;
+using System;
+using System.Reflection;
 
 namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "";
+        private const string API_KEY = "...";
 
         public static async Task Main(string[] args)
         {
@@ -19,10 +24,23 @@ namespace GPTConsole
             //await RunNativeFunction();
             //await RunTextSkill(); 
             //await RunTextSkillPipeline();
-            await TimeSkillNow();
+            //await TimeSkillNow();
+            
+            await RunMemoryWithPinecone();
             Console.ReadLine();
         }
 
+        public static async Task RunMemoryWithPinecone()
+        {
+            var environment = "gcp-starter";
+            var apiKey = "...";
+
+            var pinecone = new PineconeClient(environment, apiKey);
+            await foreach(var index in pinecone.ListIndexesAsync())
+            {
+                Console.WriteLine(index);
+            }
+        }
 
         public static async Task RunTextCompletion()
         {
@@ -78,7 +96,7 @@ namespace GPTConsole
         public static async Task RunSemanticFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var function = kernel.Plugins.GetFunction("Fun", "Joke");
@@ -91,7 +109,7 @@ namespace GPTConsole
         public static async Task RunNativeFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -117,7 +135,7 @@ namespace GPTConsole
         public static async Task RunTextSkill()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -133,7 +151,7 @@ namespace GPTConsole
         public static async Task RunTextSkillPipeline()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -152,7 +170,7 @@ namespace GPTConsole
         public static async Task TimeSkillNow()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -169,7 +187,7 @@ namespace GPTConsole
         public static async Task RunGetIntentFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var function = kernel.Plugins.GetFunction("OrchestratorSkill", "GetIntent");
@@ -197,7 +215,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunOrchestratorFunction()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -213,7 +231,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPipeline()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.TextCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
                 .Build();
 
 
@@ -231,7 +249,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPlanner()
         {
             var kernel = new KernelBuilder()
-                .WithCompletionService(AIServiceKind.ChatCompletion, API_KEY)
+                .WithOpenAIService(AIServiceKind.ChatCompletion, API_KEY)
                 .Build();
 
             var loader = new NativePluginLoader();
@@ -248,6 +266,27 @@ Bot: Would you like to write one for you?",
 
             Console.WriteLine("\nPlan results:");
             Console.WriteLine(JsonSerializer.Serialize(plan.State, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        private static Dictionary<string, string> SampleData()
+        {
+            return new Dictionary<string, string>
+            {
+                ["https://github.com/microsoft/semantic-kernel/blob/main/README.md"]
+                    = "README: Installation, getting started, and how to contribute",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks/02-running-prompts-from-file.ipynb"]
+                    = "Jupyter notebook describing how to pass prompts from a file to a semantic plugin or function",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks//00-getting-started.ipynb"]
+                    = "Jupyter notebook describing how to get started with the Semantic Kernel",
+                ["https://github.com/microsoft/semantic-kernel/tree/main/samples/plugins/ChatPlugin/ChatGPT"]
+                    = "Sample demonstrating how to create a chat plugin interfacing with ChatGPT",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/src/SemanticKernel/Memory/VolatileMemoryStore.cs"]
+                    = "C# class that defines a volatile embedding store",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/dotnet/KernelHttpServer/README.md"]
+                    = "README: How to set up a Semantic Kernel Service API using Azure Function Runtime v4",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/apps/chat-summary-webapp-react/README.md"]
+                    = "README: README associated with a sample chat summary react-based webapp",
+            };
         }
     }
 }

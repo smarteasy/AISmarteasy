@@ -2,6 +2,11 @@
 
 public interface ISemanticTextMemory
 {
+    public Task<IList<string>> GetCollectionsAsync();
+
+
+
+
     public Task<string> SaveInformationAsync(
         string collection,
         string text,
@@ -31,5 +36,4 @@ public interface ISemanticTextMemory
         bool withEmbeddings = false,
         CancellationToken cancellationToken = default);
 
-    public Task<IList<string>> GetCollectionsAsync(CancellationToken cancellationToken = default);
 }

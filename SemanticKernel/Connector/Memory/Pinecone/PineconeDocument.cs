@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using SemanticKernel.Memory;
 
 namespace SemanticKernel.Connector.Memory.Pinecone;
 
@@ -95,5 +97,27 @@ public class PineconeDocument
         var jso = new JsonSerializerOptions();
         jso.Converters.Add(new ReadOnlyMemoryConverter());
         return jso;
+    }
+
+    public MemoryRecord ToMemoryRecord(bool transferVectorOwnership)
+    {
+        ReadOnlyMemory<float> embedding = Values;
+
+        string additionalMetadataJson = GetSerializedMetadata();
+
+        MemoryRecordMetadata memoryRecordMetadata = new(
+            false,
+            DocumentId ?? string.Empty,
+            Text ?? string.Empty,
+            string.Empty,
+            SourceId ?? string.Empty,
+            additionalMetadataJson
+        );
+
+        DateTimeOffset? timestamp = CreatedAt != null
+            ? DateTimeOffset.Parse(CreatedAt, DateTimeFormatInfo.InvariantInfo)
+            : null;
+
+        return MemoryRecord.FromMetadata(memoryRecordMetadata, embedding, Id, timestamp);
     }
 }

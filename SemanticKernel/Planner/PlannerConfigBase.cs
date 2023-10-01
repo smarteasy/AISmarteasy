@@ -15,7 +15,7 @@ public abstract class PlannerConfigBase
 
     public HashSet<(string, string)> IncludedFunctions { get; } = new();
 
-    public ISemanticTextMemory Memory { get; set; } = NullMemory.Instance;
+    public ISemanticTextMemory Memory { get; set; } = null!;
 
     public int MaxRelevantFunctions { get; set; } = 100;
 

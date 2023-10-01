@@ -1,9 +1,16 @@
-﻿using SemanticKernel.Connector.Memory.Pinecone;
+﻿using System.Runtime.CompilerServices;
+using SemanticKernel.Connector.Memory.Pinecone;
 
 namespace SemanticKernel.Connector.Memory;
 
 public interface IPineconeClient
 {
+    IAsyncEnumerable<string?> ListIndexesAsync(CancellationToken cancellationToken = default);
+
+
+
+
+
     IAsyncEnumerable<PineconeDocument?> FetchVectorsAsync(string indexName, IEnumerable<string> ids, string indexNamespace = "", 
         bool includeValues = false, CancellationToken cancellationToken = default
     );
@@ -24,7 +31,7 @@ public interface IPineconeClient
 
     Task<IndexStats?> DescribeIndexStatsAsync(string indexName, Dictionary<string, object>? filter = default, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<string?> ListIndexesAsync(CancellationToken cancellationToken = default);
+
 
     Task DeleteIndexAsync(string indexName, CancellationToken cancellationToken = default);
 

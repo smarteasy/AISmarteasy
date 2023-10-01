@@ -6,6 +6,8 @@ public static class ModelStringProvider
     {
         switch (aiService)
         {
+            case AIServiceKind.Embedding:
+                return "text-embedding-ada-002";
             case AIServiceKind.TextCompletion:
                 return "text-davinci-003";
             case AIServiceKind.ChatCompletion:

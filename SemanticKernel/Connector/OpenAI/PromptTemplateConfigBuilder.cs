@@ -1,20 +1,19 @@
-﻿namespace SemanticKernel.Connector.OpenAI
+﻿namespace SemanticKernel.Connector.OpenAI;
+
+public class PromptTemplateConfigBuilder
 {
-    public class PromptTemplateConfigBuilder
+    public static PromptTemplateConfig Build(double temperature = 0.7, int maxTokens = 256)
     {
-        public static PromptTemplateConfig Build(double temperature = 0.7, int maxTokens = 256)
+        var result = new PromptTemplateConfig()
         {
-            var result = new PromptTemplateConfig()
+            Completion =
             {
-                Completion =
-                {
-                    Temperature = temperature,
-                    MaxTokens = maxTokens
+                Temperature = temperature,
+                MaxTokens = maxTokens
 
-                }
-            };
+            }
+        };
 
-            return result;
-        }
+        return result;
     }
 }

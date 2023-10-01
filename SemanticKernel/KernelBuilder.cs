@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using SemanticKernel.Connector.Memory;
+using SemanticKernel.Connector.Memory.Pinecone;
+using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+using SemanticKernel.Embedding;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -13,7 +17,6 @@ namespace SemanticKernel;
 public sealed class KernelBuilder
 {
     private readonly IPromptTemplate _promptTemplateEngine;
-    private Func<ISemanticTextMemory> _memoryFactory = () => NullMemory.Instance;
     private ILoggerFactory _loggerFactory = NullLoggerFactory.Instance;
     private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
 
@@ -41,28 +44,20 @@ public sealed class KernelBuilder
                 throw new ArgumentOutOfRangeException(nameof(config.Service), config.Service, null);
         }
 
-        var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
-
-        if (_memoryStorageFactory != null)
-        {
-            //kernel.UseMemory(_memoryStorageFactory.Invoke());
-        }
+        var kernel = new Kernel(_service!, _httpHandlerFactory, _loggerFactory);
 
         KernelProvider.Kernel = kernel;
 
         return kernel;
     }
-
-
-
 
     public Kernel Build()
     {
-        var kernel = new Kernel(_service!, _memoryFactory.Invoke(), _httpHandlerFactory, _loggerFactory);
+        var kernel = new Kernel(_service!, _httpHandlerFactory, _loggerFactory);
 
         if (_memoryStorageFactory != null)
         {
-            //kernel.UseMemory(_memoryStorageFactory.Invoke());
+            kernel.UseMemory((_service as ITextEmbeddingGeneration)!, _memoryStorageFactory.Invoke());
         }
 
         KernelProvider.Kernel = kernel;
@@ -70,40 +65,31 @@ public sealed class KernelBuilder
         return kernel;
     }
 
-    public KernelBuilder WithCompletionService(AIServiceKind aiServiceType, string apiKey)
+    public KernelBuilder WithOpenAIService(AIServiceKind aiServiceType, string apiKey)
+    {
+        return WithOpenAIService(aiServiceType, apiKey, string.Empty, string.Empty);
+    }
+
+    public KernelBuilder WithOpenAIService(AIServiceKind aiServiceType, string apiKey, string memoryEnvironment,  string memoryApiKey)
     {
         var model = ModelStringProvider.Provide(aiServiceType);
 
-        var kernelBuilder = new KernelBuilder();
-
         switch (aiServiceType)
         {
+            case AIServiceKind.Embedding:
+                WithOpenAIEmbeddingService(model, apiKey)
+                    .WithMemoryStorage(new PineconeMemoryStore(memoryEnvironment, memoryApiKey));
+                break;
             case AIServiceKind.TextCompletion:
-                kernelBuilder
-                    .WithOpenAITextCompletionService(model, apiKey);
+                WithOpenAITextCompletionService(model, apiKey);
                 break;
             case AIServiceKind.ChatCompletion:
-                kernelBuilder
-                    .WithOpenAIChatCompletionService(model, apiKey);
+               WithOpenAIChatCompletionService(model, apiKey);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(aiServiceType), aiServiceType, null);
         }
 
-        return kernelBuilder;
-    }
-
-    public KernelBuilder WithMemory(ISemanticTextMemory memory)
-    {
-        Verify.NotNull(memory);
-        _memoryFactory = () => memory;
-        return this;
-    }
-
-    public KernelBuilder WithMemory<TStore>(Func<ILoggerFactory, TStore> factory) where TStore : ISemanticTextMemory
-    {
-        Verify.NotNull(factory);
-        _memoryFactory = () => factory(_loggerFactory);
         return this;
     }
 
@@ -113,29 +99,13 @@ public sealed class KernelBuilder
         _memoryStorageFactory = () => storage;
         return this;
     }
-
-    public KernelBuilder WithMemoryStorage<TStore>(Func<ILoggerFactory, TStore> factory) where TStore : IMemoryStore
-    {
-        Verify.NotNull(factory);
-        _memoryStorageFactory = () => factory(_loggerFactory);
-        return this;
-    }
-
-    public KernelBuilder WithMemoryStorage<TStore>(Func<ILoggerFactory, IDelegatingHandlerFactory, TStore> factory)
-        where TStore : IMemoryStore
-    {
-        Verify.NotNull(factory);
-        this._memoryStorageFactory = () => factory(this._loggerFactory, this._httpHandlerFactory);
-        return this;
-    }
-
+    
     public KernelBuilder WithHttpHandlerFactory(IDelegatingHandlerFactory httpHandlerFactory)
     {
         Verify.NotNull(httpHandlerFactory);
         _httpHandlerFactory = httpHandlerFactory;
         return this;
     }
-
 
     private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
@@ -149,6 +119,12 @@ public sealed class KernelBuilder
         return this;
     }
 
+    private KernelBuilder WithOpenAIEmbeddingService(string model, string apiKey)
+    {
+        _service = new OpenAITextEmbeddingGeneration(model, apiKey);
+        return this;
+    }
+    
     public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
     {
         Verify.NotNull(loggerFactory);
