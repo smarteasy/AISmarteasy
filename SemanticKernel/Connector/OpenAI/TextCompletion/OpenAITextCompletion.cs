@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Service;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SemanticKernel.Connector.OpenAI.TextCompletion;
 

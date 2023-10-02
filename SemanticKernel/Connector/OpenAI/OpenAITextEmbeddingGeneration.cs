@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Embedding;
-
+using SemanticKernel.Service;
 namespace SemanticKernel.Connector.OpenAI;
 
-public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, ITextEmbeddingGeneration
+public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, IAIService
 {
     public OpenAITextEmbeddingGeneration(
         string modelId,
@@ -15,9 +14,8 @@ public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, ITextEmbed
     ) : base(modelId, apiKey, organization, httpClient, loggerFactory)
     {
     }
-    public Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddingsAsync(
-        IList<string> data,
-        CancellationToken cancellationToken = default)
+
+    public override Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
     {
         LogActionDetails();
         return InternalGetEmbeddingsAsync(data, cancellationToken);

@@ -10,4 +10,6 @@ public interface IAIService
 
     Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
         CancellationToken cancellationToken = default);
+
+    Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default);
 }

@@ -8,6 +8,7 @@ namespace SemanticKernel.Connector.Memory.Pinecone;
 [JsonConverter(typeof(PodTypeJsonConverter))]
 public enum PodType
 {
+    [EnumMember(Value = "starter")]
     None = 0,
 
     [EnumMember(Value = "s1.x1")]
@@ -56,7 +57,7 @@ internal sealed class PodTypeJsonConverter : JsonConverter<PodType>
         object? enumValue = Enum
             .GetValues(typeToConvert)
             .Cast<object?>()
-            .FirstOrDefault(value => value != null && typeToConvert.GetMember(value.ToString())[0]
+            .FirstOrDefault(value => value != null && typeToConvert.GetMember(value.ToString()!)[0]
                 .GetCustomAttribute(typeof(EnumMemberAttribute)) is EnumMemberAttribute enumMemberAttr && enumMemberAttr.Value == stringValue);
 
         if (enumValue != null)

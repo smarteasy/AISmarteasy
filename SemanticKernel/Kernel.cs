@@ -69,7 +69,7 @@ public sealed class Kernel : IDisposable
         Context = new SKContext(loggerFactory: loggerFactory);
     }
 
-    public void UseMemory(ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
+    public void UseMemory(IAIService embeddingGenerator, IMemoryStore storage)
     {
         Verify.NotNull(storage);
         Verify.NotNull(embeddingGenerator);
@@ -87,6 +87,12 @@ public sealed class Kernel : IDisposable
         }
 
         return plan;
+    }
+
+    public Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
+    {
+        //var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.GenerateEmbeddings(data, cancellationToken);
     }
 
     public Task<ChatHistory> RunChatCompletion(ChatHistory history)
@@ -326,7 +332,7 @@ public sealed class Kernel : IDisposable
         return function;
     }
 
-    public void RegisterMemory(ITextEmbeddingGeneration embeddingGenerator, IMemoryStore storage)
+    public void RegisterMemory(IAIService embeddingGenerator, IMemoryStore storage)
     {
         _memory = new SemanticTextMemory(embeddingGenerator, storage);
     }

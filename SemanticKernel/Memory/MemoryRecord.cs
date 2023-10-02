@@ -20,8 +20,8 @@ public class MemoryRecord : DataEntryBase
         string? key,
         DateTimeOffset? timestamp = null) : base(key, timestamp)
     {
-        this.Metadata = metadata;
-        this.Embedding = embedding;
+        Metadata = metadata;
+        Embedding = embedding;
     }
 
     public static MemoryRecord ReferenceRecord(

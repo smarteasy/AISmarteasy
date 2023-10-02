@@ -26,16 +26,16 @@ public class PineconeDocument
     public float? Score { get; set; }
 
     [JsonIgnore]
-    public string? Text => this.Metadata?.TryGetValue("text", out var text) == true ? text.ToString() : null;
+    public string? Text => Metadata?.TryGetValue("text", out var text) == true ? text.ToString() : null;
 
     [JsonIgnore]
-    public string? DocumentId => this.Metadata?.TryGetValue("document_Id", out var docId) == true ? docId.ToString() : null;
+    public string? DocumentId => Metadata?.TryGetValue("document_Id", out var docId) == true ? docId.ToString() : null;
 
     [JsonIgnore]
-    public string? SourceId => this.Metadata?.TryGetValue("source_Id", out var sourceId) == true ? sourceId.ToString() : null;
+    public string? SourceId => Metadata?.TryGetValue("source_Id", out var sourceId) == true ? sourceId.ToString() : null;
 
     [JsonIgnore]
-    public string? CreatedAt => this.Metadata?.TryGetValue("created_at", out var createdAt) == true ? createdAt.ToString() : null;
+    public string? CreatedAt => Metadata?.TryGetValue("created_at", out var createdAt) == true ? createdAt.ToString() : null;
 
     [JsonConstructor]
     public PineconeDocument(
@@ -45,11 +45,11 @@ public class PineconeDocument
         SparseVectorData? sparseValues = null,
         float? score = null)
     {
-        this.Id = id ?? Guid.NewGuid().ToString();
-        this.Values = values;
-        this.Metadata = metadata ?? new Dictionary<string, object>();
-        this.SparseValues = sparseValues;
-        this.Score = score;
+        Id = id ?? Guid.NewGuid().ToString();
+        Values = values;
+        Metadata = metadata ?? new Dictionary<string, object>();
+        SparseValues = sparseValues;
+        Score = score;
     }
 
     public static PineconeDocument Create(string? id = default, ReadOnlyMemory<float> values = default)
@@ -59,19 +59,19 @@ public class PineconeDocument
 
      public PineconeDocument WithSparseValues(SparseVectorData? sparseValues)
     {
-        this.SparseValues = sparseValues;
+        SparseValues = sparseValues;
         return this;
     }
 
     public PineconeDocument WithMetadata(Dictionary<string, object>? metadata)
     {
-        this.Metadata = metadata;
+        Metadata = metadata;
         return this;
     }
 
     public string GetSerializedMetadata()
     {
-        if (this.Metadata == null)
+        if (Metadata == null)
         {
             return string.Empty;
         }

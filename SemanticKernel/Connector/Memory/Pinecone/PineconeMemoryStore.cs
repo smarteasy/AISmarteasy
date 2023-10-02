@@ -30,14 +30,22 @@ public class PineconeMemoryStore : IPineconeMemoryStore
         }
     }
 
-    public IList<string> GetCollectionsAsync()
+    public async IAsyncEnumerable<string> GetCollectionsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        return null;
-        //await foreach (var index in _pineconeClient.ListIndexesAsync().ConfigureAwait(false))
-        //{
-        //    yield return index ?? "";
-        //}
+        await foreach (var index in this._pineconeClient.ListIndexesAsync(cancellationToken).ConfigureAwait(false))
+        {
+            yield return index ?? "";
+        }
     }
+
+
+
+
+
+
+
+
+
 
     public async Task<bool> DoesCollectionExistAsync(string collectionName, CancellationToken cancellationToken = default)
     {

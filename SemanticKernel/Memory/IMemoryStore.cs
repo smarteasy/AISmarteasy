@@ -2,11 +2,13 @@
 
 public interface IMemoryStore
 {
-    IList<string> GetCollectionsAsync();
+    IAsyncEnumerable<string> GetCollectionsAsync(CancellationToken cancellationToken = default);
 
-    
-    
     Task CreateCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
+    
+
+
+
 
 
 

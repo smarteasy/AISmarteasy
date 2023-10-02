@@ -57,7 +57,7 @@ public sealed class KernelBuilder
 
         if (_memoryStorageFactory != null)
         {
-            kernel.UseMemory((_service as ITextEmbeddingGeneration)!, _memoryStorageFactory.Invoke());
+            kernel.UseMemory((_service as IAIService)!, _memoryStorageFactory.Invoke());
         }
 
         KernelProvider.Kernel = kernel;
@@ -100,12 +100,6 @@ public sealed class KernelBuilder
         return this;
     }
     
-    public KernelBuilder WithHttpHandlerFactory(IDelegatingHandlerFactory httpHandlerFactory)
-    {
-        Verify.NotNull(httpHandlerFactory);
-        _httpHandlerFactory = httpHandlerFactory;
-        return this;
-    }
 
     private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
     {
@@ -124,7 +118,19 @@ public sealed class KernelBuilder
         _service = new OpenAITextEmbeddingGeneration(model, apiKey);
         return this;
     }
-    
+
+
+
+
+
+
+    public KernelBuilder WithHttpHandlerFactory(IDelegatingHandlerFactory httpHandlerFactory)
+    {
+        Verify.NotNull(httpHandlerFactory);
+        _httpHandlerFactory = httpHandlerFactory;
+        return this;
+    }
+
     public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
     {
         Verify.NotNull(loggerFactory);

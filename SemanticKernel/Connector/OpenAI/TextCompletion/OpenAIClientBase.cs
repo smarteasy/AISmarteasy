@@ -78,4 +78,9 @@ public abstract class OpenAIClientBase : ClientBase
     {
         return Task.FromResult<ChatHistory>(null!);
     }
+
+    public virtual Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IList<ReadOnlyMemory<float>>>(null!);
+    }
 }

@@ -42,6 +42,45 @@ public sealed class PineconeClient : IPineconeClient
         }
     }
 
+    public async Task<IndexStats?> DescribeIndexStatsAsync(
+        string indexName,
+        Dictionary<string, object>? filter = default,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Getting index stats for index {0}", indexName);
+
+        string basePath = await GetVectorOperationsApiBasePathAsync(indexName).ConfigureAwait(false);
+
+        using HttpRequestMessage request = DescribeIndexStatsRequest.GetIndexStats()
+            .WithFilter(filter)
+            .Build();
+
+        string? responseContent = null;
+
+        try
+        {
+            (_, responseContent) = await ExecuteHttpRequestAsync(basePath, request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (HttpOperationException e)
+        {
+            _logger.LogError(e, "Index not found {Message}", e.Message);
+            throw;
+        }
+
+        IndexStats? result = JsonSerializer.Deserialize<IndexStats>(responseContent, _jsonSerializerOptions);
+
+        if (result != null)
+        {
+            _logger.LogDebug("Index stats retrieved");
+        }
+        else
+        {
+            _logger.LogWarning("Index stats retrieval failed");
+        }
+
+        return result;
+    }
+
     private string GetIndexOperationsApiBasePath()
     {
         return $"https://controller.{_environment}.pinecone.io";
@@ -52,15 +91,45 @@ public sealed class PineconeClient : IPineconeClient
         HttpRequestMessage request,
         CancellationToken cancellationToken = default)
     {
-        request.Headers.Add(this._authHeader.Key, this._authHeader.Value);
+        request.Headers.Add(_authHeader.Key, _authHeader.Value);
         request.RequestUri = new Uri(baseUrl + request.RequestUri);
 
-        using HttpResponseMessage response = await this._httpClient.SendWithSuccessCheckAsync(request, cancellationToken).ConfigureAwait(false);
+        var response = await _httpClient.SendWithSuccessCheckAsync(request, cancellationToken).ConfigureAwait(false);
 
-        string responseContent = await response.Content.ReadAsStringWithExceptionMappingAsync().ConfigureAwait(false);
+        var responseContent = await response.Content.ReadAsStringWithExceptionMappingAsync().ConfigureAwait(false);
 
         return (response, responseContent);
     }
+
+    public async Task CreateIndexAsync(IndexDefinition indexDefinition, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Creating index {0}", indexDefinition.ToString());
+
+        string indexName = indexDefinition.Name;
+
+        using HttpRequestMessage request = indexDefinition.Build();
+
+        try
+        {
+            await ExecuteHttpRequestAsync(GetIndexOperationsApiBasePath(), request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (HttpOperationException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+        {
+            _logger.LogError(e, "Bad Request: {StatusCode}, {Response}", e.StatusCode, e.ResponseContent);
+            throw;
+        }
+        catch (HttpOperationException e) when (e.StatusCode == HttpStatusCode.Conflict)
+        {
+            _logger.LogError(e, "Index of given name already exists: {StatusCode}, {Response}", e.StatusCode, e.ResponseContent);
+            throw;
+        }
+        catch (HttpOperationException e)
+        {
+            _logger.LogError(e, "Creating index failed: {Message}, {Response}", e.Message, e.ResponseContent);
+            throw;
+        }
+    }
+
 
 
 
@@ -241,7 +310,7 @@ public sealed class PineconeClient : IPineconeClient
 
             using HttpRequestMessage request = batch.ToNamespace(indexNamespace).Build();
 
-            string? responseContent = null;
+            string? responseContent;
 
             try
             {
@@ -333,75 +402,7 @@ public sealed class PineconeClient : IPineconeClient
         }
     }
 
-    public async Task<IndexStats?> DescribeIndexStatsAsync(
-        string indexName,
-        Dictionary<string, object>? filter = default,
-        CancellationToken cancellationToken = default)
-    {
-        _logger.LogDebug("Getting index stats for index {0}", indexName);
 
-        string basePath = await GetVectorOperationsApiBasePathAsync(indexName).ConfigureAwait(false);
-
-        using HttpRequestMessage request = DescribeIndexStatsRequest.GetIndexStats()
-            .WithFilter(filter)
-            .Build();
-
-        string? responseContent = null;
-
-        try
-        {
-            (_, responseContent) = await ExecuteHttpRequestAsync(basePath, request, cancellationToken).ConfigureAwait(false);
-        }
-        catch (HttpOperationException e)
-        {
-            _logger.LogError(e, "Index not found {Message}", e.Message);
-            throw;
-        }
-
-        IndexStats? result = JsonSerializer.Deserialize<IndexStats>(responseContent, _jsonSerializerOptions);
-
-        if (result != null)
-        {
-            _logger.LogDebug("Index stats retrieved");
-        }
-        else
-        {
-            _logger.LogWarning("Index stats retrieval failed");
-        }
-
-        return result;
-    }
-
-
-
-    public async Task CreateIndexAsync(IndexDefinition indexDefinition, CancellationToken cancellationToken = default)
-    {
-        _logger.LogDebug("Creating index {0}", indexDefinition.ToString());
-
-        string indexName = indexDefinition.Name;
-
-        using HttpRequestMessage request = indexDefinition.Build();
-
-        try
-        {
-            await ExecuteHttpRequestAsync(GetIndexOperationsApiBasePath(), request, cancellationToken).ConfigureAwait(false);
-        }
-        catch (HttpOperationException e) when (e.StatusCode == HttpStatusCode.BadRequest)
-        {
-            _logger.LogError(e, "Bad Request: {StatusCode}, {Response}", e.StatusCode, e.ResponseContent);
-            throw;
-        }
-        catch (HttpOperationException e) when (e.StatusCode == HttpStatusCode.Conflict)
-        {
-            _logger.LogError(e, "Index of given name already exists: {StatusCode}, {Response}", e.StatusCode, e.ResponseContent);
-            throw;
-        }
-        catch (HttpOperationException e)
-        {
-            _logger.LogError(e, "Creating index failed: {Message}, {Response}", e.Message, e.ResponseContent);
-            throw;
-        }
-    }
 
     public async Task DeleteIndexAsync(string indexName, CancellationToken cancellationToken = default)
     {
@@ -429,18 +430,18 @@ public sealed class PineconeClient : IPineconeClient
 
     public async Task<bool> DoesIndexExistAsync(string indexName, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Checking for index {0}", indexName);
+        this._logger.LogDebug("Checking for index {0}", indexName);
 
-        var indexNames = ListIndexesAsync();//.ToListAsync(cancellationToken).ConfigureAwait(false);
+        List<string?>? indexNames = await this.ListIndexesAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        //if (indexNames.All(name => name != indexName))
-        //{
-        //    return false;
-        //}
+        if (indexNames.All(name => name != indexName))
+        {
+            return false;
+        }
 
-        PineconeIndex? index = await DescribeIndexAsync(indexName, cancellationToken).ConfigureAwait(false);
+        PineconeIndex? index = await this.DescribeIndexAsync(indexName, cancellationToken).ConfigureAwait(false);
 
-        return index is { Status.State: IndexState.Ready };
+        return index != null && index.Status.State == IndexState.Ready;
     }
 
     public async Task<PineconeIndex?> DescribeIndexAsync(string indexName, CancellationToken cancellationToken = default)
@@ -449,7 +450,7 @@ public sealed class PineconeClient : IPineconeClient
 
         using HttpRequestMessage request = DescribeIndexRequest.Create(indexName).Build();
 
-        string? responseContent = null;
+        string? responseContent;
 
         try
         {
@@ -466,7 +467,15 @@ public sealed class PineconeClient : IPineconeClient
             throw;
         }
 
-        PineconeIndex? indexDescription = JsonSerializer.Deserialize<PineconeIndex>(responseContent, _jsonSerializerOptions);
+        PineconeIndex? indexDescription = null;
+        try
+        {
+            indexDescription = JsonSerializer.Deserialize<PineconeIndex>(responseContent, _jsonSerializerOptions);
+        }
+        catch (Exception e)
+        {
+            _logger.LogDebug("JsonSerialization raise Exception.");
+        }
 
         if (indexDescription == null)
         {

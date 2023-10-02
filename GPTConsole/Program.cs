@@ -7,39 +7,80 @@ using SemanticKernel.Connector.Memory.Pinecone;
 using SemanticKernel.Memory;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Numerics;
 
 namespace GPTConsole
 {
     internal class Program
     {
-        private const string API_KEY = "...";
+        private const string API_KEY = "";
+        private const string PINECONE_ENVIRONMENT = "gcp-starter";
+        private const string PINECONE_API_KEY = "";
 
         public static async Task Main(string[] args)
         {
-            //const string endpoint = "http://localhost:8000";
-
-            //ChromaMemoryStore memoryStore = new(endpoint);
-
             //await RunChatCompletion();
             //await RunNativeFunction();
             //await RunTextSkill(); 
             //await RunTextSkillPipeline();
             //await TimeSkillNow();
-            
-            await RunMemoryWithPinecone();
+            //await RunPineconeIndexRelated();
+
+            await GeneratePineconeEmbeddings();
             Console.ReadLine();
         }
 
-        public static async Task RunMemoryWithPinecone()
+        public static async Task RunPineconeIndexRelated()
         {
-            var environment = "gcp-starter";
-            var apiKey = "...";
+            var pinecone = new PineconeClient(PINECONE_ENVIRONMENT, PINECONE_API_KEY);
 
-            var pinecone = new PineconeClient(environment, apiKey);
+            var creatingIndexName = "smarteasy";
+
             await foreach(var index in pinecone.ListIndexesAsync())
             {
-                Console.WriteLine(index);
+                var existedIndexName = index;
+                if (existedIndexName == creatingIndexName)
+                {
+                    creatingIndexName = "test";
+                }
+                var describeIndex = await pinecone.DescribeIndexAsync(existedIndexName!);
+                Console.WriteLine(describeIndex?.Configuration);
+    
+                await pinecone.DeleteIndexAsync(existedIndexName!);
             }
+
+            var indexDefinition = new IndexDefinition(creatingIndexName);
+            await pinecone.CreateIndexAsync(indexDefinition);
+            Console.WriteLine($"{creatingIndexName} is created." );
+        }
+
+        public static async Task GeneratePineconeEmbeddings()
+        {
+            var kernel = new KernelBuilder()
+                .WithOpenAIService(AIServiceKind.Embedding, API_KEY)
+                .Build();
+
+            string[] data = { "A", "B" };
+
+            var embeddings = await kernel.AIService.GenerateEmbeddings(data);
+
+            Console.WriteLine("GenerateEmbeddings");
+
+            var vectors = new List<PineconeDocument>();
+            foreach (var embedding in embeddings)
+            {
+                var vector = new PineconeDocument(embedding);
+                vectors.Add(vector);
+            }
+
+            var indexName = "smarteasy";
+            var pinecone = new PineconeClient(PINECONE_ENVIRONMENT, PINECONE_API_KEY);
+
+            await pinecone.UpsertAsync(indexName, vectors);
+
+            var describeIndexStats = await pinecone.DescribeIndexStatsAsync(indexName);
+            Console.WriteLine(JsonSerializer.Serialize(describeIndexStats));
         }
 
         public static async Task RunTextCompletion()

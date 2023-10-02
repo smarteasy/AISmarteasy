@@ -4,7 +4,7 @@ using SemanticKernel.Service;
 
 namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 
-public sealed class OpenAIChatCompletion : OpenAIClientBase, IChatCompletion
+public sealed class OpenAIChatCompletion : OpenAIClientBase, IAIService
 {
     public OpenAIChatCompletion(
         string modelId,

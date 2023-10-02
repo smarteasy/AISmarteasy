@@ -10,10 +10,10 @@ public class IndexStats
         float indexFullness = default,
         long totalVectorCount = default)
     {
-        this.Namespaces = namespaces;
-        this.Dimension = dimension;
-        this.IndexFullness = indexFullness;
-        this.TotalVectorCount = totalVectorCount;
+        Namespaces = namespaces;
+        Dimension = dimension;
+        IndexFullness = indexFullness;
+        TotalVectorCount = totalVectorCount;
     }
 
     [JsonPropertyName("namespaces")]

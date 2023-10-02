@@ -108,28 +108,6 @@ public abstract class ClientBase
         return new OpenAIChatHistory(instructions);
     }
 
-
-
-    private protected async IAsyncEnumerable<TextStreamingResult> InternalGetTextStreamingResultsAsync(
-        string text,
-        CompleteRequestSettings requestSettings,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        Verify.NotNull(requestSettings);
-
-        ValidateMaxTokens(requestSettings.MaxTokens);
-        var options = CreateCompletionsOptions(text, requestSettings);
-
-        Response<StreamingCompletions>? response = await RunRequestAsync<Response<StreamingCompletions>>(
-            () => Client.GetCompletionsStreamingAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
-
-        using StreamingCompletions streamingChatCompletions = response.Value;
-        await foreach (StreamingChoice choice in streamingChatCompletions.GetChoicesStreaming(cancellationToken))
-        {
-            yield return new TextStreamingResult(streamingChatCompletions, choice);
-        }
-    }
-
     private protected async Task<IList<ReadOnlyMemory<float>>> InternalGetEmbeddingsAsync(
         IList<string> data,
         CancellationToken cancellationToken = default)
@@ -157,6 +135,34 @@ public abstract class ClientBase
 
         return result;
     }
+
+
+
+
+
+    
+
+    private protected async IAsyncEnumerable<TextStreamingResult> InternalGetTextStreamingResultsAsync(
+        string text,
+        CompleteRequestSettings requestSettings,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        Verify.NotNull(requestSettings);
+
+        ValidateMaxTokens(requestSettings.MaxTokens);
+        var options = CreateCompletionsOptions(text, requestSettings);
+
+        Response<StreamingCompletions>? response = await RunRequestAsync<Response<StreamingCompletions>>(
+            () => Client.GetCompletionsStreamingAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
+
+        using StreamingCompletions streamingChatCompletions = response.Value;
+        await foreach (StreamingChoice choice in streamingChatCompletions.GetChoicesStreaming(cancellationToken))
+        {
+            yield return new TextStreamingResult(streamingChatCompletions, choice);
+        }
+    }
+
+
 
 
 
