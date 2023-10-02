@@ -20,6 +20,7 @@
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TextSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TimeSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\WaitSkill.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\GoogleSearchEngineSkill.cs" />
   </ItemGroup>
 
   <ItemGroup>

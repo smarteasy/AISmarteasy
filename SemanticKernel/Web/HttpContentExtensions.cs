@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.Memory;
+﻿namespace SemanticKernel.Web;
 
 internal static class HttpContentExtensions
 {

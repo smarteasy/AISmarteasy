@@ -1,4 +1,6 @@
-﻿namespace SemanticKernel.Connector.Memory.Chroma;
+﻿using SemanticKernel.Web;
+
+namespace SemanticKernel.Connector.Memory.Chroma;
 
 internal sealed class ListCollectionsRequest
 {

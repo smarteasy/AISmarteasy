@@ -1,4 +1,6 @@
-﻿namespace SemanticKernel.Connector.Memory.Pinecone;
+﻿using SemanticKernel.Web;
+
+namespace SemanticKernel.Connector.Memory.Pinecone;
 
 internal sealed class DeleteIndexRequest
 {

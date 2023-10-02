@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Memory;
+using SemanticKernel.Web;
 
 namespace SemanticKernel.Connector.Memory.Pinecone;
 

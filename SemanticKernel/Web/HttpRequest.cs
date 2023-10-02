@@ -1,8 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using SemanticKernel.Connector.Memory;
 
-namespace SemanticKernel.Connector.Memory;
+namespace SemanticKernel.Web;
 
 internal static class HttpRequest
 {

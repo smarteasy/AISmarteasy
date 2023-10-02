@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.Memory;
+﻿namespace SemanticKernel.Web;
 
 internal sealed class NonDisposableHttpClientHandler : HttpClientHandler
 {
@@ -9,7 +9,9 @@ internal sealed class NonDisposableHttpClientHandler : HttpClientHandler
 
     public static NonDisposableHttpClientHandler Instance { get; } = new();
 
+
     protected override void Dispose(bool disposing)
     {
+
     }
 }

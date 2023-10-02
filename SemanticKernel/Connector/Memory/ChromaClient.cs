@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using SemanticKernel.Connector.Memory.Chroma;
+using SemanticKernel.Web;
 
 namespace SemanticKernel.Connector.Memory;
 

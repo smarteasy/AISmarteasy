@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SemanticKernel.Connector.Memory;
+namespace SemanticKernel.Web;
 
 public static class HttpClientExtensions
 {
@@ -25,7 +25,7 @@ public static class HttpClientExtensions
             catch
             {
                 throw new HttpOperationException(response?.StatusCode ?? HttpStatusCode.BadRequest, responseContent, e.Message, e);
-            } 
+            }
         }
 
         return response;

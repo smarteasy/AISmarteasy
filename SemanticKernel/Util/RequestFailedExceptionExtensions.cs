@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Azure;
+using SemanticKernel.Web;
 
 namespace SemanticKernel.Util;
 

@@ -9,13 +9,15 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Numerics;
+using SemanticKernel.Connector.Web;
+using Plugins.Native.Skills;
 
 namespace GPTConsole
 {
     internal class Program
     {
         private const string API_KEY = "";
-        private const string PINECONE_ENVIRONMENT = "gcp-starter";
+        private const string PINECONE_ENVIRONMENT = "";
         private const string PINECONE_API_KEY = "";
 
         public static async Task Main(string[] args)
@@ -27,8 +29,23 @@ namespace GPTConsole
             //await TimeSkillNow();
             //await RunPineconeIndexRelated();
 
-            await GeneratePineconeEmbeddings();
+            await GoogleSearch();
             Console.ReadLine();
+        }
+
+        public static async Task GoogleSearch()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var function = kernel.Plugins.GetFunction("GoogleSearchEngineSkill", "Search");
+            var parameters = new Dictionary<string, string> { { "input", "What's the largest building in the world?" } };
+
+            var answer = await kernel.RunFunction(function, parameters);
+            Console.WriteLine(answer.Text);
         }
 
         public static async Task RunPineconeIndexRelated()
@@ -58,8 +75,7 @@ namespace GPTConsole
         public static async Task GeneratePineconeEmbeddings()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.Embedding, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             string[] data = { "A", "B" };
 
@@ -87,7 +103,7 @@ namespace GPTConsole
         {
             AIServiceConfig config = new AIServiceConfig
             {
-                Service = AIServiceKind.TextCompletion,
+                ServiceType = AIServiceTypeKind.TextCompletion,
                 Vendor = AIServiceVendorKind.OpenAI,
                 ServiceFeature = AIServiceFeatureKind.Normal,
                 APIKey = API_KEY
@@ -104,7 +120,7 @@ namespace GPTConsole
         {
             AIServiceConfig config = new AIServiceConfig
             {
-                Service = AIServiceKind.ChatCompletion,
+                ServiceType = AIServiceTypeKind.ChatCompletion,
                 Vendor = AIServiceVendorKind.OpenAI,
                 ServiceFeature = AIServiceFeatureKind.Normal,
                 APIKey = API_KEY
@@ -137,8 +153,7 @@ namespace GPTConsole
         public static async Task RunSemanticFunction()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var function = kernel.Plugins.GetFunction("Fun", "Joke");
             var parameters = new Dictionary<string, string> { { "input", "time travel to dinosaur age" } };
@@ -150,8 +165,7 @@ namespace GPTConsole
         public static async Task RunNativeFunction()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var loader = new NativePluginLoader();
             loader.Load();
@@ -176,8 +190,7 @@ namespace GPTConsole
         public static async Task RunTextSkill()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var loader = new NativePluginLoader();
             loader.Load();
@@ -192,8 +205,7 @@ namespace GPTConsole
         public static async Task RunTextSkillPipeline()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var loader = new NativePluginLoader();
             loader.Load();
@@ -211,8 +223,7 @@ namespace GPTConsole
         public static async Task TimeSkillNow()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var loader = new NativePluginLoader();
             loader.Load();
@@ -228,8 +239,7 @@ namespace GPTConsole
         public static async Task RunGetIntentFunction()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
             var function = kernel.Plugins.GetFunction("OrchestratorSkill", "GetIntent");
 
@@ -256,8 +266,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunOrchestratorFunction()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY)); 
 
             var loader = new NativePluginLoader();
             loader.Load();
@@ -272,8 +281,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPipeline()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.TextCompletion, API_KEY)
-                .Build();
+                    .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
 
             var jokeFunction = kernel.Plugins.GetFunction("TempSkill", "Joke");
@@ -290,8 +298,7 @@ Bot: Would you like to write one for you?",
         public static async Task RunPlanner()
         {
             var kernel = new KernelBuilder()
-                .WithOpenAIService(AIServiceKind.ChatCompletion, API_KEY)
-                .Build();
+                    .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
             var loader = new NativePluginLoader();
             loader.Load();

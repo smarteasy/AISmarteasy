@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SemanticKernel;
+namespace SemanticKernel.Web;
 
 public class HttpOperationException : Exception
 {
@@ -19,8 +19,8 @@ public class HttpOperationException : Exception
     public HttpOperationException(HttpStatusCode? statusCode, string? responseContent, string? message, Exception? innerException)
         : base(message, innerException)
     {
-        this.StatusCode = statusCode;
-        this.ResponseContent = responseContent;
+        StatusCode = statusCode;
+        ResponseContent = responseContent;
     }
 
     public HttpStatusCode? StatusCode { get; set; }

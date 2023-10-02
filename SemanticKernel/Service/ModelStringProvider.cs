@@ -2,18 +2,27 @@ namespace SemanticKernel.Service;
 
 public static class ModelStringProvider
 {
-    public static string Provide(AIServiceKind aiService)
+    public static string ProvideCompletionModel(AIServiceTypeKind serviceType)
     {
-        switch (aiService)
+        switch (serviceType)
         {
-            case AIServiceKind.Embedding:
-                return "text-embedding-ada-002";
-            case AIServiceKind.TextCompletion:
+            case AIServiceTypeKind.TextCompletion:
                 return "text-davinci-003";
-            case AIServiceKind.ChatCompletion:
+            case AIServiceTypeKind.ChatCompletion:
                 return "gpt-4";
             default:
-                throw new ArgumentOutOfRangeException(nameof(aiService), aiService, null);
+                throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+        }
+    }
+
+    public static string ProvideEmbeddingModel(MemoryTypeKind memoryType)
+    {
+        switch (memoryType)
+        {
+            case MemoryTypeKind.PineCone:
+                return "text-davinci-003";
+            default:
+                throw new ArgumentOutOfRangeException(nameof(memoryType), memoryType, null);
         }
     }
 }
