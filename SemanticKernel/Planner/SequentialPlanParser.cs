@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml;
 using SemanticKernel.Context;
-using SemanticKernel.Function;
 
 namespace SemanticKernel.Planner;
 
@@ -55,8 +54,6 @@ internal static class SequentialPlanParser
 
         foreach (XmlNode solutionNode in solution)
         {
-            var parentNodeName = solutionNode.Name;
-
             foreach (XmlNode childNode in solutionNode.ChildNodes)
             {
                 if (childNode.Name == "#text" || childNode.Name == "#comment")
@@ -66,12 +63,12 @@ internal static class SequentialPlanParser
 
                 if (childNode.Name.StartsWith(FunctionTag, StringComparison.OrdinalIgnoreCase))
                 {
-                    var pluginFunctionName = childNode.Name.Split(s_functionTagArray, StringSplitOptions.None)?[1] ?? string.Empty;
+                    var pluginFunctionName = childNode.Name.Split(FunctionTagArray, StringSplitOptions.None)[1];
                     GetFunctionCallbackNames(pluginFunctionName, out var pluginName, out var functionName);
 
                     if (!string.IsNullOrEmpty(functionName))
                     {
-                        var pluginFunction = KernelProvider.Kernel.Plugins.GetFunction(pluginName, functionName);
+                        var pluginFunction = KernelProvider.Kernel.FindFunction(pluginName, functionName);
 
                         var planStep = new Plan(pluginFunction);
 
@@ -124,9 +121,9 @@ internal static class SequentialPlanParser
     private static void GetFunctionCallbackNames(string pluginFunctionName, out string pluginName, out string functionName)
     {
         var pluginFunctionNameParts = pluginFunctionName.Split('.');
-        pluginName = pluginFunctionNameParts?.Length > 1 ? pluginFunctionNameParts[0] : string.Empty;
+        pluginName = pluginFunctionNameParts.Length > 1 ? pluginFunctionNameParts[0] : string.Empty;
         functionName = pluginFunctionNameParts?.Length > 1 ? pluginFunctionNameParts[1] : pluginFunctionName;
     }
 
-    private static readonly string[] s_functionTagArray = new string[] { FunctionTag };
+    private static readonly string[] FunctionTagArray = new string[] { FunctionTag };
 }

@@ -76,8 +76,8 @@ public sealed class CodeBlock : Block, ICodeRendering
 
     private async Task<string> RenderFunctionCallAsync(FunctionIdBlock fBlock, SKContext context)
     {
-        var plugins = KernelProvider.Kernel.Plugins;
-        if (!GetFunctionFromPluginCollection(plugins!, fBlock, out ISKFunction? function))
+        var function = GetFunctionFromPlugins(fBlock);
+        if (function==null)
         {
             var errorMsg = $"Function `{fBlock.Content}` not found";
             Logger.LogError(errorMsg);
@@ -88,27 +88,37 @@ public sealed class CodeBlock : Block, ICodeRendering
 
         if (_blocks.Count > 1)
         {
-            contextClone = PopulateContextWithFunctionArguments(contextClone);
+            contextClone = PopulateContextWithFunctionArguments(context);
         }
 
         try
         {
+            await function.InvokeAsync(contextClone).ConfigureAwait(false);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Logger.LogError(ex, "Function {Plugin}.{Function} execution failed with error {Error}", function!.PluginName, function.Name, ex.Message);
+            Logger.LogError(ex, "Function {Plugin}.{Function} execution failed with error {Error}", function.PluginName, function.Name, ex.Message);
             throw;
         }
 
         return contextClone.Result;
     }
 
-    private bool GetFunctionFromPluginCollection(
-        IReadOnlyPluginCollection plugins,
-        FunctionIdBlock functionBlock,
-        out ISKFunction? function)
+    private ISKFunction? GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
-        return plugins.TryGetFunction(functionBlock.PluginName, functionBlock.FunctionName, out function);
+        foreach (var plugin in KernelProvider.Kernel.Plugins.Values)
+        {
+            try
+            {
+                return plugin.GetFunction(functionBlock.FunctionName);
+            }
+            catch (SKException)
+            {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private bool IsValidFunctionCall(out string errorMsg)

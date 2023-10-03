@@ -93,7 +93,7 @@ public class PromptTemplate : IPromptTemplate
             result.Append(await task.ConfigureAwait(false));
         }
 
-        this._logger.LogTrace("Rendered prompt: {0}", result);
+        _logger.LogTrace("Rendered prompt: {0}", result);
 
         return result.ToString();
     }

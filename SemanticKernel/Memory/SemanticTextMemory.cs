@@ -114,7 +114,7 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
 
     public void Dispose()
     {
-        if (this._embeddingGenerator is IDisposable emb) { emb.Dispose(); }
-        if (this._storage is IDisposable storage) { storage.Dispose(); }
+        if (_embeddingGenerator is IDisposable emb) { emb.Dispose(); }
+        if (_storage is IDisposable storage) { storage.Dispose(); }
     }
 }

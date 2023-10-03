@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Context;
-using SemanticKernel.Embedding;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -22,15 +20,11 @@ public sealed class Kernel : IDisposable
 
     private readonly string _semanticPluginDirectory;
 
-    private readonly IPluginCollection _pluginCollection;
-
-    private ISemanticTextMemory _memory;
     private readonly ILogger _logger;
 
-    public IReadOnlyPluginCollection Plugins => _pluginCollection;
+    public Dictionary<string, Plugin> Plugins { get; }
 
-
-    public ISemanticTextMemory Memory => _memory;
+    public ISemanticTextMemory? Memory { get; private set; } = null;
 
     public IPromptTemplate PromptTemplate { get; }
 
@@ -43,30 +37,23 @@ public sealed class Kernel : IDisposable
     public IAIService AIService { get; }
     public SKContext Context { get; set; }
 
-    public Kernel(IAIService aiService, 
-        IDelegatingHandlerFactory httpHandlerFactory,
-        ILoggerFactory loggerFactory)
+    public Kernel(IAIService aiService, IDelegatingHandlerFactory httpHandlerFactory, ILoggerFactory loggerFactory)
     {
-        _semanticPluginDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
-
+        AIService = aiService;
+        HttpHandlerFactory = httpHandlerFactory;
         LoggerFactory = loggerFactory;
+
+        Context = new SKContext(loggerFactory: loggerFactory);
+        
         _logger = LoggerFactory.CreateLogger(typeof(Kernel));
 
         PromptTemplate = new PromptTemplate(LoggerFactory);
         PromptTemplateConfig = PromptTemplateConfigBuilder.Build();
+        
+        Plugins = new Dictionary<string, Plugin>();
 
-        //TODO - 내용 정리
-        _pluginCollection = new PluginCollection(LoggerFactory);
-        AIService = aiService;
-
-        //TODO - 세부적인 처리 과정 추적
-
-        HttpHandlerFactory = httpHandlerFactory;
-
-
+        _semanticPluginDirectory = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
         LoadSemanticPlugin(); 
-
-        Context = new SKContext(loggerFactory: loggerFactory);
     }
 
     public void UseMemory(IAIService embeddingGenerator, IMemoryStore storage)
@@ -91,7 +78,6 @@ public sealed class Kernel : IDisposable
 
     public Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
     {
-        //var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return AIService.GenerateEmbeddings(data, cancellationToken);
     }
 
@@ -121,7 +107,7 @@ public sealed class Kernel : IDisposable
             Context.Variables[parameter.Key] = parameter.Value;
         }
 
-        var context = await function.InvokeAsync(requestSetting);
+        var context = await function.InvokeAsync(Context, requestSetting);
 
         return new SemanticAnswer(context.Variables.Input);
     }
@@ -152,10 +138,7 @@ public sealed class Kernel : IDisposable
         return result;
     }
 
-    public ISKFunction CreateSemanticFunction(
-        string pluginName,
-        string functionName,
-        SemanticFunctionConfig functionConfig)
+    public ISKFunction CreateSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
     {
         if (!functionConfig.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
         {
@@ -174,8 +157,6 @@ public sealed class Kernel : IDisposable
         return func;
     }
 
-
-
     public async Task<Plan> CreatePlanAsync(string goal, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(goal))
@@ -183,15 +164,17 @@ public sealed class Kernel : IDisposable
             throw new SKException("The goal specified is empty");
         }
 
-        var functionsManual = BuildFunctionsManual();
+        var functionViews = BuildFunctionViews();
 
         var parameters = new Dictionary<string, string>
         {
-            { AVAILABLE_FUNCTIONS_KEY, functionsManual },
+            { AVAILABLE_FUNCTIONS_KEY, functionViews },
             { "input", goal }
         };
 
-        var planner = Plugins.GetFunction("OrchestratorSkill", "SequencePlanner");
+        Plugins.TryGetValue("OrchestratorSkill", out var plugin);
+        var planner = plugin!.GetFunction("SequencePlanner");
+
         var answerPlan = await RunFunction(planner, parameters).ConfigureAwait(false);
 
         var planText  = answerPlan.Text.Trim();
@@ -202,8 +185,6 @@ public sealed class Kernel : IDisposable
                 "Unable to create plan. No response from Function Flow function. " +
                 $"\nGoal:{goal}\nFunctions:\n{planText}");
         }
-
-        var functions = _pluginCollection.GetAllFunctions();
 
         Plan plan;
         try
@@ -223,42 +204,17 @@ public sealed class Kernel : IDisposable
         return plan;
     }
 
-    private static string BuildFunctionsManual()
+    private string BuildFunctionViews()
     {
-        var functionsView = KernelProvider.Kernel.Plugins.GetFunctionsView();
         var result = string.Empty;
-        foreach (var functionViews in functionsView.FunctionViews.Values)
+        foreach (var plugin in Plugins.Values)
         {
-            result += string.Join("\n\n", functionViews.Select(x => x.ToManualString()));
+            result += string.Join("\n\n", plugin.BuildPluginView().FunctionViews.Values.Select(x => x.ToManualString()));
             result += "\n\n";
         }
 
         return result;
     }
-
-
-    public void CreateSemanticFunction(string promptTemplate, string pluginName, string functionName, string? description = null, 
-        AIRequestSettings? requestSettings = null)
-    {
-        functionName ??= RandomFunctionName();
-
-        var config = new PromptTemplateConfig
-        {
-            Description = description ?? "Generic function, unknown purpose",
-            Type = "completion",
-            //Completion = CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
-    };
-
-        functionName ??= RandomFunctionName();
-        Verify.ValidFunctionName(functionName);
-        if (!string.IsNullOrEmpty(pluginName)) { Verify.ValidPluginName(pluginName); }
-
-        var template = new PromptTemplate(promptTemplate, config);
-        var functionConfig = new SemanticFunctionConfig(config, template);
-
-        RegisterSemanticFunction(pluginName!, functionName, functionConfig);
-    }
-
 
     private void LoadSemanticPlugin()
     {
@@ -268,6 +224,10 @@ public sealed class Kernel : IDisposable
 
     private void LoadSemanticPlugin(string[] subDirectories)
     {
+        foreach (var directory in subDirectories)
+        {
+            LoadSemanticSubPlugin(directory, Directory.GetDirectories(directory));
+        }
         LoadSemanticSubPlugin(_semanticPluginDirectory, subDirectories);
     }
 
@@ -307,46 +267,57 @@ public sealed class Kernel : IDisposable
         }
     }
 
-
     public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
     {
         Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(functionName);
 
         ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
-        _pluginCollection.AddFunction(function);
+
+        if (!Plugins.TryGetValue(pluginName, out var plugin))
+        {
+            plugin = new Plugin(pluginName);
+            Plugins.Add(pluginName, plugin);
+        }
+
+        plugin!.AddFunction(function);
     }
 
     public void RegisterNativeFunction(ISKFunction function)
     {
-        _pluginCollection.AddFunction(function);
+        var pluginName = function.PluginName;
+        if (!Plugins.TryGetValue(pluginName, out var plugin))
+        {
+            plugin = new Plugin(pluginName);
+            Plugins.Add(pluginName, plugin);
+        }
+
+        plugin!.AddFunction(function);
     }
-
-    public ISKFunction RegisterCustomFunction(ISKFunction function)
-    {
-        Verify.NotNull(function);
-
-        function.SetDefaultPluginCollection(Plugins);
-        _pluginCollection.AddFunction(function);
-
-        return function;
-    }
-
+    
     public void RegisterMemory(IAIService embeddingGenerator, IMemoryStore storage)
     {
-        _memory = new SemanticTextMemory(embeddingGenerator, storage);
+        Memory = new SemanticTextMemory(embeddingGenerator, storage);
     }
-
-    private static string RandomFunctionName() => "func" + Guid.NewGuid().ToString("N");
 
     public SKContext CreateNewContext(ContextVariables variables)
     {
         return new SKContext(variables);
     }
 
+    public ISKFunction FindFunction(string pluginName, string functionName)
+    {
+        Verify.ValidPluginName(pluginName);
+        Verify.ValidFunctionName(functionName);
+
+        Plugins.TryGetValue(pluginName, out var plugin);
+        return plugin!.GetFunction(functionName);
+    }
+
     public void Dispose()
     {
-        if (_memory is IDisposable mem) { mem.Dispose(); }
-        if (_pluginCollection is IDisposable plugins) { plugins.Dispose(); }
+        if (Memory is IDisposable mem) { mem.Dispose(); }
+
+        if (Plugins is IDisposable plugins) { plugins.Dispose(); }
     }
 }

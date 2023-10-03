@@ -60,16 +60,16 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         };
     }
 
-  public async Task<SKContext> InvokeAsync(
+  public async Task<SKContext> InvokeAsync(SKContext context,
         AIRequestSettings? settings,
         CancellationToken cancellationToken = default)
     {
         var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
-        return await RunPromptAsync(kernel.AIService, settings, cancellationToken).ConfigureAwait(false);
+        return await RunPromptAsync(kernel.AIService, context, settings, cancellationToken).ConfigureAwait(false);
     }
 
-  public ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins)
+  public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
   {
       return this;
   }
@@ -128,7 +128,7 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
     private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
     private readonly ILogger _logger;
-    private IReadOnlyPluginCollection? _pluginCollection;
+    private IPlugin? _pluginCollection;
     private Lazy<IAIService>? _textCompletion;
     public IPromptTemplate PromptTemplate { get; }
 
@@ -154,12 +154,10 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     private async Task<SKContext> RunPromptAsync(
         IAIService? client,
+        SKContext context,
         AIRequestSettings? requestSettings,
         CancellationToken cancellationToken)
     {
-
-        var context = KernelProvider.Kernel.Context;
-
         Verify.NotNull(client);
         Verify.NotNull(requestSettings);
 

@@ -4,36 +4,79 @@ using SemanticKernel;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
 using SemanticKernel.Connector.Memory;
 using SemanticKernel.Connector.Memory.Pinecone;
-using SemanticKernel.Memory;
-using System;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Numerics;
-using SemanticKernel.Connector.Web;
-using Plugins.Native.Skills;
+using SemanticKernel.Context;
+using System.Globalization;
+using SemanticKernel.Function;
+using SemanticKernel.Prompt;
+using System.Diagnostics;
+using Microsoft.VisualBasic;
 
 namespace GPTConsole
 {
     internal class Program
     {
         private const string API_KEY = "";
-        private const string PINECONE_ENVIRONMENT = "";
+        private const string PINECONE_ENVIRONMENT = "gcp-starter";
         private const string PINECONE_API_KEY = "";
 
         public static async Task Main(string[] args)
         {
             //await RunChatCompletion();
             //await RunNativeFunction();
-            //await RunTextSkill(); 
-            //await RunTextSkillPipeline();
+            //await RunExample1(); 
+            //await RunExample2();
+            //await RunExample3();
+            //await RunExample4();
+            //await RunExample5();
             //await TimeSkillNow();
+            //await RunExample6();
+            //await RunExample10();
             //await RunPineconeIndexRelated();
 
-            await GoogleSearch();
+            //await GoogleSearch();
+
+            await RunExample7();
+ 
             Console.ReadLine();
         }
 
-        public static async Task GoogleSearch()
+        public static Task RunExample10()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            foreach (var plugin in kernel.Plugins.Values)
+            {
+                foreach (var functionView in plugin.BuildPluginView().FunctionViews.Values)
+                {
+                    PrintFunction(functionView);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private static void PrintFunction(FunctionView func)
+        {
+            Console.WriteLine($"   {func.Name}: {func.Description}");
+
+            if (func.Parameters.Count > 0)
+            {
+                Console.WriteLine("      Params:");
+                foreach (var p in func.Parameters)
+                {
+                    Console.WriteLine($"      - {p.Name}: {p.Description}");
+                    Console.WriteLine($"        default: '{p.DefaultValue}'");
+                }
+            }
+
+            Console.WriteLine();
+        }
+
+        public static async Task RunExample1()
         {
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
@@ -41,11 +84,209 @@ namespace GPTConsole
             var loader = new NativePluginLoader();
             loader.Load();
 
-            var function = kernel.Plugins.GetFunction("GoogleSearchEngineSkill", "Search");
-            var parameters = new Dictionary<string, string> { { "input", "What's the largest building in the world?" } };
-
+            var function = kernel.FindFunction("TextSkill", "Uppercase");
+            var parameters = new Dictionary<string, string> { { "input", "ciao" } };
             var answer = await kernel.RunFunction(function, parameters);
+
             Console.WriteLine(answer.Text);
+        }
+
+        public static async Task RunExample2()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var trimStart = kernel.FindFunction("TextSkill", "TrimStart");
+            var trimEnd = kernel.FindFunction("TextSkill", "TrimEnd");
+            var uppercase = kernel.FindFunction("TextSkill", "Uppercase");
+
+            kernel.Context.Variables["input"] = "    i n f i n i t e     s p a c e     ";
+
+            var answer = await kernel.RunPipeline(trimStart, trimEnd, uppercase);
+            Console.WriteLine(answer.Text);
+        }
+
+        private static async Task RunExample3()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var function1 = kernel.FindFunction("TextSkill", "AppendDay");
+            var function2 = kernel.FindFunction("TextSkill", "Uppercase");
+
+            var variables = new ContextVariables("Today is: ");
+            variables.Set("day", DateTimeOffset.Now.ToString("dddd", CultureInfo.CurrentCulture));
+
+            kernel.Context = new SKContext(variables);
+            var answer = await kernel.RunPipeline(function1, function2);
+            Console.WriteLine(answer.Text);
+        }
+
+        private static async Task RunExample4()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var function1 = kernel.FindFunction("GoogleSkill", "Search");
+
+            var parameters1 = new Dictionary<string, string> { { "input", "What's the tallest building in South America" } };
+
+            var result1 = await kernel.RunFunction(function1, parameters1);
+
+            Console.WriteLine(result1.Text + "\n");
+
+
+            var function2 = kernel.FindFunction("SummarizeSkill", "Summarize");
+            var parameters2 = new Dictionary<string, string>();
+
+            var result2 = await kernel.RunFunction(function2, parameters2);
+            Console.WriteLine(result2.Text);
+        }
+
+        private static async Task RunExample5()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            string promptTemplate = @"
+Generate a creative reason or excuse for the given event.
+Be creative and be funny. Let your imagination run wild.
+
+Event: I am running late.
+Excuse: I was being held ransom by giraffe gangsters.
+
+Event: I haven't been to the gym for a year
+Excuse: I've been too busy training my pet dragon.
+
+Event: {{$input}}
+";
+
+            string configText = @"
+{
+    ""schema"": 1,
+    ""type"": ""completion"",
+    ""description"": ""Generate a creative reason or excuse for the given even"",
+    ""completion"": {
+        ""max_tokens"": 1024,
+        ""temperature"": 0.4,
+        ""top_p"": 1
+    }
+}
+";
+            var config = PromptTemplateConfig.FromJson(configText);
+            var template = new PromptTemplate(promptTemplate, config);
+            var functionConfig = new SemanticFunctionConfig(config, template);
+
+            var function = kernel.CreateSemanticFunction("EventSkill", "GenerateReasonOrExcuse", functionConfig);
+
+            var parameters = new Dictionary<string, string> { { "input", "I missed the F1 final race" } };
+
+            var result = await kernel.RunFunction(function, parameters);
+            Console.WriteLine(result.Text);
+
+            parameters = new Dictionary<string, string> { { "input", "sorry I forgot your birthday" } };
+
+            result = await kernel.RunFunction(function, parameters);
+            Console.WriteLine(result.Text);
+        }
+
+        private static async Task RunExample6()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            string promptTemplate = @"
+Today is: {{TimeSkill.Date}}
+Current time is: {{TimeSkill.Time}}
+
+Answer to the following questions using JSON syntax, including the data used.
+Is it morning, afternoon, evening, or night (morning/afternoon/evening/night)?
+Is it weekend time (weekend/not weekend)?
+";
+
+            string configText = @"
+{
+    ""schema"": 1,
+    ""type"": ""completion"",
+    ""description"": ""Calling native function."",
+    ""completion"": {
+        ""max_tokens"": 1024,
+        ""temperature"": 0.9
+    }
+}
+";
+            var config = PromptTemplateConfig.FromJson(configText);
+            var template = new PromptTemplate(promptTemplate, config);
+            var functionConfig = new SemanticFunctionConfig(config, template);
+
+            var function = kernel.CreateSemanticFunction("TemplateSkill", "CallNativeFunction", functionConfig);
+
+            var parameters = new Dictionary<string, string>();
+
+            var result = await kernel.RunFunction(function, parameters);
+            Console.WriteLine(result.Text);
+        }
+
+        public static async Task RunExample7()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var questions = "What's the exchange rate EUR:USD?";
+            Console.WriteLine(questions);
+
+            var function = kernel.FindFunction("RAGSkill", "Search");
+            var parameters = new Dictionary<string, string> { ["input"] = questions };
+            var answer = await kernel.RunFunction(function, parameters);
+
+            if (answer.Text.Contains("google.search", StringComparison.OrdinalIgnoreCase))
+            {
+                var searchFunction = kernel.FindFunction("GoogleSkill", "Search");
+                var searchParameters = new Dictionary<string, string> { { "input", questions } };
+
+                var searchAnswer = await kernel.RunFunction(searchFunction, searchParameters);
+                string searchResult = searchAnswer.Text;
+
+                Console.WriteLine("---- Fetching information from Google");
+                Console.WriteLine(searchResult);
+
+                //var summarizeFunction = kernel.FindFunction("SummarizeSkill", "Summarize");
+                //var summarizeParameters = new Dictionary<string, string>
+                //{
+                //    ["input"] = searchResult
+                //};
+                //var searchResultSummary = await kernel.RunFunction(summarizeFunction, summarizeParameters);
+                //searchResult = searchResultSummary.Text;
+
+                parameters = new Dictionary<string, string>
+                {
+                    ["input"] = questions,
+                    ["externalInformation"] = searchResult
+                };
+
+                answer = await kernel.RunFunction(function, parameters);
+                Console.WriteLine($"Answer: {answer.Text}");
+            }
+            else
+            {
+                Console.WriteLine("AI had all the information, no need to query Google.");
+                Console.WriteLine($"Answer: {answer.Text}");
+            }
         }
 
         public static async Task RunPineconeIndexRelated()
@@ -155,7 +396,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-            var function = kernel.Plugins.GetFunction("Fun", "Joke");
+            var function = kernel.FindFunction("Fun", "Joke");
             var parameters = new Dictionary<string, string> { { "input", "time travel to dinosaur age" } };
 
             var answer = await kernel.RunFunction(function, parameters);
@@ -170,7 +411,7 @@ namespace GPTConsole
             var loader = new NativePluginLoader();
             loader.Load();
 
-            var function = kernel.Plugins.GetFunction("MathSkill", "Sqrt");
+            var function = kernel.FindFunction("MathSkill", "Sqrt");
             var parameters = new Dictionary<string, string> { { "input", "12" } };
 
             var answer = await kernel.RunFunction(function, parameters);
@@ -182,41 +423,8 @@ namespace GPTConsole
                 { "number", "56.78" }
             };
 
-            function = kernel.Plugins.GetFunction("MathSkill", "Multiply");
+            function = kernel.FindFunction("MathSkill", "Multiply");
             answer = await kernel.RunFunction(function, parameters);
-            Console.WriteLine(answer.Text);
-        }
-
-        public static async Task RunTextSkill()
-        {
-            var kernel = new KernelBuilder()
-                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
-
-            var loader = new NativePluginLoader();
-            loader.Load();
-
-            var function = kernel.Plugins.GetFunction("TextSkill", "Uppercase");
-            var parameters = new Dictionary<string, string> { { "input", "ciao" } };
-            var answer = await kernel.RunFunction(function, parameters);
-
-            Console.WriteLine(answer.Text);
-        }
-
-        public static async Task RunTextSkillPipeline()
-        {
-            var kernel = new KernelBuilder()
-                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
-
-            var loader = new NativePluginLoader();
-            loader.Load();
-
-            var trimStart = kernel.Plugins.GetFunction("TextSkill", "TrimStart");
-            var trimEnd = kernel.Plugins.GetFunction("TextSkill", "TrimEnd");
-            var uppercase = kernel.Plugins.GetFunction("TextSkill", "Uppercase");
-
-            kernel.Context.Variables["input"] = "    i n f i n i t e     s p a c e     ";
-
-            var answer = await kernel.RunPipeline(trimStart, trimEnd, uppercase);
             Console.WriteLine(answer.Text);
         }
 
@@ -228,7 +436,7 @@ namespace GPTConsole
             var loader = new NativePluginLoader();
             loader.Load();
 
-            var function = kernel.Plugins.GetFunction("TimeSkill", "Now");
+            var function = kernel.FindFunction("TimeSkill", "Now");
 
             var parameters = new Dictionary<string, string> { };
             var answer = await kernel.RunFunction(function, parameters);
@@ -241,7 +449,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-            var function = kernel.Plugins.GetFunction("OrchestratorSkill", "GetIntent");
+            var function = kernel.FindFunction("OrchestratorSkill", "GetIntent");
 
             var parameters = new Dictionary<string, string>
             {
@@ -271,7 +479,7 @@ Bot: Would you like to write one for you?",
             var loader = new NativePluginLoader();
             loader.Load();
 
-            var function = kernel.Plugins.GetFunction("OrchestratorSkill", "RouteRequest");
+            var function = kernel.FindFunction("OrchestratorSkill", "RouteRequest");
             var parameters = new Dictionary<string, string> { { "input", "What is the square root of 634?" } };
 
             var answer = await kernel.RunFunction(function, parameters);
@@ -284,9 +492,9 @@ Bot: Would you like to write one for you?",
                     .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
 
-            var jokeFunction = kernel.Plugins.GetFunction("TempSkill", "Joke");
-            var poemFunction = kernel.Plugins.GetFunction("TempSkill", "Poem");
-            var menuFunction = kernel.Plugins.GetFunction("TempSkill", "Menu");
+            var jokeFunction = kernel.FindFunction("TempSkill", "Joke");
+            var poemFunction = kernel.FindFunction("TempSkill", "Poem");
+            var menuFunction = kernel.FindFunction("TempSkill", "Menu");
 
             kernel.Context.Variables["input"] = "Charlie Brown";
 
@@ -302,8 +510,6 @@ Bot: Would you like to write one for you?",
 
             var loader = new NativePluginLoader();
             loader.Load();
-
-
          
             var goal = "If my investment of 2130.23 dollars increased by 23%, how much would I have after I spent $5 on a latte?";
             var plan = await kernel.RunPlan(goal);
@@ -314,27 +520,6 @@ Bot: Would you like to write one for you?",
 
             Console.WriteLine("\nPlan results:");
             Console.WriteLine(JsonSerializer.Serialize(plan.State, new JsonSerializerOptions { WriteIndented = true }));
-        }
-
-        private static Dictionary<string, string> SampleData()
-        {
-            return new Dictionary<string, string>
-            {
-                ["https://github.com/microsoft/semantic-kernel/blob/main/README.md"]
-                    = "README: Installation, getting started, and how to contribute",
-                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks/02-running-prompts-from-file.ipynb"]
-                    = "Jupyter notebook describing how to pass prompts from a file to a semantic plugin or function",
-                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks//00-getting-started.ipynb"]
-                    = "Jupyter notebook describing how to get started with the Semantic Kernel",
-                ["https://github.com/microsoft/semantic-kernel/tree/main/samples/plugins/ChatPlugin/ChatGPT"]
-                    = "Sample demonstrating how to create a chat plugin interfacing with ChatGPT",
-                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/src/SemanticKernel/Memory/VolatileMemoryStore.cs"]
-                    = "C# class that defines a volatile embedding store",
-                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/dotnet/KernelHttpServer/README.md"]
-                    = "README: How to set up a Semantic Kernel Service API using Azure Function Runtime v4",
-                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/apps/chat-summary-webapp-react/README.md"]
-                    = "README: README associated with a sample chat summary react-based webapp",
-            };
         }
     }
 }

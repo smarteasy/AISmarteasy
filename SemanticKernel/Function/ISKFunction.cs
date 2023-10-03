@@ -15,11 +15,11 @@ public interface ISKFunction
 
     FunctionView Describe();
 
-    Task<SKContext> InvokeAsync(
+    Task<SKContext> InvokeAsync(SKContext context,
         AIRequestSettings? settings = null,
         CancellationToken cancellationToken = default);
 
-    ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins);
+    ISKFunction SetDefaultPluginCollection(IPlugin plugins);
 
     ISKFunction SetAIConfiguration(AIRequestSettings settings);
 }

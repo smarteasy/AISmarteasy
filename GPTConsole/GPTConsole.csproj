@@ -20,7 +20,7 @@
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TextSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TimeSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\WaitSkill.cs" />
-    <Compile Include="bin\Debug\net7.0\Plugins\Native\GoogleSearchEngineSkill.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\GoogleSkill.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +36,16 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\RAGSkill\Search\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\RAGSkill\Search\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\MakeAbstractReadable\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\MakeAbstractReadable\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Notegen\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Notegen\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Summarize\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Summarize\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Topics\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Topics\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Joke\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Menu\config.json" />

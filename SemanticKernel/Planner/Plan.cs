@@ -1,11 +1,7 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Context;
 using SemanticKernel.Function;
 using SemanticKernel.Service;
@@ -90,7 +86,7 @@ public sealed class Plan : IPlan
         AddSteps(steps.ToArray());
     }
 
-    public static Plan FromJson(string json, IReadOnlyFunctionCollection? functions = null, bool requireFunctions = true)
+    public static Plan FromJson(string json, IPlugin? functions = null, bool requireFunctions = true)
     {
         var plan = JsonSerializer.Deserialize<Plan>(json, new JsonSerializerOptions { IncludeFields = true }) ?? new Plan(string.Empty);
 
@@ -139,17 +135,17 @@ public sealed class Plan : IPlan
         var functionVariables = GetNextStepVariables(KernelProvider.Kernel.Context.Variables, step);
         KernelProvider.Kernel.Context = new SKContext(functionVariables);
 
-        var result = await step.InvokeAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        var result = await step.InvokeAsync(KernelProvider.Kernel.Context, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (Outputs.Intersect(step.Outputs).Any())
         {
-            if (State.TryGetValue(DefaultResultKey, out string? currentPlanResult))
+            if (State.TryGetValue(DEFAULT_RESULT_KEY, out string? currentPlanResult))
             {
-                State.Set(DefaultResultKey, $"{currentPlanResult}\n{result.Variables.Input}");
+                State.Set(DEFAULT_RESULT_KEY, $"{currentPlanResult}\n{result.Variables.Input}");
             }
             else
             {
-                State.Set(DefaultResultKey, result.Variables.Input);
+                State.Set(DEFAULT_RESULT_KEY, result.Variables.Input);
             }
         }
 
@@ -193,32 +189,29 @@ public sealed class Plan : IPlan
         return new(Name, PluginName, Description, parameters);
     }
 
-
-    public ISKFunction SetDefaultPluginCollection(IReadOnlyPluginCollection plugins)
+    public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
     {
         return this;
     }
 
 
-    public async Task<SKContext> InvokeAsync(
+    public async Task<SKContext> InvokeAsync(SKContext context,
         AIRequestSettings? requestSettings = null,
         CancellationToken cancellationToken = default)
     {
-        var context = KernelProvider.Kernel.Context;
-
         if (Function is not null)
         {
             AddVariablesToContext(State, context);
 
             context = await Function
-                .InvokeAsync(requestSettings, cancellationToken)
+                .InvokeAsync(context, requestSettings, cancellationToken)
                 .ConfigureAwait(false);
         }
 
         return context;
     }
 
-    public ISKFunction SetDefaultFunctionCollection(IReadOnlyFunctionCollection functions)
+    public ISKFunction SetDefaultFunctionCollection(IPlugin functions)
     {
         return this;
         //return this.Function is not null ? Function.SetDefaultPluginCollection(functions) : this;
@@ -227,7 +220,7 @@ public sealed class Plan : IPlan
     [Obsolete("Methods, properties and classes which include Skill in the name have been renamed. Use ISKFunction.SetDefaultFunctionCollection instead. This will be removed in a future release.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #pragma warning disable CS1591
-    public ISKFunction SetDefaultSkillCollection(IReadOnlyFunctionCollection skills) =>
+    public ISKFunction SetDefaultSkillCollection(IPlugin skills) =>
         this.SetDefaultFunctionCollection(skills);
 
     public ISKFunction SetAIService(Func<IAIService> serviceFactory)
@@ -243,7 +236,7 @@ public sealed class Plan : IPlan
     internal string ExpandFromVariables(ContextVariables variables, string input)
     {
         var result = input;
-        var matches = s_variablesRegex.Matches(input);
+        var matches = VariablesRegex.Matches(input);
         var orderedMatches = matches.Cast<Match>().Select(m => m.Groups["var"].Value).Distinct().OrderByDescending(m => m.Length);
 
         foreach (var varName in orderedMatches)
@@ -257,27 +250,16 @@ public sealed class Plan : IPlan
         return result;
     }
 
-    private static Plan SetAvailableFunctions(Plan plan, IReadOnlyFunctionCollection functions, bool requireFunctions = true)
+    private static Plan SetAvailableFunctions(Plan plan, IPlugin plugin, bool requireFunctions = true)
     {
-        if (plan.Steps.Count == 0)
+        if (requireFunctions && plan.Steps.Count == 0)
         {
-            Verify.NotNull(functions);
-
-            if (functions.TryGetFunction(plan.PluginName, plan.Name, out var planFunction))
-            {
-                plan.SetFunction(planFunction);
-            }
-            else if (requireFunctions)
-            {
-                throw new SKException($"Function '{plan.PluginName}.{plan.Name}' not found in function collection");
-            }
+            throw new SKException($"Function '{plan.PluginName}.{plan.Name}' not found in function collection");
         }
-        else
+
+        foreach (var step in plan.Steps)
         {
-            foreach (var step in plan.Steps)
-            {
-                SetAvailableFunctions(step, functions, requireFunctions);
-            }
+            SetAvailableFunctions(step, plugin, requireFunctions);
         }
 
         return plan;
@@ -296,7 +278,7 @@ public sealed class Plan : IPlan
 
     private SKContext UpdateContextWithOutputs(SKContext context)
     {
-        var resultString = this.State.TryGetValue(DefaultResultKey, out string? result) ? result : this.State.ToString();
+        var resultString = this.State.TryGetValue(DEFAULT_RESULT_KEY, out string? result) ? result : this.State.ToString();
         context.Variables.Update(resultString);
 
         // copy previous step's variables to the next step
@@ -412,9 +394,9 @@ public sealed class Plan : IPlan
 
     private readonly List<Plan> _steps = new();
 
-    private static readonly Regex s_variablesRegex = new(@"\$(?<var>\w+)");
+    private static readonly Regex VariablesRegex = new(@"\$(?<var>\w+)");
 
-    private const string DefaultResultKey = "PLAN.RESULT";
+    private const string DEFAULT_RESULT_KEY = "PLAN.RESULT";
 
     private string DebuggerDisplay
     {
