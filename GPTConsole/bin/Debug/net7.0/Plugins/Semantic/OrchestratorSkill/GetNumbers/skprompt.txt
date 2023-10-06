@@ -1,0 +1,14 @@
+Extract the numbers from the input and output them in JSON format.
+
+-------------------
+INPUT: Take the square root of 4
+OUTPUT: {"number":4}
+
+INPUT: Subtract 3 dollars from 2 dollars
+OUTPUT: {"first":2,"second":3}
+
+INPUT: I have a 2x4 that is 3 feet long. Can you cut it in half?
+OUTPUT: {"first":3, "second":2}
+
+INPUT: {{$input}}
+OUTPUT: 

@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "description": "Given a section of a conversation transcript, summarize the part of the conversation.",
+    "type": "completion",
+    "completion": {
+        "max_tokens": 1024,
+        "temperature": 0.1,
+        "top_p": 0.5
+    }
+}

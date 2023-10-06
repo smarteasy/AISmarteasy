@@ -1,0 +1,19 @@
+{
+    "schema": 1,
+    "type": "completion",
+    "description": "Answer questions only when you know the facts or the information is provided.",
+    "completion": {
+        "max_tokens": 1024,
+        "temperature": 0,
+        "top_p": 1
+    },
+    "input": {
+        "parameters": [
+            {
+                "name": "input",
+                "description": "What to search for",
+                "defaultValue": ""
+            }
+        ]
+    }
+}

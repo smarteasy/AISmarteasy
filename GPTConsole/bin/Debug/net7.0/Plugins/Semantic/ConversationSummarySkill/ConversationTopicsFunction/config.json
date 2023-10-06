@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "description": "Analyze a conversation transcript and extract key topics worth remembering.",
+    "type": "completion",
+    "completion": {
+        "max_tokens": 1024,
+        "temperature": 0.1,
+        "top_p": 0.5
+    }
+}

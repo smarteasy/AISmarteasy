@@ -1,0 +1,2 @@
+  Make this poem "{{$input}}" influence the three items in a coffee shop menu.
+  The menu reads in enumerated form:
