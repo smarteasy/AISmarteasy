@@ -5,11 +5,11 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GPTApp", "App\GPTApp.csproj", "{7A27E025-1BD4-4B24-A181-3250ABED5D15}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AISmarteasy.Core", "SemanticKernel\AISmarteasy.Core.csproj", "{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSemanticKernel", "TestSemanticKernel\TestSemanticKernel.csproj", "{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCore", "TestSemanticKernel\TestCore.csproj", "{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GPTConsole", "GPTConsole\GPTConsole.csproj", "{393812E2-CCA3-4DBA-9B8E-3FC8207A0997}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AISmarteasy.Core", "AISmarteasy.Core\AISmarteasy.Core.csproj", "{4D156230-7258-4D56-8D9C-5180CCDED8A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{7A27E025-1BD4-4B24-A181-3250ABED5D15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A27E025-1BD4-4B24-A181-3250ABED5D15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A27E025-1BD4-4B24-A181-3250ABED5D15}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{393812E2-CCA3-4DBA-9B8E-3FC8207A0997}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{393812E2-CCA3-4DBA-9B8E-3FC8207A0997}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{393812E2-CCA3-4DBA-9B8E-3FC8207A0997}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D156230-7258-4D56-8D9C-5180CCDED8A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D156230-7258-4D56-8D9C-5180CCDED8A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D156230-7258-4D56-8D9C-5180CCDED8A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D156230-7258-4D56-8D9C-5180CCDED8A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
