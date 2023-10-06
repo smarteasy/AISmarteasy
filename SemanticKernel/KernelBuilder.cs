@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.Memory;
-using SemanticKernel.Connector.Memory.Pinecone;
 using SemanticKernel.Connector.OpenAI;
 using SemanticKernel.Connector.OpenAI.TextCompletion;
 using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
-using SemanticKernel.Embedding;
 using SemanticKernel.Function;
 using SemanticKernel.Handler;
 using SemanticKernel.Memory;
@@ -48,24 +45,15 @@ public sealed class KernelBuilder
         if (config.MemoryType == MemoryTypeKind.PineCone)
         {
             var embeddingModel = ModelStringProvider.ProvideEmbeddingModel(config.MemoryType);
-            WithOpenAIEmbeddingService(model, config.APIKey);
+            WithOpenAIEmbeddingService(embeddingModel, config.APIKey);
             WithMemoryStorage(new PineconeMemoryStore(config.MemoryEnvironment!, config.MemoryApiKey!));
         }
 
         var kernel = new Kernel(_completionService!, _httpHandlerFactory, _loggerFactory);
 
-        KernelProvider.Kernel = kernel;
-
-        return kernel;
-    }
-
-    public Kernel Build()
-    {
-        var kernel = new Kernel(_completionService!, _httpHandlerFactory, _loggerFactory);
-
         if (_memoryStorageFactory != null)
         {
-            kernel.UseMemory((_completionService as IAIService)!, _memoryStorageFactory.Invoke());
+            kernel.UseMemory((_embeddingService as IAIService)!, _memoryStorageFactory.Invoke());
         }
 
         KernelProvider.Kernel = kernel;

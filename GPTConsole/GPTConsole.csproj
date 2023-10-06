@@ -17,6 +17,7 @@
     <Compile Include="bin\Debug\net7.0\Plugins\Native\FileIOSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\MathSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\OrchestratorSkill.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\TextMemorySkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TextSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TimeSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\WaitSkill.cs" />

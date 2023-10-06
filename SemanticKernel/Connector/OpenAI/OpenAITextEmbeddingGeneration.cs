@@ -15,9 +15,10 @@ public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, IAIService
     {
     }
 
-    public override Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
+    public override async Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddingsAsync(IList<string> data,
+        CancellationToken cancellationToken = default)
     {
         LogActionDetails();
-        return InternalGetEmbeddingsAsync(data, cancellationToken);
+        return await InternalGetEmbeddingsAsync(data, cancellationToken).ConfigureAwait(false);
     }
 }

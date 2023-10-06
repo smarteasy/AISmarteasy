@@ -5,9 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace SemanticKernel.Function;
 
-internal static class Verify
+public static class Verify
 {
-    private static readonly Regex s_asciiLettersDigitsUnderscoresRegex = new("^[0-9A-Za-z_]*$");
+    private static readonly Regex AsciiLettersDigitsUnderscoresRegex = new("^[0-9A-Za-z_]*$");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void NotNull([NotNull] object? obj, [CallerArgumentExpression("obj")] string? paramName = null)
@@ -19,7 +19,7 @@ internal static class Verify
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void NotNullOrWhiteSpace([NotNull] string? str, [CallerArgumentExpression("str")] string? paramName = null)
+    public static void NotNullOrWhiteSpace([NotNull] string? str, [CallerArgumentExpression("str")] string? paramName = null)
     {
         NotNull(str, paramName);
         if (string.IsNullOrWhiteSpace(str))
@@ -31,7 +31,7 @@ internal static class Verify
     internal static void ValidPluginName([NotNull] string? pluginName)
     {
         NotNullOrWhiteSpace(pluginName);
-        if (!s_asciiLettersDigitsUnderscoresRegex.IsMatch(pluginName))
+        if (!AsciiLettersDigitsUnderscoresRegex.IsMatch(pluginName))
         {
             ThrowInvalidName("plugin name", pluginName);
         }
@@ -46,7 +46,7 @@ internal static class Verify
     private static void ValidName([NotNull] string? name, string kind)
     {
         NotNullOrWhiteSpace(name);
-        if (!s_asciiLettersDigitsUnderscoresRegex.IsMatch(name))
+        if (!AsciiLettersDigitsUnderscoresRegex.IsMatch(name))
         {
             ThrowInvalidName(kind, name);
         }
@@ -71,10 +71,6 @@ internal static class Verify
         }
     }
 
-    /// <summary>
-    /// Make sure every function parameter name is unique
-    /// </summary>
-    /// <param name="parameters">List of parameters</param>
     internal static void ParametersUniqueness(IList<ParameterView> parameters)
     {
         int count = parameters.Count;
@@ -87,14 +83,7 @@ internal static class Verify
                 if (string.IsNullOrWhiteSpace(p.Name))
                 {
                     string paramName = $"{nameof(parameters)}[{i}].{p.Name}";
-                    if (p.Name is null)
-                    {
-                        ThrowArgumentNullException(paramName);
-                    }
-                    else
-                    {
-                        ThrowArgumentWhiteSpaceException(paramName);
-                    }
+                    ThrowArgumentWhiteSpaceException(paramName);
                 }
 
                 if (!seen.Add(p.Name))

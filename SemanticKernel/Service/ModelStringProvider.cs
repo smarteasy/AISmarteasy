@@ -20,7 +20,7 @@ public static class ModelStringProvider
         switch (memoryType)
         {
             case MemoryTypeKind.PineCone:
-                return "text-davinci-003";
+                return "text-embedding-ada-002";
             default:
                 throw new ArgumentOutOfRangeException(nameof(memoryType), memoryType, null);
         }

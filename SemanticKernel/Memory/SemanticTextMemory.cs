@@ -1,39 +1,29 @@
 ﻿using System.Runtime.CompilerServices;
-using SemanticKernel.Embedding;
 using SemanticKernel.Service;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SemanticKernel.Memory;
 
 public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
 {
-    private readonly IAIService _embeddingGenerator;
+    private readonly IAIService _embeddingService;
     private readonly IMemoryStore _storage;
 
-    public SemanticTextMemory(IAIService embeddingGenerator, IMemoryStore storage)
+    public SemanticTextMemory(IAIService embeddingService, IMemoryStore storage)
     {
-        _embeddingGenerator = embeddingGenerator;
+        _embeddingService = embeddingService;
         _storage = storage;
     }
 
-    public Task<IList<string>> GetCollectionsAsync()
+    public async Task<IList<string>> GetCollectionsAsync(CancellationToken cancellationToken = default)
     {
-        return null;//await this._storage.GetCollectionsAsync().ToListAsync().ConfigureAwait(false);
+        return await _storage.GetCollectionsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
 
-
-
-
-    public async Task<string> SaveInformationAsync(
-        string collection,
-        string text,
-        string id,
-        string? description = null,
-        string? additionalMetadata = null,
-        CancellationToken cancellationToken = default)
+    public async Task<string> SaveInformationAsync(string collection, string text, string id,
+        string? description = null, string? additionalMetadata = null, CancellationToken cancellationToken = default)
     {
-        var embeddings = await _embeddingGenerator.GenerateEmbeddings(new List<string> { text }, cancellationToken).ConfigureAwait(false);
+        var embeddings = await _embeddingService.GenerateEmbeddingsAsync(new List<string> { text }, cancellationToken).ConfigureAwait(false);
         MemoryRecord data = MemoryRecord.LocalRecord(
             id: id, text: text, description: description, additionalMetadata: additionalMetadata, embedding: embeddings.First());
 
@@ -45,23 +35,23 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
         return await _storage.UpsertAsync(collection, data, cancellationToken).ConfigureAwait(false);
     }
 
+
+
+
+
+
     public async Task<string> SaveReferenceAsync(
-        string collection,
-        string text,
-        string externalId,
-        string externalSourceName,
-        string? description = null,
-        string? additionalMetadata = null,
-        CancellationToken cancellationToken = default)
+        string collection, string text, string externalId, string externalSourceName,
+        string? description = null, string? additionalMetadata = null, CancellationToken cancellationToken = default)
     {
-        var embeddings = await _embeddingGenerator.GenerateEmbeddings(new List<string>{ text }, cancellationToken).ConfigureAwait(false);
+        var embeddings = await _embeddingService.GenerateEmbeddingsAsync(new List<string>{ text }, cancellationToken).ConfigureAwait(false);
         var data = MemoryRecord.ReferenceRecord(externalId: externalId, sourceName: externalSourceName, description: description,
             additionalMetadata: additionalMetadata, embedding: embeddings.First());
 
-        //if (!(await _storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
-        //{
+        if (!(await _storage.DoesCollectionExistAsync(collection, cancellationToken).ConfigureAwait(false)))
+        {
             await _storage.CreateCollectionAsync(collection, cancellationToken).ConfigureAwait(false);
-        //}
+        }
 
         return await _storage.UpsertAsync(collection, data, cancellationToken).ConfigureAwait(false);
     }
@@ -87,34 +77,24 @@ public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
         await _storage.RemoveAsync(collection, key, cancellationToken).ConfigureAwait(false);
     }
 
-    public async IAsyncEnumerable<MemoryQueryResult> SearchAsync(
-        string collection,
-        string query,
-        int limit = 1,
-        double minRelevanceScore = 0.0,
-        bool withEmbeddings = false,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<MemoryQueryResult> SearchAsync(string collection, string query, 
+        int limit = 1, double minRelevanceScore = 0.0, bool withEmbeddings = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var queryEmbeddings = await _embeddingGenerator.GenerateEmbeddings(new List<string> { query }, cancellationToken).ConfigureAwait(false);
+        var queryEmbeddings = await _embeddingService.GenerateEmbeddingsAsync(new List<string> { query }, cancellationToken).ConfigureAwait(false);
 
-        IAsyncEnumerable<(MemoryRecord, double)> results = this._storage.GetNearestMatchesAsync(
-            collectionName: collection,
-            embedding: queryEmbeddings.First(),
-            limit: limit,
-            minRelevanceScore: minRelevanceScore,
-            withEmbeddings: withEmbeddings,
-            cancellationToken: cancellationToken);
+        var results = _storage.GetNearestMatchesAsync(collectionName: collection,
+            embedding: queryEmbeddings.First(), limit: limit, minRelevanceScore: minRelevanceScore,
+            withEmbeddings: withEmbeddings, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        await foreach ((MemoryRecord, double) result in results.WithCancellation(cancellationToken))
+        await foreach (var result in results.ConfigureAwait(false))
         {
             yield return MemoryQueryResult.FromMemoryRecord(result.Item1, result.Item2);
         }
     }
 
-
     public void Dispose()
     {
-        if (_embeddingGenerator is IDisposable emb) { emb.Dispose(); }
+        if (_embeddingService is IDisposable emb) { emb.Dispose(); }
         if (_storage is IDisposable storage) { storage.Dispose(); }
     }
 }

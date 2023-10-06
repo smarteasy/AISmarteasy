@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using SemanticKernel.Connector.Memory;
+using SemanticKernel.Memory;
 
 namespace SemanticKernel.Web;
 

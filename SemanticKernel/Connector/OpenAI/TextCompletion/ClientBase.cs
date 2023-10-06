@@ -12,7 +12,7 @@ namespace SemanticKernel.Connector.OpenAI.TextCompletion;
 
 public abstract class ClientBase
 {
-    private const int MaxResultsPerPrompt = 128;
+    private const int MAX_RESULTS_PER_PROMPT = 128;
 
     private protected ClientBase(ILoggerFactory? loggerFactory = null)
     {
@@ -25,20 +25,20 @@ public abstract class ClientBase
 
     private protected ILogger Logger { get; set; }
 
-    private static Meter s_meter = new(typeof(ClientBase).Assembly.GetName().Name);
+    private static readonly Meter Meter = new(typeof(ClientBase).Assembly.GetName().Name!);
 
-    private static Counter<int> s_promptTokensCounter =
-        s_meter.CreateCounter<int>(
+    private static readonly Counter<int> PromptTokensCounter =
+        Meter.CreateCounter<int>(
             name: "SK.Connectors.OpenAI.PromptTokens",
             description: "Number of prompt tokens used");
 
-    private static Counter<int> s_completionTokensCounter =
-        s_meter.CreateCounter<int>(
+    private static readonly Counter<int> CompletionTokensCounter =
+        Meter.CreateCounter<int>(
             name: "SK.Connectors.OpenAI.CompletionTokens",
             description: "Number of completion tokens used");
 
-    private static Counter<int> s_totalTokensCounter =
-        s_meter.CreateCounter<int>(
+    private static readonly Counter<int> TotalTokensCounter =
+        Meter.CreateCounter<int>(
             name: "SK.Connectors.OpenAI.TotalTokens",
             description: "Total number of tokens used");
 
@@ -108,12 +108,10 @@ public abstract class ClientBase
         return new OpenAIChatHistory(instructions);
     }
 
-    private protected async Task<IList<ReadOnlyMemory<float>>> InternalGetEmbeddingsAsync(
-        IList<string> data,
-        CancellationToken cancellationToken = default)
+    private protected async Task<IList<ReadOnlyMemory<float>>> InternalGetEmbeddingsAsync(IList<string> texts, CancellationToken cancellationToken = default)
     {
-        var result = new List<ReadOnlyMemory<float>>(data.Count);
-        foreach (string text in data)
+        var result = new List<ReadOnlyMemory<float>>(texts.Count);
+        foreach (var text in texts)
         {
             var options = new EmbeddingsOptions(text);
 
@@ -152,11 +150,11 @@ public abstract class ClientBase
         ValidateMaxTokens(requestSettings.MaxTokens);
         var options = CreateCompletionsOptions(text, requestSettings);
 
-        Response<StreamingCompletions>? response = await RunRequestAsync<Response<StreamingCompletions>>(
+        var response = await RunRequestAsync<Response<StreamingCompletions>>(
             () => Client.GetCompletionsStreamingAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
 
         using StreamingCompletions streamingChatCompletions = response.Value;
-        await foreach (StreamingChoice choice in streamingChatCompletions.GetChoicesStreaming(cancellationToken))
+        await foreach (StreamingChoice choice in streamingChatCompletions.GetChoicesStreaming(cancellationToken).ConfigureAwait(false))
         {
             yield return new TextStreamingResult(streamingChatCompletions, choice);
         }
@@ -213,7 +211,7 @@ public abstract class ClientBase
     {
         ChatHistory chat = PrepareChatHistory(text, textSettings, out ChatRequestSettings chatSettings);
 
-        await foreach (var chatCompletionStreamingResult in InternalGetChatStreamingResultsAsync(chat, chatSettings, cancellationToken))
+        await foreach (var chatCompletionStreamingResult in InternalGetChatStreamingResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
         {
             yield return (ITextStreamingResult)chatCompletionStreamingResult;
         }
@@ -238,9 +236,9 @@ public abstract class ClientBase
 
     private static CompletionsOptions CreateCompletionsOptions(string text, CompleteRequestSettings requestSettings)
     {
-        if (requestSettings.ResultsPerPrompt is < 1 or > MaxResultsPerPrompt)
+        if (requestSettings.ResultsPerPrompt is < 1 or > MAX_RESULTS_PER_PROMPT)
         {
-            throw new ArgumentOutOfRangeException($"{nameof(requestSettings)}.{nameof(requestSettings.ResultsPerPrompt)}", requestSettings.ResultsPerPrompt, $"The value must be in range between 1 and {MaxResultsPerPrompt}, inclusive.");
+            throw new ArgumentOutOfRangeException($"{nameof(requestSettings)}.{nameof(requestSettings.ResultsPerPrompt)}", requestSettings.ResultsPerPrompt, $"The value must be in range between 1 and {MAX_RESULTS_PER_PROMPT}, inclusive.");
         }
 
         var options = new CompletionsOptions
@@ -276,9 +274,9 @@ public abstract class ClientBase
 
     private static ChatCompletionsOptions CreateChatCompletionsOptions(ChatRequestSettings requestSettings, IEnumerable<ChatMessageBase> chatHistory)
     {
-        if (requestSettings.ResultsPerPrompt is < 1 or > MaxResultsPerPrompt)
+        if (requestSettings.ResultsPerPrompt is < 1 or > MAX_RESULTS_PER_PROMPT)
         {
-            throw new ArgumentOutOfRangeException($"{nameof(requestSettings)}.{nameof(requestSettings.ResultsPerPrompt)}", requestSettings.ResultsPerPrompt, $"The value must be in range between 1 and {MaxResultsPerPrompt}, inclusive.");
+            throw new ArgumentOutOfRangeException($"{nameof(requestSettings)}.{nameof(requestSettings.ResultsPerPrompt)}", requestSettings.ResultsPerPrompt, $"The value must be in range between 1 and {MAX_RESULTS_PER_PROMPT}, inclusive.");
         }
 
         var options = new ChatCompletionsOptions
@@ -329,7 +327,7 @@ public abstract class ClientBase
 
     private static void ValidateMaxTokens(int? maxTokens)
     {
-        if (maxTokens.HasValue && maxTokens < 1)
+        if (maxTokens is < 1)
         {
             throw new SKException($"MaxTokens {maxTokens} is not valid, the value must be greater than zero");
         }
@@ -353,8 +351,8 @@ public abstract class ClientBase
             "Prompt tokens: {PromptTokens}. Completion tokens: {CompletionTokens}. Total tokens: {TotalTokens}.",
             usage.PromptTokens, usage.CompletionTokens, usage.TotalTokens);
 
-        s_promptTokensCounter.Add(usage.PromptTokens);
-        s_completionTokensCounter.Add(usage.CompletionTokens);
-        s_totalTokensCounter.Add(usage.TotalTokens);
+        PromptTokensCounter.Add(usage.PromptTokens);
+        CompletionTokensCounter.Add(usage.CompletionTokens);
+        TotalTokensCounter.Add(usage.TotalTokens);
     }
 }

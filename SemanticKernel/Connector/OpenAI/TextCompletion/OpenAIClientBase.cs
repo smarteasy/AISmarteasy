@@ -32,7 +32,7 @@ public abstract class OpenAIClientBase : ClientBase
 
         if (!string.IsNullOrWhiteSpace(organization))
         {
-            options.AddPolicy(new AddHeaderRequestPolicy("OpenAI-Organization", organization!), HttpPipelinePosition.PerCall);
+            options.AddPolicy(new AddHeaderRequestPolicy("OpenAI-Organization", organization), HttpPipelinePosition.PerCall);
         }
 
         Client = new OpenAIClient(apiKey, options);
@@ -79,7 +79,8 @@ public abstract class OpenAIClientBase : ClientBase
         return Task.FromResult<ChatHistory>(null!);
     }
 
-    public virtual Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddings(IList<string> data, CancellationToken cancellationToken = default)
+    public virtual Task<IList<ReadOnlyMemory<float>>> GenerateEmbeddingsAsync(IList<string> data,
+        CancellationToken cancellationToken = default)
     {
         return Task.FromResult<IList<ReadOnlyMemory<float>>>(null!);
     }

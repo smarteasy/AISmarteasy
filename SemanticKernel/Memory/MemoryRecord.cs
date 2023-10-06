@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using SemanticKernel.Connector.Memory.Pinecone;
+using SemanticKernel.Memory.Pinecone;
 
 namespace SemanticKernel.Memory;
 

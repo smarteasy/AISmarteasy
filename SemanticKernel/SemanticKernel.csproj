@@ -11,6 +11,7 @@
     <PackageReference Include="Google.Apis.CustomSearchAPI.v1" Version="1.62.0.3106" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0-rc.1.23419.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-rc.1.23419.4" />
+    <PackageReference Include="PdfPig" Version="0.1.9-alpha-20230930-06ac8" />
   </ItemGroup>
 
   <ItemGroup>
