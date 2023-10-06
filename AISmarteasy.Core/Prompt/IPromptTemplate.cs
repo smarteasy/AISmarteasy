@@ -1,7 +1,7 @@
-﻿using SemanticKernel.Context;
-using SemanticKernel.Function;
+﻿using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 public interface IPromptTemplate
 {

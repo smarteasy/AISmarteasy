@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
-using SemanticKernel.Service;
+using AISmarteasy.Core.Service;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 public sealed class SemanticTextMemory : ISemanticTextMemory, IDisposable
 {

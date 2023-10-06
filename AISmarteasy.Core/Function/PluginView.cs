@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Function;
+﻿namespace AISmarteasy.Core.Function;
 
 public sealed class PluginView
 {

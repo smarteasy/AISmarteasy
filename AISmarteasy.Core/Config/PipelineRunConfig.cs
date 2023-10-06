@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace SemanticKernel.Config;
+﻿namespace AISmarteasy.Core.Config;
 
 public readonly struct PipelineRunConfig
 {

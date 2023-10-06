@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SemanticKernel.Context;
+namespace AISmarteasy.Core.Context;
 
 public class ContextVariablesConverter : JsonConverter<ContextVariables>
 {

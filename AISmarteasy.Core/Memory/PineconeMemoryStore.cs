@@ -1,11 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
+using AISmarteasy.Core.Memory.Pinecone;
+using AISmarteasy.Core.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.Memory;
-using SemanticKernel.Memory.Pinecone;
-using SemanticKernel.Web;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 
 public class PineconeMemoryStore : IPineconeMemoryStore

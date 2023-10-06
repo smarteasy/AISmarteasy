@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SemanticKernel.Memory.Pinecone;
+namespace AISmarteasy.Core.Memory.Pinecone;
 
 internal sealed class QueryResponse
 {

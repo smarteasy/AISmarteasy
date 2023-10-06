@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 public class Plugin : IPlugin
 {

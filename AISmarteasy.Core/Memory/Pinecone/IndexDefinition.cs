@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
-using SemanticKernel.Web;
+using AISmarteasy.Core.Web;
 
-namespace SemanticKernel.Memory.Pinecone;
+namespace AISmarteasy.Core.Memory.Pinecone;
 
 public class IndexDefinition
 {

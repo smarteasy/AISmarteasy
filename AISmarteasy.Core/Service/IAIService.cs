@@ -1,7 +1,7 @@
-﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
-namespace SemanticKernel.Service;
+namespace AISmarteasy.Core.Service;
 
 public interface IAIService
 {

@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Service;
+﻿using AISmarteasy.Core.Service;
 
-namespace SemanticKernel.Embedding;
+namespace AISmarteasy.Core.Embedding;
 
 public interface IEmbeddingGeneration<TValue, TEmbedding> : IAIService
     where TEmbedding : unmanaged

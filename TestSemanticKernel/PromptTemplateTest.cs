@@ -1,7 +1,7 @@
 
-using SemanticKernel;
-using SemanticKernel.Function;
-using SemanticKernel.Prompt;
+using AISmarteasy.Core;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Prompt;
 
 namespace TestSemanticKernel
 {

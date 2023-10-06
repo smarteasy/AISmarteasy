@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Planner;
+﻿namespace AISmarteasy.Core.Planner;
 
 public interface ISequentialPlanner
 {

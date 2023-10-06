@@ -1,9 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using SemanticKernel.Memory;
+using AISmarteasy.Core.Memory;
 
-namespace SemanticKernel.Web;
+namespace AISmarteasy.Core.Web;
 
 internal static class HttpRequest
 {

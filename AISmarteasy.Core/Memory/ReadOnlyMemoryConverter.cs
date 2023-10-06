@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 internal sealed class ReadOnlyMemoryConverter : JsonConverter<ReadOnlyMemory<float>>
 {

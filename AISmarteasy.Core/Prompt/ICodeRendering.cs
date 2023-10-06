@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Context;
+﻿using AISmarteasy.Core.Context;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 public interface ICodeRendering
 {

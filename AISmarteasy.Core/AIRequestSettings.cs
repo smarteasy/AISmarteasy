@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SemanticKernel;
+namespace AISmarteasy.Core;
 
 public class AIRequestSettings
 {

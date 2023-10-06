@@ -1,7 +1,6 @@
-﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Context;
+﻿using AISmarteasy.Core.Context;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 public interface ISKFunction
 {

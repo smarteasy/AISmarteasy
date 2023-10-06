@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Function;
+﻿using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Embedding;
+namespace AISmarteasy.Core.Embedding;
 
 public static class EmbeddingGenerationExtensions
 {

@@ -1,7 +1,6 @@
-﻿using System.Runtime.CompilerServices;
-using SemanticKernel.Memory.Pinecone;
+﻿using AISmarteasy.Core.Memory.Pinecone;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 public interface IPineconeClient
 {

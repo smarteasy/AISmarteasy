@@ -1,9 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Memory;
 using Azure.AI.OpenAI;
-using SemanticKernel.Function;
-using SemanticKernel.Memory;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 internal sealed class ChatStreamingResult : IChatStreamingResult, ITextStreamingResult
 {

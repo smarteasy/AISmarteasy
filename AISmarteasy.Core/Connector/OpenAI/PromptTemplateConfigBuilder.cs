@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.OpenAI;
+﻿namespace AISmarteasy.Core.Connector.OpenAI;
 
 public class PromptTemplateConfigBuilder
 {

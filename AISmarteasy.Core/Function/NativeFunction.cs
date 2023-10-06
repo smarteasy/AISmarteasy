@@ -6,13 +6,13 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Context;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Context;
 using SemanticKernel.Util;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 internal sealed class NativeFunction : ISKFunction, IDisposable

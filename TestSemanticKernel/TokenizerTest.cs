@@ -1,6 +1,5 @@
-
-using SemanticKernel.Prompt;
-using SemanticKernel.Prompt.Blocks;
+using AISmarteasy.Core.Prompt;
+using AISmarteasy.Core.Prompt.Blocks;
 
 namespace TestSemanticKernel
 {

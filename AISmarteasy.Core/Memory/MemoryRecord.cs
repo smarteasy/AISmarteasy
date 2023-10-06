@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using SemanticKernel.Memory.Pinecone;
+using AISmarteasy.Core.Memory.Pinecone;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 public class MemoryRecord : DataEntryBase
 {

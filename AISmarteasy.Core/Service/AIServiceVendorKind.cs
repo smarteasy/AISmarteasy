@@ -1,4 +1,4 @@
-namespace SemanticKernel.Service;
+namespace AISmarteasy.Core.Service;
 
 public enum AIServiceVendorKind
 {

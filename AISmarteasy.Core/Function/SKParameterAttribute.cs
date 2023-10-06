@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Function;
+﻿namespace AISmarteasy.Core.Function;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class SKParameterAttribute : Attribute

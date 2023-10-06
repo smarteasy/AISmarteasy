@@ -1,18 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Config;
-using SemanticKernel.Connector.OpenAI;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
-using SemanticKernel.Context;
-using SemanticKernel.Function;
-using SemanticKernel.Handler;
-using SemanticKernel.Memory;
-using SemanticKernel.Planner;
-using SemanticKernel.Prompt;
-using SemanticKernel.Service;
-using SemanticKernel.Text;
+﻿using AISmarteasy.Core.Config;
+using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Handler;
+using AISmarteasy.Core.Memory;
+using AISmarteasy.Core.Planner;
+using AISmarteasy.Core.Prompt;
+using AISmarteasy.Core.Service;
+using AISmarteasy.Core.Text;
+using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel;
+namespace AISmarteasy.Core;
 
 public sealed class Kernel : IDisposable
 {

@@ -2,12 +2,12 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using AISmarteasy.Core.Memory.Pinecone;
+using AISmarteasy.Core.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Memory.Pinecone;
-using SemanticKernel.Web;
 
-namespace SemanticKernel.Memory;
+namespace AISmarteasy.Core.Memory;
 
 public sealed class PineconeClient : IPineconeClient
 {

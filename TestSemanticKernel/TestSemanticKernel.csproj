@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AISmarteasy.Core\AISmarteasy.Core.csproj" />
     <ProjectReference Include="..\SemanticKernel\AISmarteasy.Core.csproj" />
   </ItemGroup>
 

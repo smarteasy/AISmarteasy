@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace SemanticKernel.Memory.Pinecone;
+namespace AISmarteasy.Core.Memory.Pinecone;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum IndexMetric

@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Context;
-using SemanticKernel.Prompt.Blocks;
+﻿using AISmarteasy.Core.Context;
+using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt.Blocks;
 
 public sealed class TextBlock : Block, ITextRendering
 {

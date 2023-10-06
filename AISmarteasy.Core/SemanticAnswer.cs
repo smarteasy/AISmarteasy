@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel;
+﻿namespace AISmarteasy.Core;
 
 public class SemanticAnswer
 {

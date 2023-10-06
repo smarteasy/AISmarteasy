@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Web;
+﻿namespace AISmarteasy.Core.Web;
 
 internal static class HttpContentExtensions
 {

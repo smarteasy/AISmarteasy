@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Config;
+﻿namespace AISmarteasy.Core.Config;
 
 public readonly struct FunctionRunConfig
 {

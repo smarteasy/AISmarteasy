@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.Web;
+﻿namespace AISmarteasy.Core.Connector.Web;
 
 
 public interface IWebSearchEngineConnector

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace SemanticKernel.Function;
+﻿namespace AISmarteasy.Core.Function;
 
 public interface IPlugin
 {

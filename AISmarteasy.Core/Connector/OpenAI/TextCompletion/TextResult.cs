@@ -1,6 +1,6 @@
 ﻿using Azure.AI.OpenAI;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 
 internal sealed class TextResult : ITextResult
 {

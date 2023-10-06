@@ -1,13 +1,12 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
+using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Prompt.Blocks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI;
-using SemanticKernel.Context;
-using SemanticKernel.Function;
-using SemanticKernel.Prompt.Blocks;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 public class PromptTemplate : IPromptTemplate
 {

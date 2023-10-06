@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.RegularExpressions;
+using AISmarteasy.Core.Context;
 using Microsoft.Extensions.Logging;
-using SemanticKernel.Context;
 
-namespace SemanticKernel.Prompt.Blocks;
+namespace AISmarteasy.Core.Prompt.Blocks;
 
 internal sealed class FunctionIdBlock : Block, ITextRendering
 {

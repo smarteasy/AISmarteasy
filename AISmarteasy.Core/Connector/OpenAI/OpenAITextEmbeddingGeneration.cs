@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Service;
-namespace SemanticKernel.Connector.OpenAI;
+﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Service;
+using Microsoft.Extensions.Logging;
+
+namespace AISmarteasy.Core.Connector.OpenAI;
 
 public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, IAIService
 {

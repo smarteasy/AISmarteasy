@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
+using AISmarteasy.Core;
+using AISmarteasy.Core.Function;
 using Microsoft.Extensions.Logging;
-using SemanticKernel;
-using SemanticKernel.Function;
 
 namespace GPTConsole;
 

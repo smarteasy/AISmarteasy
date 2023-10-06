@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace SemanticKernel.Util;
+namespace AISmarteasy.Core.Util;
 
 internal static class StringExtensions
 {

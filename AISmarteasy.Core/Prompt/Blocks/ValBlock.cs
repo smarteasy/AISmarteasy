@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Context;
+﻿using AISmarteasy.Core.Context;
+using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Prompt.Blocks;
+namespace AISmarteasy.Core.Prompt.Blocks;
 
 public sealed class ValBlock : Block, ITextRendering
 {

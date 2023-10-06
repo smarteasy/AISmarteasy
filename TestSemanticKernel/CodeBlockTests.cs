@@ -1,8 +1,4 @@
-﻿
-using SemanticKernel.Prompt;
-using SemanticKernel.Prompt.Blocks;
-
-namespace TestSemanticKernel
+﻿namespace TestSemanticKernel
 {
     public class CodeBlockTest
     {

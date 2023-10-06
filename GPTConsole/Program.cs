@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using SemanticKernel.Service;
-using SemanticKernel;
-using SemanticKernel.Config;
-using SemanticKernel.Context;
+using AISmarteasy.Core;
+using AISmarteasy.Core.Config;
+using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Service;
 
 namespace GPTConsole
 {

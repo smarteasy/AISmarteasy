@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Util;
+﻿using AISmarteasy.Core.Util;
 
-namespace SemanticKernel;
+namespace AISmarteasy.Core;
 
 public static class Telemetry
 {

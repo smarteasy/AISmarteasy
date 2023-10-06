@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 public static class SKFunction
 {

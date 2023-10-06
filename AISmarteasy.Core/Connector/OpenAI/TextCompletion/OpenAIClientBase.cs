@@ -1,12 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Function;
 using Azure.AI.OpenAI;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Extensions.Logging;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
-using SemanticKernel.Function;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 
 public abstract class OpenAIClientBase : ClientBase
 {

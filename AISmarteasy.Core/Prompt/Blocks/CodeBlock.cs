@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using SemanticKernel.Context;
-using SemanticKernel.Function;
+﻿using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
+using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Prompt.Blocks;
+namespace AISmarteasy.Core.Prompt.Blocks;
 
 public sealed class CodeBlock : Block, ICodeRendering
 {

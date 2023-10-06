@@ -1,10 +1,10 @@
-﻿using Google.Apis.CustomSearchAPI.v1;
+﻿using AISmarteasy.Core.Function;
+using Google.Apis.CustomSearchAPI.v1;
 using Google.Apis.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Function;
 
-namespace SemanticKernel.Connector.Web;
+namespace AISmarteasy.Core.Connector.Web;
 
 public sealed class GoogleConnector : IWebSearchEngineConnector, IDisposable
 {

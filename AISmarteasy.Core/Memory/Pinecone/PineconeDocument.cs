@@ -1,9 +1,8 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SemanticKernel.Memory;
 
-namespace SemanticKernel.Memory.Pinecone;
+namespace AISmarteasy.Core.Memory.Pinecone;
 
 public class PineconeDocument
 {

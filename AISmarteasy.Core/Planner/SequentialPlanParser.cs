@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml;
-using SemanticKernel.Context;
+using AISmarteasy.Core.Context;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 internal static class SequentialPlanParser
 {

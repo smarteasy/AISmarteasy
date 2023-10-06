@@ -1,7 +1,6 @@
-﻿using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Prompt;
+﻿using AISmarteasy.Core.Prompt;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 public sealed class SemanticFunctionConfig
 {

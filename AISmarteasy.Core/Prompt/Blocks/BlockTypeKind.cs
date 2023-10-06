@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Prompt.Blocks;
+﻿namespace AISmarteasy.Core.Prompt.Blocks;
 
 public enum BlockTypeKind
 {

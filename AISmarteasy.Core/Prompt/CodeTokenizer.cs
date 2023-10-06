@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using AISmarteasy.Core.Prompt.Blocks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Prompt.Blocks;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 internal sealed class CodeTokenizer
 {

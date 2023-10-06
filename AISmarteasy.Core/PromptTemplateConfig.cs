@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using SemanticKernel.Prompt;
+using AISmarteasy.Core.Prompt;
 
-namespace SemanticKernel;
+namespace AISmarteasy.Core;
 
 public class PromptTemplateConfig
 {

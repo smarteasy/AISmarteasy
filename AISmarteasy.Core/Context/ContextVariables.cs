@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using SemanticKernel.Function;
+using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Context;
+namespace AISmarteasy.Core.Context;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 [DebuggerTypeProxy(typeof(TypeProxy))]

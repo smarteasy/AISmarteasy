@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Text.Json;
-using SemanticKernel.Function;
+using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Connector.Web;
+namespace AISmarteasy.Core.Connector.Web;
 
 public abstract class WebSearchEngineSkill
 {

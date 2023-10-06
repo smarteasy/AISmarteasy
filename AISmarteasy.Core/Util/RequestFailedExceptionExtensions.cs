@@ -1,8 +1,8 @@
 ﻿using System.Net;
+using AISmarteasy.Core.Web;
 using Azure;
-using SemanticKernel.Web;
 
-namespace SemanticKernel.Util;
+namespace AISmarteasy.Core.Util;
 
 public static class RequestFailedExceptionExtensions
 {

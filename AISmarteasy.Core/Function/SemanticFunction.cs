@@ -1,16 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using Azure.AI.OpenAI;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Prompt;
+using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
-using SemanticKernel.Context;
-using SemanticKernel.Prompt;
-using SemanticKernel.Service;
 using SemanticKernel.Util;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 #pragma warning disable format
 

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 internal sealed class EmbeddedResource
 {

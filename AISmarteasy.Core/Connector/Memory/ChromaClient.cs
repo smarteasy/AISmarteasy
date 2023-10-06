@@ -1,13 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using AISmarteasy.Core.Connector.Memory.Chroma;
+using AISmarteasy.Core.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-using SemanticKernel.Connector.Memory.Chroma;
-using SemanticKernel.Web;
-
-namespace SemanticKernel.Connector.Memory;
+namespace AISmarteasy.Core.Connector.Memory;
 
 public class ChromaClient : IChromaClient
 {

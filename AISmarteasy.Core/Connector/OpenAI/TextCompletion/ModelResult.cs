@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
-using SemanticKernel.Function;
-using SemanticKernel.Prompt;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Prompt;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 
 public sealed class ModelResult
 {

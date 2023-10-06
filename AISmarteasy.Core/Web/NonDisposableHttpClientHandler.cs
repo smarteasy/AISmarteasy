@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Web;
+﻿namespace AISmarteasy.Core.Web;
 
 internal sealed class NonDisposableHttpClientHandler : HttpClientHandler
 {

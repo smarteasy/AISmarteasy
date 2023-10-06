@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
-using SemanticKernel.Function;
+using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 public readonly struct AuthorRole : IEquatable<AuthorRole>
 {
     public static readonly AuthorRole System = new("system");

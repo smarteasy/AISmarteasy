@@ -1,8 +1,6 @@
-﻿using SemanticKernel.Context;
-using SemanticKernel.Function;
-using SemanticKernel.Prompt;
+﻿using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 public sealed class SequentialPlanner : ISequentialPlanner
 {

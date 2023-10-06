@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
 public sealed class ParameterView

@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Function;
+﻿using AISmarteasy.Core.Function;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 public interface IPlan : ISKFunction
 {

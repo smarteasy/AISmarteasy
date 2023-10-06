@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using SemanticKernel.Util;
+using AISmarteasy.Core.Util;
 
-namespace SemanticKernel.Text;
+namespace AISmarteasy.Core.Text;
 
 public static class TextChunker
 {

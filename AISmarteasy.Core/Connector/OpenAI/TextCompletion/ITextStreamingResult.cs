@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Connector.OpenAI.TextCompletion;
+﻿namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 
 public interface ITextStreamingResult : ITextResult
 {

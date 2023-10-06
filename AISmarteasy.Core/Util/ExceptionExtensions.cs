@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-#pragma warning disable IDE0130
+﻿#pragma warning disable IDE0130
 // ReSharper disable once CheckNamespace - Using NS of Exception
 namespace SemanticKernel.Util;
 #pragma warning restore IDE0130

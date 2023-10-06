@@ -1,7 +1,7 @@
-﻿using Azure.AI.OpenAI;
-using SemanticKernel.Function;
+﻿using AISmarteasy.Core.Function;
+using Azure.AI.OpenAI;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 internal sealed class ChatResult : IChatResult, ITextResult
 {

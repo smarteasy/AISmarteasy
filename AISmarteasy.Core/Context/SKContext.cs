@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
 
-namespace SemanticKernel.Context;
+namespace AISmarteasy.Core.Context;
 
 public sealed class SKContext
 {

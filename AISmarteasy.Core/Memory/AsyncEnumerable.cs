@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Memory;
+﻿namespace AISmarteasy.Core.Memory;
 
 internal static class AsyncEnumerable
 {

@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Memory;
+﻿namespace AISmarteasy.Core.Memory;
 
 public interface IPineconeMemoryStore : IMemoryStore
 {

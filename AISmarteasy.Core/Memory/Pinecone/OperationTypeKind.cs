@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Memory.Pinecone;
+﻿namespace AISmarteasy.Core.Memory.Pinecone;
 
 internal enum OperationTypeKind
 {

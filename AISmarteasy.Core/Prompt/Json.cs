@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using SemanticKernel.Memory;
+using AISmarteasy.Core.Memory;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 internal static class Json
 {

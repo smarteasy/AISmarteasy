@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Prompt;
+﻿namespace AISmarteasy.Core.Prompt;
 
 internal static class Symbols
 {

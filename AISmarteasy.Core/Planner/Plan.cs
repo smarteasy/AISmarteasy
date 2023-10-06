@@ -2,11 +2,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using SemanticKernel.Context;
-using SemanticKernel.Function;
-using SemanticKernel.Service;
+using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Service;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 public sealed class Plan : IPlan
 {

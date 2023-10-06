@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Connector.Memory.Chroma;
+﻿using AISmarteasy.Core.Connector.Memory.Chroma;
 
-namespace SemanticKernel.Connector.Memory;
+namespace AISmarteasy.Core.Connector.Memory;
 
 
 public interface IChromaClient

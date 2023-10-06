@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AISmarteasy.Core.Prompt.Blocks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Prompt.Blocks;
 
-namespace SemanticKernel.Prompt;
+namespace AISmarteasy.Core.Prompt;
 
 public sealed class TemplateTokenizer
 {

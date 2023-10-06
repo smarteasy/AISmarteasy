@@ -1,6 +1,6 @@
 ﻿using Azure.AI.OpenAI;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 public class ChatModelResult
 {

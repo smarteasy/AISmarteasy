@@ -1,6 +1,6 @@
-﻿using SemanticKernel.Util;
+﻿using AISmarteasy.Core.Util;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 public class OpenAIChatHistory : ChatHistory
 {

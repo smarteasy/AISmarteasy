@@ -1,4 +1,4 @@
-﻿namespace SemanticKernel.Util;
+﻿namespace AISmarteasy.Core.Util;
 
 internal static class EnvExtensions
 {

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SemanticKernel.Web;
+namespace AISmarteasy.Core.Web;
 
 public static class HttpClientExtensions
 {

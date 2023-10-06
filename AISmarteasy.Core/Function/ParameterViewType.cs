@@ -1,7 +1,7 @@
 ﻿#pragma warning disable CA1720 // Identifier contains type name
 
 
-namespace SemanticKernel.Function;
+namespace AISmarteasy.Core.Function;
 
 public class ParameterViewType : IEquatable<ParameterViewType>
 {

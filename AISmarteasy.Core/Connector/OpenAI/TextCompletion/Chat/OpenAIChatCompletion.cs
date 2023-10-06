@@ -1,8 +1,7 @@
-﻿using Azure.AI.OpenAI;
+﻿using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
-using SemanticKernel.Service;
 
-namespace SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 public sealed class OpenAIChatCompletion : OpenAIClientBase, IAIService
 {

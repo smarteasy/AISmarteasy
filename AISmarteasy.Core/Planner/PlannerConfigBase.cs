@@ -1,7 +1,7 @@
-﻿using SemanticKernel.Function;
-using SemanticKernel.Memory;
+﻿using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Memory;
 
-namespace SemanticKernel.Planner;
+namespace AISmarteasy.Core.Planner;
 
 public abstract class PlannerConfigBase
 {

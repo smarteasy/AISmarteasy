@@ -8,20 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="bin\Debug\net7.0\Plugins\**" />
-    <EmbeddedResource Remove="bin\Debug\net7.0\Plugins\**" />
-    <None Remove="bin\Debug\net7.0\Plugins\**" />
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="bin\Debug\net7.0\Plugins\Native\FileIOSkill.cs" />
+    <Compile Include="bin\Debug\net7.0\Plugins\Native\GoogleSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\MathSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\OrchestratorSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TextMemorySkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TextSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\TimeSkill.cs" />
     <Compile Include="bin\Debug\net7.0\Plugins\Native\WaitSkill.cs" />
-    <Compile Include="bin\Debug\net7.0\Plugins\Native\GoogleSkill.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +37,8 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\SequencePlanner\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\SequencePlanner\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\RAGSkill\Search\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\RAGSkill\Search\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\MakeAbstractReadable\config.json" />
@@ -57,11 +59,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AISmarteasy.Core\AISmarteasy.Core.csproj" />
-    <ProjectReference Include="..\SemanticKernel\AISmarteasy.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\SequencePlanner\skprompt.txt" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace SemanticKernel.Handler;
+namespace AISmarteasy.Core.Handler;
 
 public interface IDelegatingHandlerFactory
 {

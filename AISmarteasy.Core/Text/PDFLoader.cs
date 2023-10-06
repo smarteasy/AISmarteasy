@@ -1,8 +1,8 @@
-﻿using SemanticKernel.Memory;
+﻿using AISmarteasy.Core.Memory;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
-namespace SemanticKernel.Text;
+namespace AISmarteasy.Core.Text;
 
 public class PdfLoader
 {

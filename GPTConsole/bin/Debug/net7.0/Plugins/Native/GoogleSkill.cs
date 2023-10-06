@@ -5,7 +5,7 @@ namespace Plugins.Native.Skills;
 public sealed class GoogleSkill: WebSearchEngineSkill 
 {
     private const string API_KEY = "";
-    private const string SEARCH_ENGINE_ID = "0656a4c79b69f47c5";
+    private const string SEARCH_ENGINE_ID = "";
 
     public GoogleSkill()
     {

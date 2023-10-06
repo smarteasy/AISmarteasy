@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
+using AISmarteasy.Core.Context;
 using Microsoft.Extensions.Logging;
-using SemanticKernel.Context;
 
-namespace SemanticKernel.Prompt.Blocks;
+namespace AISmarteasy.Core.Prompt.Blocks;
 
 public sealed class VarBlock : Block, ITextRendering
 {

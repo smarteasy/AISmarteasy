@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SemanticKernel.Connector.Memory.Chroma;
+namespace AISmarteasy.Core.Connector.Memory.Chroma;
 
 public class ChromaEmbeddingsModel
 {

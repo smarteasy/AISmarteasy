@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using SemanticKernel.Web;
+using AISmarteasy.Core.Web;
 
-namespace SemanticKernel.Connector.Memory.Chroma;
+namespace AISmarteasy.Core.Connector.Memory.Chroma;
 
 internal sealed class GetCollectionRequest
 {

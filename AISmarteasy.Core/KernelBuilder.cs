@@ -1,15 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Handler;
+using AISmarteasy.Core.Memory;
+using AISmarteasy.Core.Prompt;
+using AISmarteasy.Core.Service;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Connector.OpenAI;
-using SemanticKernel.Connector.OpenAI.TextCompletion;
-using SemanticKernel.Connector.OpenAI.TextCompletion.Chat;
-using SemanticKernel.Function;
-using SemanticKernel.Handler;
-using SemanticKernel.Memory;
-using SemanticKernel.Prompt;
-using SemanticKernel.Service;
 
-namespace SemanticKernel;
+namespace AISmarteasy.Core;
 
 public sealed class KernelBuilder
 {
