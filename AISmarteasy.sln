@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GPTApp", "App\GPTApp.csproj", "{7A27E025-1BD4-4B24-A181-3250ABED5D15}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SemanticKernel", "SemanticKernel\SemanticKernel.csproj", "{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AISmarteasy.Core", "SemanticKernel\AISmarteasy.Core.csproj", "{2422AC97-5F44-4A6E-9E32-482FADB3E4C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSemanticKernel", "TestSemanticKernel\TestSemanticKernel.csproj", "{D7DB5C23-3B79-4E35-BE5A-72EB19E72744}"
 EndProject
