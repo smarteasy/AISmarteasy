@@ -1,6 +1,4 @@
-﻿using AISmarteasy.Core.Context;
-
-namespace AISmarteasy.Core.Function;
+﻿namespace AISmarteasy.Core.Function;
 
 public interface ISKFunction
 {
@@ -14,9 +12,7 @@ public interface ISKFunction
 
     FunctionView Describe();
 
-    Task<SKContext> InvokeAsync(SKContext context,
-        AIRequestSettings? settings = null,
-        CancellationToken cancellationToken = default);
+    Task InvokeAsync(AIRequestSettings? settings = null, CancellationToken cancellationToken = default);
 
     ISKFunction SetDefaultPluginCollection(IPlugin plugins);
 

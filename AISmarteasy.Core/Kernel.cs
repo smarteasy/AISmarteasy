@@ -59,6 +59,39 @@ public sealed class Kernel : IDisposable
         LoadSemanticPlugin(); 
     }
 
+    public string ContextVariablesInput => KernelProvider.Kernel.Context.Variables.Input;
+
+    public Task RunFunctionAsync(FunctionRunConfig config)
+    {
+        var function = FindFunction(config.PluginName, config.FunctionName);
+        return RunFunctionAsync(function, config.Parameters);
+    }
+
+    public Task RunFunctionAsync(ISKFunction function, string prompt)
+    {
+        var config = new FunctionRunConfig();
+        config.UpdateInput(prompt);
+        return RunFunctionAsync(function, config.Parameters);
+    }
+
+    public Task RunFunctionAsync(ISKFunction function, Dictionary<string, string> parameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            Context.Variables[parameter.Key] = parameter.Value;
+        }
+
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return function.InvokeAsync(requestSetting);
+    }
+
+
+
+
+
+
+
+
     public async Task<List<string>> SaveEmbeddingsFromDirectoryPdfFiles(string directory)
     {
         if (_memory != null) return await PdfLoader.SaveEmbeddingsFromDirectoryFiles(_memory, directory).ConfigureAwait(false);
@@ -82,7 +115,7 @@ public sealed class Kernel : IDisposable
         RegisterMemory(embeddingService, storage);
     }
 
-    public async Task<Plan> RunPlan(string prompt)
+    public async Task<Plan> RunPlanAsync(string prompt)
     {
         var plan = await CreatePlanAsync(prompt).ConfigureAwait(false);
 
@@ -93,94 +126,6 @@ public sealed class Kernel : IDisposable
         }
 
         return plan;
-    }
-
-    public Task<ChatHistory> RunChatCompletion(ChatHistory history)
-    {
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunChatCompletion(history, requestSetting);
-    }
-
-    public Task<SemanticAnswer> RunCompletion(string prompt)
-    {
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunTextCompletion(prompt, requestSetting);
-    }
-
-
-    public Task<SemanticAnswer> RunFunction(FunctionRunConfig config)
-    {
-        var function = FindFunction(config.PluginName, config.FunctionName);
-        return RunFunction(function, config.Parameters);
-    }
-
-    public async Task<SemanticAnswer> RunFunction(ISKFunction function, Dictionary<string, string>? parameters)
-    {
-        if (parameters != null)
-        {
-            foreach (var parameter in parameters)
-            {
-                Context.Variables[parameter.Key] = parameter.Value;
-            }
-        }
-
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        var context = await function.InvokeAsync(Context, requestSetting).ConfigureAwait(false);
-
-        return new SemanticAnswer(context.Variables.Input);
-    }
-
-    public ISKFunction FindFunction(string pluginName, string functionName)
-    {
-        Verify.ValidPluginName(pluginName);
-        Verify.ValidFunctionName(functionName);
-
-        Plugins.TryGetValue(pluginName, out var plugin);
-        return plugin!.GetFunction(functionName);
-    }
-
-    public async Task<SemanticAnswer> RunPipeline(PipelineRunConfig config)
-    {
-        int pipelineStepCount = 0;
-        SemanticAnswer answer = new SemanticAnswer(string.Empty);
-
-        foreach (var pluginFunctionName in config.PluginFunctionNames)
-        {
-            try
-            {
-                var function = FindFunction(pluginFunctionName.PluginName, pluginFunctionName.FunctionName);
-                answer = await RunFunction(function, null).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", 
-                    pluginFunctionName.PluginName, pluginFunctionName.FunctionName, pipelineStepCount, ex.Message);
-                throw;
-            }
-
-            pipelineStepCount++;
-        }
-
-        return new SemanticAnswer(answer.Text);
-    }
-
-    public ISKFunction CreateSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
-    {
-        if (!functionConfig.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new SKException($"Function type not supported: {functionConfig.PromptTemplateConfig}");
-        }
-
-        ISKFunction func = SemanticFunction.FromSemanticConfig(
-            pluginName,
-            functionName,
-            functionConfig,
-            LoggerFactory
-        );
-
-        func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(functionConfig.PromptTemplateConfig.Completion));
-
-        return func;
     }
 
     public async Task<Plan> CreatePlanAsync(string goal, CancellationToken cancellationToken = default)
@@ -201,9 +146,9 @@ public sealed class Kernel : IDisposable
         Plugins.TryGetValue("OrchestratorSkill", out var plugin);
         var planner = plugin!.GetFunction("SequencePlanner");
 
-        var answer = await RunFunction(planner, parameters).ConfigureAwait(false);
+        await RunFunctionAsync(planner, parameters).ConfigureAwait(false);
 
-        var planText  = answer.Text.Trim();
+        var planText = KernelProvider.Kernel.ContextVariablesInput.Trim();
 
         if (string.IsNullOrWhiteSpace(planText))
         {
@@ -226,7 +171,7 @@ public sealed class Kernel : IDisposable
         {
             throw new SKException($"Not possible to create plan for goal with available functions.\nGoal:{goal}\nFunctions:\n{planText}");
         }
-        
+
         return plan;
     }
 
@@ -241,6 +186,75 @@ public sealed class Kernel : IDisposable
 
         return result;
     }
+
+
+
+
+
+    public Task<ChatHistory> RunChatCompletion(ChatHistory history)
+    {
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.RunChatCompletion(history, requestSetting);
+    }
+
+    public Task<SemanticAnswer> RunCompletion(string prompt)
+    {
+        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.RunTextCompletion(prompt, requestSetting);
+    }
+
+
+
+
+    public ISKFunction FindFunction(string pluginName, string functionName)
+    {
+        Verify.ValidPluginName(pluginName);
+        Verify.ValidFunctionName(functionName);
+
+        Plugins.TryGetValue(pluginName, out var plugin);
+        return plugin!.GetFunction(functionName);
+    }
+
+    public async Task<SemanticAnswer> RunPipelineAsync(PipelineRunConfig config)
+    {
+        int pipelineStepCount = 0;
+
+        foreach (var pluginFunctionName in config.PluginFunctionNames)
+        {
+            try
+            {
+                var function = FindFunction(pluginFunctionName.PluginName, pluginFunctionName.FunctionName);
+                await RunFunctionAsync(function, config.Parameters).ConfigureAwait(false);
+                config.Parameters.Clear();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Plugin {Plugin} function {Function} call fail during pipeline step {Step} with error {Error}:", 
+                    pluginFunctionName.PluginName, pluginFunctionName.FunctionName, pipelineStepCount, ex.Message);
+                throw;
+            }
+
+            pipelineStepCount++;
+        }
+
+        return new SemanticAnswer(ContextVariablesInput);
+    }
+
+    private ISKFunction CreateSemanticFunction(SemanticFunctionConfig config)
+    {
+        if (!config.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new SKException($"Function type not supported: {config.PromptTemplateConfig}");
+        }
+
+        var func = SemanticFunction.FromSemanticConfig(config.PluginName, config.FunctionName, config, LoggerFactory);
+
+        func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(config.PromptTemplateConfig.Completion));
+
+        return func;
+    }
+
+
 
     private void LoadSemanticPlugin()
     {
@@ -282,9 +296,9 @@ public sealed class Kernel : IDisposable
 
         var config = PromptTemplateConfig.FromJson(File.ReadAllText(configPath));
         var template = new PromptTemplate(File.ReadAllText(promptPath), config);
-        var functionConfig = new SemanticFunctionConfig(config, template);
+        var functionConfig = new SemanticFunctionConfig(pluginName, functionName, config, template);
 
-        RegisterSemanticFunction(pluginName, functionName, functionConfig);
+        RegisterSemanticFunction(functionConfig);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -293,12 +307,13 @@ public sealed class Kernel : IDisposable
         }
     }
 
-    public void RegisterSemanticFunction(string pluginName, string functionName, SemanticFunctionConfig functionConfig)
+    public ISKFunction RegisterSemanticFunction(SemanticFunctionConfig config)
     {
+        var pluginName = config.PluginName;
         Verify.ValidPluginName(pluginName);
-        Verify.ValidFunctionName(functionName);
+        Verify.ValidFunctionName(config.FunctionName);
 
-        ISKFunction function = CreateSemanticFunction(pluginName, functionName, functionConfig);
+        ISKFunction function = CreateSemanticFunction(config);
 
         if (!Plugins.TryGetValue(pluginName, out var plugin))
         {
@@ -307,6 +322,8 @@ public sealed class Kernel : IDisposable
         }
 
         plugin.AddFunction(function);
+
+        return function;
     }
 
     public void RegisterNativeFunction(ISKFunction function)

@@ -2,13 +2,20 @@
 
 public readonly struct FunctionRunConfig
 {
-    public string FunctionName { get; }
-
     public string PluginName { get; }
 
-    public Dictionary<string, string> Parameters { get;} = new Dictionary<string, string>();
+    public string FunctionName { get; }
+
+    public Dictionary<string, string> Parameters { get;} = new();
 
     private const string INPUT_PARAMETER_KEY = "input";
+
+    public FunctionRunConfig()
+    {
+        PluginName = string.Empty;
+        FunctionName = string.Empty;
+        Parameters[INPUT_PARAMETER_KEY] = string.Empty;
+    }
 
     public FunctionRunConfig(string pluginName, string functionName)
     {
@@ -22,6 +29,4 @@ public readonly struct FunctionRunConfig
     {
         Parameters[INPUT_PARAMETER_KEY] = value;
     }
-
-
 }

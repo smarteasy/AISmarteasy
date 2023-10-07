@@ -86,6 +86,18 @@ public sealed class Plan : IPlan
         AddSteps(steps.ToArray());
     }
 
+    public Task InvokeAsync(AIRequestSettings? requestSettings = null, CancellationToken cancellationToken = default)
+    {
+        var context = KernelProvider.Kernel.Context;
+        AddVariablesToContext(State, context);
+        return Function.InvokeAsync(requestSettings, cancellationToken);
+    }
+
+
+
+
+
+
     public static Plan FromJson(string json, IPlugin? functions = null, bool requireFunctions = true)
     {
         var plan = JsonSerializer.Deserialize<Plan>(json, new JsonSerializerOptions { IncludeFields = true }) ?? new Plan(string.Empty);
@@ -133,32 +145,26 @@ public sealed class Plan : IPlan
 
         var step = Steps[NextStepIndex];
         var functionVariables = GetNextStepVariables(KernelProvider.Kernel.Context.Variables, step);
-        KernelProvider.Kernel.Context = new SKContext(functionVariables);
+        var context = new SKContext(functionVariables);
+        KernelProvider.Kernel.Context = context;
 
-        var result = await step.InvokeAsync(KernelProvider.Kernel.Context, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await step.InvokeAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (Outputs.Intersect(step.Outputs).Any())
         {
             if (State.TryGetValue(DEFAULT_RESULT_KEY, out string? currentPlanResult))
             {
-                State.Set(DEFAULT_RESULT_KEY, $"{currentPlanResult}\n{result.Variables.Input}");
+                State.Set(DEFAULT_RESULT_KEY, $"{currentPlanResult}\n{context.Variables.Input}");
             }
             else
             {
-                State.Set(DEFAULT_RESULT_KEY, result.Variables.Input);
+                State.Set(DEFAULT_RESULT_KEY, context.Variables.Input);
             }
         }
 
         foreach (var item in step.Outputs)
         {
-            if (result.Variables.TryGetValue(item, out string? val))
-            {
-                State.Set(item, val);
-            }
-            else
-            {
-                State.Set(item, result.Variables.Input);
-            }
+            State.Set(item, context.Variables.TryGetValue(item, out string? val) ? val : context.Variables.Input);
         }
 
         NextStepIndex++;
@@ -195,21 +201,10 @@ public sealed class Plan : IPlan
     }
 
 
-    public async Task<SKContext> InvokeAsync(SKContext context,
-        AIRequestSettings? requestSettings = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (Function is not null)
-        {
-            AddVariablesToContext(State, context);
 
-            context = await Function
-                .InvokeAsync(context, requestSettings, cancellationToken)
-                .ConfigureAwait(false);
-        }
 
-        return context;
-    }
+
+
 
     public ISKFunction SetDefaultFunctionCollection(IPlugin functions)
     {
@@ -381,16 +376,16 @@ public sealed class Plan : IPlan
 
     private void SetFunction(ISKFunction function)
     {
-        this.Function = function;
-        this.Name = function.Name;
-        this.PluginName = function.PluginName;
-        this.Description = function.Description;
-        this.RequestSettings = function.RequestSettings;
+        Function = function;
+        Name = function.Name;
+        PluginName = function.PluginName;
+        Description = function.Description;
+        RequestSettings = function.RequestSettings;
     }
 
     private static string GetRandomPlanName() => "plan" + Guid.NewGuid().ToString("N");
 
-    private ISKFunction? Function { get; set; }
+    private ISKFunction Function { get; set; }
 
     private readonly List<Plan> _steps = new();
 

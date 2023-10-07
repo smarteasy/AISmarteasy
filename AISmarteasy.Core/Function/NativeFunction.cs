@@ -87,11 +87,11 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         };
     }
 
-    public async Task<SKContext> InvokeAsync(SKContext context, AIRequestSettings? settings = null, CancellationToken cancellationToken = default)
+    public Task InvokeAsync(AIRequestSettings? settings = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await _function(settings, context, cancellationToken).ConfigureAwait(false);
+            return _function(settings, cancellationToken);
         }
         catch (System.Exception e) when (!e.IsCriticalException())
         {
@@ -123,12 +123,12 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
     private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
-    private readonly Func<AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> _function;
+    private readonly Func<AIRequestSettings?, CancellationToken, Task> _function;
     private readonly ILogger _logger;
 
     private struct MethodDetails
     {
-        public Func<AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> Function { get; set; }
+        public Func<AIRequestSettings?, CancellationToken, Task> Function { get; set; }
         public List<ParameterView> Parameters { get; set; }
         public string Name { get; init; }
         public string Description { get; init; }
@@ -139,8 +139,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
        return await completions[0].GetCompletionAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    internal NativeFunction(
-        Func<AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> delegateFunction,
+    internal NativeFunction(Func<AIRequestSettings?, CancellationToken, Task> delegateFunction,
         IList<ParameterView> parameters,
         string pluginName,
         string functionName,
@@ -169,10 +168,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         throw new SKException("Invalid operation, the method requires a semantic function");
     }
 
-    private static MethodDetails GetMethodDetails(
-        MethodInfo method,
-        object? target,
-        ILogger? logger = null)
+    private static MethodDetails GetMethodDetails(MethodInfo method, object? target, ILogger? logger = null)
     {
         Verify.NotNull(method);
 
@@ -228,7 +224,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         return false;
     }
 
-    private static (Func<AIRequestSettings?, SKContext, CancellationToken, Task<SKContext>> function, List<ParameterView>) GetDelegateInfo(object? instance, MethodInfo method)
+    private static (Func<AIRequestSettings?, CancellationToken, Task> function, List<ParameterView>) GetDelegateInfo(object? instance, MethodInfo method)
     {
         ThrowForInvalidSignatureIf(method.IsGenericMethodDefinition, method, "Generic methods are not supported");
 
@@ -250,9 +246,12 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
         Func<object?, SKContext, Task<SKContext>> returnFunc = GetReturnValueMarshalerDelegate(method);
 
-        Task<SKContext> Function(AIRequestSettings? _, SKContext context, CancellationToken cancellationToken)
+        Task Function(AIRequestSettings? _, CancellationToken cancellationToken)
         {
             object?[] args = parameterFuncs.Length != 0 ? new object?[parameterFuncs.Length] : Array.Empty<object?>();
+            var context = KernelProvider.Kernel.Context;
+
+            
             for (int i = 0; i < args.Length; i++)
             {
                 args[i] = parameterFuncs[i](context, cancellationToken);

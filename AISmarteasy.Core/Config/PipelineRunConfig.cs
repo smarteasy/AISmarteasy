@@ -3,7 +3,7 @@
 public readonly struct PipelineRunConfig
 {
     public List<PluginFunctionName> PluginFunctionNames { get; } = new List<PluginFunctionName>();
-
+    public Dictionary<string, string> Parameters { get; } = new Dictionary<string, string>();
     private const string INPUT_PARAMETER_KEY = "input";
 
     public PipelineRunConfig()
@@ -13,6 +13,12 @@ public readonly struct PipelineRunConfig
     public void AddPluginFunctionName(string pluginName, string functionName)
     {
         PluginFunctionNames.Add(new PluginFunctionName(pluginName, functionName));
+        Parameters[INPUT_PARAMETER_KEY] = string.Empty;
+    }
+
+    public void UpdateInput(string value)
+    {
+        Parameters[INPUT_PARAMETER_KEY] = value;
     }
 }
 

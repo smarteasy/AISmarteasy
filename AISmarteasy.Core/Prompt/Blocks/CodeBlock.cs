@@ -93,7 +93,7 @@ public sealed class CodeBlock : Block, ICodeRendering
 
         try
         {
-            await function.InvokeAsync(contextClone).ConfigureAwait(false);
+            await function.InvokeAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {

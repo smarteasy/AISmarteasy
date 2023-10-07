@@ -18,17 +18,17 @@ public class OrchestratorSkill
         };
 
         var getIntent = kernel.FindFunction("OrchestratorSkill", "GetIntent");
-        var answer = await kernel.RunFunction(getIntent, parameters);
-        var intent = answer.Text.Trim();
+        await kernel.RunFunctionAsync(getIntent, parameters);
+        var intent = KernelProvider.Kernel.ContextVariablesInput.Trim();
 
         parameters = new Dictionary<string, string>
         {
             ["input"] = input
         };
         var getNumbers = kernel.FindFunction("OrchestratorSkill", "GetNumbers");
-        answer = await kernel.RunFunction(getNumbers, parameters);
+        await kernel.RunFunctionAsync(getNumbers, parameters);
 
-        var numbersJson = answer.Text;
+        var numbersJson = KernelProvider.Kernel.ContextVariablesInput;
         JsonObject numbers = JsonNode.Parse(numbersJson)!.AsObject();
 
         switch (intent)
@@ -39,7 +39,8 @@ public class OrchestratorSkill
                 {
                     ["number"] = numbers["number"]!.ToString()
                 };
-                return (await kernel.RunFunction(sqrt, parameters)).Text;
+                await kernel.RunFunctionAsync(sqrt, parameters);
+                return KernelProvider.Kernel.ContextVariablesInput;
             case "Multiply":
                 var multiply = kernel.FindFunction("MathPlugin", "Multiply");
 
@@ -49,7 +50,8 @@ public class OrchestratorSkill
                     ["second"] = numbers["second"]!.ToString()
                 };
 
-                return (await kernel.RunFunction(multiply, parameters)).Text;
+                await kernel.RunFunctionAsync(multiply, parameters);
+                return KernelProvider.Kernel.ContextVariablesInput;
             default:
                 return "I'm sorry, I don't understand.";
         }

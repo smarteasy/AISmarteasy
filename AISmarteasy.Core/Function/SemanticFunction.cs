@@ -28,21 +28,13 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     public IList<ParameterView> Parameters { get; }
 
-    public static ISKFunction FromSemanticConfig(
-        string skillName,
-        string functionName,
-        SemanticFunctionConfig functionConfig,
-        ILoggerFactory? loggerFactory = null,
-        CancellationToken cancellationToken = default)
+    public static ISKFunction FromSemanticConfig(string pluginName, string functionName, SemanticFunctionConfig functionConfig,
+        ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
     {
         Verify.NotNull(functionConfig);
 
-        var func = new SemanticFunction(
-            template: functionConfig.PromptTemplate,
-            description: functionConfig.PromptTemplateConfig.Description,
-            skillName: skillName,
-            functionName: functionName,
-            loggerFactory: loggerFactory
+        var func = new SemanticFunction(template: functionConfig.PromptTemplate, description: functionConfig.PromptTemplateConfig.Description,
+            skillName: pluginName, functionName: functionName, loggerFactory: loggerFactory
         );
 
         return func;
@@ -59,13 +51,12 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         };
     }
 
-  public async Task<SKContext> InvokeAsync(SKContext context,
-        AIRequestSettings? settings,
-        CancellationToken cancellationToken = default)
+  public Task InvokeAsync(AIRequestSettings? settings,
+      CancellationToken cancellationToken = default)
     {
         var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
-        return await RunPromptAsync(kernel.AIService, context, settings, cancellationToken).ConfigureAwait(false);
+        return RunPromptAsync(kernel.AIService, settings, cancellationToken);
     }
 
   public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
@@ -127,7 +118,6 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
     private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
     private readonly ILogger _logger;
-    private IPlugin? _pluginCollection;
     private Lazy<IAIService>? _textCompletion;
     public IPromptTemplate PromptTemplate { get; }
 
@@ -151,14 +141,12 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
     }
 
 
-    private async Task<SKContext> RunPromptAsync(
-        IAIService? client,
-        SKContext context,
-        AIRequestSettings? requestSettings,
-        CancellationToken cancellationToken)
+    private async Task RunPromptAsync(IAIService? client, AIRequestSettings? requestSettings, CancellationToken cancellationToken)
     {
         Verify.NotNull(client);
         Verify.NotNull(requestSettings);
+
+        var context = KernelProvider.Kernel.Context;
 
         try
         {
@@ -180,10 +168,8 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         }
         catch (Exception ex) when (!ex.IsCriticalException())
         {
-            _logger?.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", PluginName, Name, ex.Message);
+            _logger.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", PluginName, Name, ex.Message);
             throw;
         }
-
-        return context;
     }
 }
