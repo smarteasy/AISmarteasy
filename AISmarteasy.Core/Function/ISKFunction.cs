@@ -1,4 +1,6 @@
-﻿namespace AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.Prompt;
+
+namespace AISmarteasy.Core.Function;
 
 public interface ISKFunction
 {
@@ -12,9 +14,11 @@ public interface ISKFunction
 
     FunctionView Describe();
 
-    Task InvokeAsync(AIRequestSettings? settings = null, CancellationToken cancellationToken = default);
+    Task InvokeAsync(AIRequestSettings settings, CancellationToken cancellationToken = default);
 
     ISKFunction SetDefaultPluginCollection(IPlugin plugins);
 
     ISKFunction SetAIConfiguration(AIRequestSettings settings);
+
+    IPromptTemplate PromptTemplate { get; }
 }

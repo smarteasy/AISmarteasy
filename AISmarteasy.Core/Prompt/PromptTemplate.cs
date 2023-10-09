@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt.Blocks;
 using Microsoft.Extensions.Logging;
@@ -39,32 +38,33 @@ public class PromptTemplate : IPromptTemplate
         _promptConfig = config;
         _logger = loggerFactory.CreateLogger(typeof(PromptTemplate));
         _tokenizer = new TemplateTokenizer(loggerFactory);
+
+        Parameters = InitParameters();
     }
 
-    public IList<ParameterView> Parameters
+    public IList<ParameterView> Parameters { get; }
+
+    private List<ParameterView> InitParameters()
     {
-        get
+        Dictionary<string, ParameterView> result = new(_promptConfig.Input.Parameters.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var p in this._promptConfig.Input.Parameters)
         {
-            Dictionary<string, ParameterView> result = new(StringComparer.OrdinalIgnoreCase);
-            foreach (var parameter in _promptConfig.Input.Parameters)
-            {
-                result[parameter.Name] =
-                    new ParameterView(parameter.Name, parameter.Description, parameter.DefaultValue);
-            }
-
-            return result.Values.ToList();
+            result[p.Name] = new ParameterView(p.Name, p.Description, p.DefaultValue);
         }
+
+        return result.Values.ToList();
     }
 
-    public async Task<string> RenderAsync(SKContext context, CancellationToken cancellationToken = default)
+    public async Task<string> RenderAsync(CancellationToken cancellationToken = default)
     {
-       _logger.LogTrace("Rendering string template: {0}", _template);
+        _logger.LogTrace("Rendering string template: {0}", _template);
         var blocks = ExtractBlocks(_template);
-        return await RenderAsync(blocks, context, cancellationToken).ConfigureAwait(false);
+        return await RenderAsync(blocks, cancellationToken).ConfigureAwait(false);
     }
 
-    internal async Task<string> RenderAsync(IList<Block> blocks, SKContext context, CancellationToken cancellationToken = default)
+    internal async Task<string> RenderAsync(IList<Block> blocks, CancellationToken cancellationToken = default)
     {
+        var context = KernelProvider.Kernel.Context;
         _logger.LogTrace("Rendering list of {0} blocks", blocks.Count);
         var tasks = new List<Task<string>>(blocks.Count);
         foreach (var block in blocks)

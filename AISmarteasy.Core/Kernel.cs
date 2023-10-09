@@ -1,4 +1,5 @@
-﻿using AISmarteasy.Core.Config;
+﻿using System.Numerics;
+using AISmarteasy.Core.Config;
 using AISmarteasy.Core.Connector.OpenAI;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
@@ -18,7 +19,7 @@ public sealed class Kernel : IDisposable
 {
     private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
     private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
-    private const string AVAILABLE_FUNCTIONS_KEY = "available_functions";
+
 
     private readonly string _semanticPluginDirectory;
 
@@ -115,67 +116,30 @@ public sealed class Kernel : IDisposable
         RegisterMemory(embeddingService, storage);
     }
 
-    public async Task<Plan> RunPlanAsync(string prompt)
+    public async Task<Plan> RunPlanAsync(string goal)
     {
-        var plan = await CreatePlanAsync(prompt).ConfigureAwait(false);
-
-        while (plan.HasNextStep)
-        {
-            KernelProvider.Kernel.Context = KernelProvider.Kernel.CreateNewContext(new ContextVariables(KernelProvider.Kernel.Context.Variables.Input));
-            await plan.RunNextStepAsync().ConfigureAwait(false);
-        }
-
-        return plan;
-    }
-
-    public async Task<Plan> CreatePlanAsync(string goal, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(goal))
-        {
-            throw new SKException("The goal specified is empty");
-        }
-
-        var functionViews = BuildFunctionViews();
-
-        var parameters = new Dictionary<string, string>
-        {
-            { AVAILABLE_FUNCTIONS_KEY, functionViews },
-            { "input", goal }
-        };
-
-        Plugins.TryGetValue("OrchestratorSkill", out var plugin);
-        var planner = plugin!.GetFunction("SequencePlanner");
-
-        await RunFunctionAsync(planner, parameters).ConfigureAwait(false);
-
-        var planText = KernelProvider.Kernel.ContextVariablesInput.Trim();
-
-        if (string.IsNullOrWhiteSpace(planText))
-        {
-            throw new SKException(
-                "Unable to create plan. No response from Function Flow function. " +
-                $"\nGoal:{goal}\nFunctions:\n{planText}");
-        }
-
-        Plan plan;
+        Plan? plan;
         try
         {
-            plan = planText.ToPlanFromXml(goal);
+            var planBuilder = new PlanBuilder();
+            plan = await planBuilder.Build(goal).ConfigureAwait(false);
+
+            while (plan.HasNextStep)
+            {
+                var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+                await plan.RunAsync(requestSetting).ConfigureAwait(false);
+            }
         }
         catch (SKException e)
         {
-            throw new SKException($"Unable to create plan for goal with available functions.\nGoal:{goal}\nFunctions:\n{planText}", e);
-        }
-
-        if (plan.Steps.Count == 0)
-        {
-            throw new SKException($"Not possible to create plan for goal with available functions.\nGoal:{goal}\nFunctions:\n{planText}");
+            Console.WriteLine(e);
+            throw;
         }
 
         return plan;
     }
 
-    private string BuildFunctionViews()
+    public string BuildFunctionViews()
     {
         var result = string.Empty;
         foreach (var plugin in Plugins.Values)

@@ -1,4 +1,5 @@
-﻿using AISmarteasy.Core.Context;
+﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using Microsoft.Extensions.Logging;
 
@@ -84,16 +85,15 @@ public sealed class CodeBlock : Block, ICodeRendering
             throw new SKException(errorMsg);
         }
 
-        SKContext contextClone = context.Clone();
-
         if (_blocks.Count > 1)
         {
-            contextClone = PopulateContextWithFunctionArguments(context);
+            context = PopulateContextWithFunctionArguments(context);
         }
 
         try
         {
-            await function.InvokeAsync().ConfigureAwait(false);
+            var requestSetting = CompleteRequestSettings.FromCompletionConfig(new PromptTemplateConfig().Completion);
+            await function.InvokeAsync(requestSetting).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -101,24 +101,13 @@ public sealed class CodeBlock : Block, ICodeRendering
             throw;
         }
 
-        return contextClone.Result;
+        return context.Result;
     }
 
     private ISKFunction? GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
-        foreach (var plugin in KernelProvider.Kernel.Plugins.Values)
-        {
-            try
-            {
-                return plugin.GetFunction(functionBlock.FunctionName);
-            }
-            catch (SKException)
-            {
-                return null;
-            }
-        }
-
-        return null;
+        var plugin = KernelProvider.Kernel.Plugins[functionBlock.PluginName];
+        return plugin.GetFunction(functionBlock.FunctionName); ;
     }
 
     private bool IsValidFunctionCall(out string errorMsg)

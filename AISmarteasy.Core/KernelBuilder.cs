@@ -6,15 +6,15 @@ using AISmarteasy.Core.Handler;
 using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
+using AISmarteasy.Core.Util;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AISmarteasy.Core;
 
 public sealed class KernelBuilder
 {
     private readonly IPromptTemplate _promptTemplateEngine;
-    private ILoggerFactory _loggerFactory = NullLoggerFactory.Instance;
+    private ILoggerFactory _loggerFactory = ConsoleLogger.LoggerFactory;
     private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
 
     private Func<IMemoryStore>? _memoryStorageFactory;

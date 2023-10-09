@@ -55,6 +55,10 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Menu\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\TempSkill\Poem\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\ShortPoem\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\ShortPoem\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\Translate\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\Translate\skprompt.txt" />
   </ItemGroup>
 
   <ItemGroup>

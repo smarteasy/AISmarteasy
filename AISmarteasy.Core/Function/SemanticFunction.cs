@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
@@ -11,10 +11,7 @@ using SemanticKernel.Util;
 
 namespace AISmarteasy.Core.Function;
 
-#pragma warning disable format
-
-[DebuggerDisplay("{DebuggerDisplay,nq}")]
-internal sealed class SemanticFunction : ISKFunction, IDisposable
+public class SemanticFunction : ISKFunction
 {
     public string Name { get; }
 
@@ -22,55 +19,32 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
 
     public string Description { get; }
 
-    public bool IsSemantic => true;
-
     public AIRequestSettings RequestSettings { get; private set; } = new();
 
-    public IList<ParameterView> Parameters { get; }
+    public IList<ParameterView> Parameters { get; set; }
 
-    public static ISKFunction FromSemanticConfig(string pluginName, string functionName, SemanticFunctionConfig functionConfig,
-        ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
+    public IPromptTemplate PromptTemplate { get; }
+
+    private readonly ILogger _logger;
+
+    public FunctionView Describe()
     {
-        Verify.NotNull(functionConfig);
-
-        var func = new SemanticFunction(template: functionConfig.PromptTemplate, description: functionConfig.PromptTemplateConfig.Description,
-            skillName: pluginName, functionName: functionName, loggerFactory: loggerFactory
-        );
-
-        return func;
+        return new FunctionView(Name, PluginName, Description) { Parameters = Parameters };
     }
 
-  public FunctionView Describe()
-    {
-        return new FunctionView
-        {
-            Name = Name,
-            PluginName = PluginName,
-            Description = Description,
-            Parameters = Parameters,
-        };
-    }
-
-  public Task InvokeAsync(AIRequestSettings? settings,
-      CancellationToken cancellationToken = default)
+    public Task InvokeAsync(AIRequestSettings requestSettings,
+        CancellationToken cancellationToken = default)
     {
         var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
-        return RunPromptAsync(kernel.AIService, settings, cancellationToken);
+        return RunPromptAsync(kernel.AIService, requestSettings, cancellationToken);
     }
 
-  public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
-  {
-      return this;
-  }
-
-
-  public ISKFunction SetAIService(Func<IAIService> serviceFactory)
+    public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
     {
-        Verify.NotNull(serviceFactory);
-        _textCompletion = new Lazy<IAIService>(serviceFactory);
         return this;
     }
+
 
     public ISKFunction SetAIConfiguration(AIRequestSettings settings)
     {
@@ -79,57 +53,41 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         return this;
     }
 
-    public void Dispose()
-    {
-        if (this._textCompletion is { IsValueCreated: true } aiService)
-        {
-            (aiService.Value as IDisposable)?.Dispose();
-        }
-    }
-
     public override string ToString()
         => ToString(false);
 
     public string ToString(bool writeIndented)
-        => JsonSerializer.Serialize(this, options: writeIndented ? ToStringIndentedSerialization : ToStringStandardSerialization);
+        => JsonSerializer.Serialize(this,
+            options: writeIndented ? ToStringIndentedSerialization : ToStringStandardSerialization);
 
     internal SemanticFunction(
-        IPromptTemplate template,
-        string skillName,
+        IPromptTemplate promptTemplate,
+        string pluginName,
         string functionName,
         string description,
         ILoggerFactory? loggerFactory = null)
     {
-        Verify.NotNull(template);
-        Verify.ValidPluginName(skillName);
+        Verify.NotNull(promptTemplate);
+        Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(functionName);
 
-        _logger = loggerFactory is not null ? loggerFactory.CreateLogger(typeof(SemanticFunction)) : NullLogger.Instance;
+        _logger = loggerFactory is not null
+            ? loggerFactory.CreateLogger(typeof(SemanticFunction))
+            : NullLogger.Instance;
 
-        PromptTemplate = template;
-        Parameters = template.Parameters;
+        PromptTemplate = promptTemplate;
+        Parameters = PromptTemplate.Parameters;
         Verify.ParametersUniqueness(Parameters);
 
         Name = functionName;
-        PluginName = skillName;
+        PluginName = pluginName;
         Description = description;
     }
 
     private static readonly JsonSerializerOptions ToStringStandardSerialization = new();
     private static readonly JsonSerializerOptions ToStringIndentedSerialization = new() { WriteIndented = true };
-    private readonly ILogger _logger;
-    private Lazy<IAIService>? _textCompletion;
-    public IPromptTemplate PromptTemplate { get; }
 
-    private static async Task<string> RunAsync(IReadOnlyList<ITextResult> completions, CancellationToken cancellationToken = default)
-    {
-        return await completions[0].GetCompletionAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"{Name} ({Description})";
-
-     private void AddDefaultValues(ContextVariables variables)
+    private void AddDefaultValues(ContextVariables variables)
     {
         foreach (var parameter in Parameters)
         {
@@ -140,8 +98,8 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         }
     }
 
-
-    private async Task RunPromptAsync(IAIService? client, AIRequestSettings? requestSettings, CancellationToken cancellationToken)
+    private async Task RunPromptAsync(IAIService? client, AIRequestSettings? requestSettings,
+        CancellationToken cancellationToken)
     {
         Verify.NotNull(client);
         Verify.NotNull(requestSettings);
@@ -152,24 +110,41 @@ internal sealed class SemanticFunction : ISKFunction, IDisposable
         {
             if (client is OpenAITextCompletion)
             {
-                var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
-                var answer = await client.RunTextCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
+                var prompt = await PromptTemplate.RenderAsync(cancellationToken).ConfigureAwait(false);
+                var answer = await client
+                    .RunTextCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken)
+                    .ConfigureAwait(false);
                 context.Variables.Update(answer.Text);
             }
             else
             {
 
-                var prompt = await PromptTemplate.RenderAsync(context, cancellationToken).ConfigureAwait(false);
+                var prompt = await PromptTemplate.RenderAsync(cancellationToken).ConfigureAwait(false);
                 var chatHistory = new ChatHistory();
                 chatHistory.AddUserMessage(prompt);
-                var chtHistory = await client.RunChatCompletion(chatHistory, (CompleteRequestSettings)requestSettings, cancellationToken).ConfigureAwait(false);
+                var chtHistory = await client
+                    .RunChatCompletion(chatHistory, (CompleteRequestSettings)requestSettings, cancellationToken)
+                    .ConfigureAwait(false);
                 context.Variables.Update(chtHistory.Messages[1].Content);
             }
         }
         catch (Exception ex) when (!ex.IsCriticalException())
         {
-            _logger.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", PluginName, Name, ex.Message);
+            _logger.LogError(ex, "Semantic function {Plugin}.{Name} execution failed with error {Error}", PluginName,
+                Name, ex.Message);
             throw;
         }
+    }
+
+    public static ISKFunction FromSemanticConfig(string pluginName, string functionName, SemanticFunctionConfig functionConfig,
+        ILoggerFactory? loggerFactory = null, CancellationToken cancellationToken = default)
+    {
+        Verify.NotNull(functionConfig);
+
+        var func = new SemanticFunction(promptTemplate: functionConfig.PromptTemplate, description: functionConfig.PromptTemplateConfig.Description,
+            pluginName: pluginName, functionName: functionName, loggerFactory: loggerFactory
+        );
+
+        return func;
     }
 }

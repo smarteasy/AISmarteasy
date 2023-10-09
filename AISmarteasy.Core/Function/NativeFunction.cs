@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Prompt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SemanticKernel.Util;
@@ -78,20 +79,14 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
     public FunctionView Describe()
     {
-        return new FunctionView
-        {
-            Name = Name,
-            PluginName = PluginName,
-            Description = Description,
-            Parameters = Parameters,
-        };
+        return new FunctionView(Name, PluginName, Description) { Parameters = Parameters };
     }
 
-    public Task InvokeAsync(AIRequestSettings? settings = null, CancellationToken cancellationToken = default)
+    public Task InvokeAsync(AIRequestSettings requestSettings, CancellationToken cancellationToken = default)
     {
         try
         {
-            return _function(settings, cancellationToken);
+            return _function(requestSettings, cancellationToken);
         }
         catch (System.Exception e) when (!e.IsCriticalException())
         {
@@ -109,6 +104,8 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
     {
         return this;
     }
+
+    public IPromptTemplate PromptTemplate => throw new NotImplementedException();
 
 
     public void Dispose()
@@ -244,13 +241,12 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
             }
         }
 
-        Func<object?, SKContext, Task<SKContext>> returnFunc = GetReturnValueMarshalerDelegate(method);
+        Func<object?, Task> returnFunc = GetReturnValueMarshalerDelegate(method);
 
         Task Function(AIRequestSettings? _, CancellationToken cancellationToken)
         {
             object?[] args = parameterFuncs.Length != 0 ? new object?[parameterFuncs.Length] : Array.Empty<object?>();
             var context = KernelProvider.Kernel.Context;
-
             
             for (int i = 0; i < args.Length; i++)
             {
@@ -259,7 +255,7 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
             object? result = method.Invoke(instance, args);
 
-            return returnFunc(result, context);
+            return returnFunc(result);
         }
 
         stringParameterViews.AddRange(method
@@ -391,52 +387,31 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         throw GetExceptionForInvalidSignature(method, $"Unknown parameter type {parameter.ParameterType}");
     }
 
-    private static Func<object?, SKContext, Task<SKContext>> GetReturnValueMarshalerDelegate(MethodInfo method)
+    private static Func<object?, Task> GetReturnValueMarshalerDelegate(MethodInfo method)
     {
         Type returnType = method.ReturnType;
 
-        if (returnType == typeof(void))
-        {
-            return static (result, context) => Task.FromResult(context);
-        }
-
         if (returnType == typeof(Task))
         {
-            return async static (result, context) =>
+            return async static (result) =>
             {
                 await ((Task)ThrowIfNullResult(result)).ConfigureAwait(false);
-                return context;
             };
         }
 
         if (returnType == typeof(ValueTask))
         {
-            return async static (result, context) =>
+            return async static (result) =>
             {
                 await ((ValueTask)ThrowIfNullResult(result)).ConfigureAwait(false);
-                return context;
             };
-        }
-
-        if (returnType == typeof(SKContext))
-        {
-            return static (result, _) => Task.FromResult((SKContext)ThrowIfNullResult(result));
-        }
-
-        if (returnType == typeof(Task<SKContext>))
-        {
-            return static (result, _) => (Task<SKContext>)ThrowIfNullResult(result);
-        }
-
-        if (returnType == typeof(ValueTask<SKContext>))
-        {
-            return static (result, context) => ((ValueTask<SKContext>)ThrowIfNullResult(result)).AsTask();
         }
 
         if (returnType == typeof(string))
         {
-            return static (result, context) =>
+            return static (result) =>
             {
+                var context = KernelProvider.Kernel.Context;
                 context.Variables.Update((string?)result);
                 return Task.FromResult(context);
             };
@@ -444,61 +419,63 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
 
         if (returnType == typeof(Task<string>))
         {
-            return async static (result, context) =>
+            return async static (result) =>
             {
+                var context = KernelProvider.Kernel.Context;
                 context.Variables.Update(await ((Task<string>)ThrowIfNullResult(result)).ConfigureAwait(false));
-                return context;
             };
         }
 
         if (returnType == typeof(ValueTask<string>))
         {
-            return async static (result, context) =>
+            return async static (result) =>
             {
+                var context = KernelProvider.Kernel.Context;
                 context.Variables.Update(await ((ValueTask<string>)ThrowIfNullResult(result)).ConfigureAwait(false));
-                return context;
             };
         }
 
         if (!returnType.IsGenericType || returnType.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
-            if (GetFormatter(returnType) is not Func<object?, CultureInfo, string> formatter)
+            var formatter = GetFormatter(returnType) as Func<object?, CultureInfo, string>;
+            if (formatter == null)
             {
                 throw GetExceptionForInvalidSignature(method, $"Unknown return type {returnType}");
             }
 
-            return (result, context) =>
+            return (result) =>
             {
+                var context = KernelProvider.Kernel.Context;
                 context.Variables.Update(formatter(result, context.Culture));
                 return Task.FromResult(context);
             };
         }
 
-        if (returnType.GetGenericTypeDefinition() is Type genericTask &&
+        if (returnType.GetGenericTypeDefinition() is { } genericTask &&
             genericTask == typeof(Task<>) &&
             returnType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod() is MethodInfo taskResultGetter &&
             GetFormatter(taskResultGetter.ReturnType) is Func<object?, CultureInfo, string> taskResultFormatter)
         {
-            return async (result, context) =>
+            return async (result) =>
             {
+                var context = KernelProvider.Kernel.Context;
                 await ((Task)ThrowIfNullResult(result)).ConfigureAwait(false);
                 context.Variables.Update(taskResultFormatter(taskResultGetter.Invoke(result!, Array.Empty<object>()), context.Culture));
-                return context;
             };
         }
 
-        if (returnType.GetGenericTypeDefinition() is Type genericValueTask &&
+        if (returnType.GetGenericTypeDefinition() is { } genericValueTask &&
             genericValueTask == typeof(ValueTask<>) &&
-            returnType.GetMethod("AsTask", BindingFlags.Public | BindingFlags.Instance) is MethodInfo valueTaskAsTask &&
-            valueTaskAsTask.ReturnType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod() is MethodInfo asTaskResultGetter &&
+            returnType.GetMethod("AsTask", BindingFlags.Public | BindingFlags.Instance) is { } valueTaskAsTask &&
+            valueTaskAsTask.ReturnType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance)?.GetGetMethod() is { } asTaskResultGetter &&
             GetFormatter(asTaskResultGetter.ReturnType) is { } asTaskResultFormatter)
         {
-            return async (result, context) =>
+            return async (result) =>
             {
-                Task task = (Task)valueTaskAsTask.Invoke(ThrowIfNullResult(result), Array.Empty<object>());
+                var context = KernelProvider.Kernel.Context;
+                Task? task = (Task)valueTaskAsTask.Invoke(ThrowIfNullResult(result), Array.Empty<object>())!;
                 await task.ConfigureAwait(false);
                 context.Variables.Update(asTaskResultFormatter(asTaskResultGetter.Invoke(task!, Array.Empty<object>()), context.Culture));
-                return context;
             };
         }
 

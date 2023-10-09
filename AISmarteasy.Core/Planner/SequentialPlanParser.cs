@@ -1,10 +1,11 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml;
 using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Function;
 
 namespace AISmarteasy.Core.Planner;
 
-internal static class SequentialPlanParser
+public static class SequentialPlanParser
 {
     internal const string GoalTag = "goal";
     internal const string SolutionTag = "plan";
@@ -12,7 +13,8 @@ internal static class SequentialPlanParser
     internal const string SetContextVariableTag = "setContextVariable";
     internal const string AppendToResultTag = "appendToResult";
 
-    internal static Plan ToPlanFromXml(this string xmlString, string goal, bool allowMissingFunctions = false)
+    public static void ToPlanFromXml(string xmlString, IPlan plan, 
+        bool allowMissingFunctions = false)
     {
         XmlDocument xmlDoc = new();
         try
@@ -50,8 +52,6 @@ internal static class SequentialPlanParser
 
         var solution = xmlDoc.GetElementsByTagName(SolutionTag);
 
-        var plan = new Plan(goal);
-
         foreach (XmlNode solutionNode in solution)
         {
             foreach (XmlNode childNode in solutionNode.ChildNodes)
@@ -64,22 +64,22 @@ internal static class SequentialPlanParser
                 if (childNode.Name.StartsWith(FunctionTag, StringComparison.OrdinalIgnoreCase))
                 {
                     var pluginFunctionName = childNode.Name.Split(FunctionTagArray, StringSplitOptions.None)[1];
-                    GetFunctionCallbackNames(pluginFunctionName, out var pluginName, out var functionName);
+                    GetFunctionCallbackNames(pluginFunctionName, out var stepPluginName, out var stepFunctionName);
 
-                    if (!string.IsNullOrEmpty(functionName))
+                    if (!string.IsNullOrEmpty(stepFunctionName))
                     {
-                        var pluginFunction = KernelProvider.Kernel.FindFunction(pluginName, functionName);
+                        var pluginFunction = KernelProvider.Kernel.FindFunction(stepPluginName, stepFunctionName);
 
-                        var planStep = new Plan(pluginFunction);
+                        var planStep = new Plan(pluginFunction.PromptTemplate, pluginFunction.PluginName, pluginFunction.Name, pluginFunction.Description);
 
-                        var functionVariables = new ContextVariables();
+                        var parameterViews = new Dictionary<string, ParameterView>();
                         var functionOutputs = new List<string>();
                         var functionResults = new List<string>();
-
+                        
                         var view = pluginFunction.Describe();
                         foreach (var p in view.Parameters)
                         {
-                            functionVariables.Set(p.Name, p.DefaultValue);
+                            parameterViews.Add(p.Name, new ParameterView(p.Name, p.DefaultValue));
                         }
 
                         if (childNode.Attributes is not null)
@@ -97,13 +97,15 @@ internal static class SequentialPlanParser
                                 }
                                 else
                                 {
-                                    functionVariables.Set(attr.Name, attr.InnerText);
+                                    parameterViews[attr.Name].DefaultValue = attr.InnerText;
                                 }
                             }
                         }
 
                         planStep.Outputs = functionOutputs;
-                        planStep.Parameters = functionVariables;
+                        var parameters = 
+                        planStep.Parameters = parameterViews.Values.ToList();
+
                         foreach (var result in functionResults)
                         {
                             plan.Outputs.Add(result);
@@ -114,8 +116,6 @@ internal static class SequentialPlanParser
                 }
             }
         }
-
-        return plan;
     }
 
     private static void GetFunctionCallbackNames(string pluginFunctionName, out string pluginName, out string functionName)

@@ -1,40 +1,12 @@
-﻿using System.Diagnostics;
+﻿namespace AISmarteasy.Core.Function;
 
-namespace AISmarteasy.Core.Function;
-
-[DebuggerDisplay("{DebuggerDisplay,nq}")]
-public sealed class FunctionView
+public sealed record FunctionView(
+    string Name,
+    string PluginName,
+    string Description = "",
+    IList<ParameterView>? Parameters = null)
 {
-    public string Name { get; set; } = string.Empty;
-
-    public string PluginName { get; set; } = string.Empty;
-
-    public string Description { get; set; } = string.Empty;
-
-    public bool IsAsynchronous { get; set; }
-
-    public IList<ParameterView> Parameters { get; set; } = new List<ParameterView>();
-
-    public FunctionView()
-    {
-    }
-
-    public FunctionView(
-        string name,
-        string pluginName,
-        string description,
-        IList<ParameterView> parameters,
-        bool isAsynchronous = true)
-    {
-        Name = name;
-        PluginName = pluginName;
-        Description = description;
-        Parameters = parameters;
-        IsAsynchronous = isAsynchronous;
-    }
-
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string DebuggerDisplay => $"{Name} ({Description})";
+    public IList<ParameterView> Parameters { get; init; } = Parameters ?? Array.Empty<ParameterView>();
 
     public string ToManualString()
     {
@@ -49,13 +21,9 @@ public sealed class FunctionView
   inputs:
   {inputs}";
     }
+
     public string ToFullyQualifiedName()
     {
         return $"{PluginName}.{Name}";
-    }
-    public string ToEmbeddingString()
-    {
-        var inputs = string.Join("\n", Parameters.Select(p => $"    - {p.Name}: {p.Description}"));
-        return $"{Name}:\n  description: {Description}\n  inputs:\n{inputs}";
     }
 }

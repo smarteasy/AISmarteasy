@@ -79,16 +79,23 @@ public static class Verify
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < count; i++)
             {
-                ParameterView p = parameters[i];
-                if (string.IsNullOrWhiteSpace(p.Name))
+                ParameterView parameterView = parameters[i];
+                if (string.IsNullOrWhiteSpace(parameterView.Name))
                 {
-                    string paramName = $"{nameof(parameters)}[{i}].{p.Name}";
-                    ThrowArgumentWhiteSpaceException(paramName);
+                    string paramName = $"{nameof(parameters)}[{i}].{parameterView.Name}";
+                    if (string.IsNullOrEmpty(parameterView.Name))
+                    {
+                        ThrowArgumentNullException(paramName);
+                    }
+                    else
+                    {
+                        ThrowArgumentWhiteSpaceException(paramName);
+                    }
                 }
 
-                if (!seen.Add(p.Name))
+                if (!seen.Add(parameterView.Name))
                 {
-                    throw new SKException($"The function has two or more parameters with the same name '{p.Name}'");
+                    throw new SKException($"The function has two or more parameters with the same name '{parameterView.Name}'");
                 }
             }
         }

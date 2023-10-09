@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using AISmarteasy.Core;
 using AISmarteasy.Core.Config;
 using AISmarteasy.Core.Context;
@@ -6,6 +7,7 @@ using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using Google.Apis.CustomSearchAPI.v1.Data;
+using UglyToad.PdfPig.Content;
 
 namespace GPTConsole
 {
@@ -22,8 +24,11 @@ namespace GPTConsole
             //Run_Example03_Variables();
             //Run_Example04_01_CombineLLMPromptsAndNativeCode();
             //Run_Example04_02_CombineLLMPromptsAndNativeCode();
-            Run_Example05_InlineFunctionDefinition();
-            
+            //Run_Example05_InlineFunctionDefinition();
+            //Run_Example06_TemplateLanguage();
+            //RunExample10_DescribeAllPluginsAndFunctions();
+            Run_Example12_SequentialPlanner();
+
             Console.ReadLine();
         }
 
@@ -158,28 +163,99 @@ namespace GPTConsole
 
              await kernel.RunFunctionAsync(inlineFunction, "sorry I forgot your birthday");
             Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
-
-
-
-            //$"Translate this date {DateTimeOffset.Now:f} to French format", requestSettings: new OpenAIRequestSettings() { MaxTokens = 100 });
-
-
-            //           var fixedFunction = kernel.CreateSemanticFunction($"Translate this date {DateTimeOffset.Now:f} to French format", requestSettings: new OpenAIRequestSettings() { MaxTokens = 100 });
-
-
-            //var functionRunConfig = new FunctionRunConfig("EventSkill", );
-            //functionRunConfig.UpdateInput();
-            //var answer = await kernel.RunFunction(functionRunConfig);
-            //Console.WriteLine(answer.Text);
-
-            //functionRunConfig.UpdateInput("sorry I forgot your birthday");
-            //answer = await kernel.RunFunction(functionRunConfig);
-            //Console.WriteLine(answer.Text);
-
-
-            //result = await kernel.RunAsync(fixedFunction);
-            //Console.WriteLine(result.GetValue<string>());
         }
+
+        private static async void Run_Example06_TemplateLanguage()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            string promptTemplate = @"
+Today is: {{TimeSkill.Date}}
+Current time is: {{TimeSkill.Time}}
+
+Answer to the following questions using JSON syntax, including the data used.
+Is it morning, afternoon, evening, or night (morning/afternoon/evening/night)?
+Is it weekend time (weekend/not weekend)?
+";
+
+        string configText = @"
+        {
+            ""schema"": 1,
+            ""type"": ""completion"",
+            ""description"": ""Generate day and time information."",
+            ""completion"": {
+                ""max_tokens"": 1024,
+                ""temperature"": 0.4,
+                ""top_p"": 1
+            }
+        }
+        ";
+            var config = PromptTemplateConfig.FromJson(configText);
+            var template = new PromptTemplate(promptTemplate, config);
+            var functionConfig = new SemanticFunctionConfig("TimeSkill", "GenerateDayTimeInformation", config, template);
+            var function = kernel.RegisterSemanticFunction(functionConfig);
+
+            await kernel.RunFunctionAsync(function, string.Empty);
+            Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
+        }
+
+        public static Task RunExample10_DescribeAllPluginsAndFunctions()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            foreach (var plugin in kernel.Plugins.Values)
+            {
+                foreach (var functionView in plugin.BuildPluginView().FunctionViews.Values)
+                {
+                    PrintFunction(functionView);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private static void PrintFunction(FunctionView func)
+        {
+            Console.WriteLine($"   {func.Name}: {func.Description}");
+
+            if (func.Parameters.Count > 0)
+            {
+                Console.WriteLine("      Params:");
+                foreach (var p in func.Parameters)
+                {
+                    Console.WriteLine($"      - {p.Name}: {p.Description}");
+                    Console.WriteLine($"        default: '{p.DefaultValue}'");
+                }
+            }
+
+            Console.WriteLine();
+        }
+
+        private static async void Run_Example12_SequentialPlanner()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var loader = new NativePluginLoader();
+            loader.Load();
+
+            var goal = "Write a poem about John Doe, then translate it into Korean.";
+
+            var plan = await kernel.RunPlanAsync(goal);
+            Console.WriteLine("Plan:\n");
+            Console.WriteLine(plan.Content);
+            Console.WriteLine("Answer:\n");
+            Console.WriteLine(plan.Answer);
+        }
+
         //public static async Task RunPdf()
         //{
         //    var kernel = new KernelBuilder()
@@ -196,85 +272,6 @@ namespace GPTConsole
         //}
 
 
-
-        //public static Task RunExample10()
-        //{
-        //    var kernel = new KernelBuilder()
-        //        .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
-
-        //    var loader = new NativePluginLoader();
-        //    loader.Load();
-
-        //    foreach (var plugin in kernel.Plugins.Values)
-        //    {
-        //        foreach (var functionView in plugin.BuildPluginView().FunctionViews.Values)
-        //        {
-        //            PrintFunction(functionView);
-        //        }
-        //    }
-
-        //    return Task.CompletedTask;
-        //}
-
-        //private static void PrintFunction(FunctionView func)
-        //{
-        //    Console.WriteLine($"   {func.Name}: {func.Description}");
-
-        //    if (func.Parameters.Count > 0)
-        //    {
-        //        Console.WriteLine("      Params:");
-        //        foreach (var p in func.Parameters)
-        //        {
-        //            Console.WriteLine($"      - {p.Name}: {p.Description}");
-        //            Console.WriteLine($"        default: '{p.DefaultValue}'");
-        //        }
-        //    }
-
-        //    Console.WriteLine();
-        //}
-
-
-
-
-        //private static async Task RunExample6()
-        //{
-        //    var kernel = new KernelBuilder()
-        //        .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
-
-        //    var loader = new NativePluginLoader();
-        //    loader.Load();
-
-        //    string promptTemplate = @"
-        //Today is: {{TimeSkill.Date}}
-        //Current time is: {{TimeSkill.Time}}
-
-        //Answer to the following questions using JSON syntax, including the data used.
-        //Is it morning, afternoon, evening, or night (morning/afternoon/evening/night)?
-        //Is it weekend time (weekend/not weekend)?
-        //";
-
-        //    string configText = @"
-        //{
-        //    ""schema"": 1,
-        //    ""type"": ""completion"",
-        //    ""description"": ""Calling native function."",
-        //    ""completion"": {
-        //        ""max_tokens"": 1024,
-        //        ""temperature"": 0.9
-        //    }
-        //}
-        //";
-        //    var config = PromptTemplateConfig.FromJson(configText);
-        //    var template = new PromptTemplate(promptTemplate, config);
-        //    var functionConfig = new SemanticFunctionConfig(config, template);
-
-        //    var function = kernel.CreateSemanticFunction("TemplateSkill", "CallNativeFunction", functionConfig);
-
-        //    var parameters = new Dictionary<string, string>();
-
-        //    var result = await kernel.RunFunction(function, parameters);
-        //    Console.WriteLine(result.Text);
-        //}
 
         //public static async Task RunExample7()
         //{
@@ -368,23 +365,6 @@ namespace GPTConsole
 
         //            var describeIndexStats = await pinecone.DescribeIndexStatsAsync(indexName);
         //            Console.WriteLine(JsonSerializer.Serialize(describeIndexStats));
-        //        }
-
-        //        public static async Task RunTextCompletion()
-        //        {
-        //            AIServiceConfig config = new AIServiceConfig
-        //            {
-        //                ServiceType = AIServiceTypeKind.TextCompletion,
-        //                Vendor = AIServiceVendorKind.OpenAI,
-        //                ServiceFeature = AIServiceFeatureKind.Normal,
-        //                APIKey = API_KEY
-        //            };
-
-        //            var kernel = new KernelBuilder().Build(config);
-
-        //            var prompt = "ChatGPT?";
-        //            var answer = await kernel.RunCompletion(prompt);
-        //            Console.WriteLine(answer.Text);
         //        }
 
         //        public static async Task RunChatCompletion()
@@ -533,24 +513,7 @@ namespace GPTConsole
         //            Console.WriteLine(answer.Text);
         //        }
 
-        //        public static async Task RunPlanner()
-        //        {
-        //            var kernel = new KernelBuilder()
-        //                    .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-        //            var loader = new NativePluginLoader();
-        //            loader.Load();
-
-        //            var goal = "If my investment of 2130.23 dollars increased by 23%, how much would I have after I spent $5 on a latte?";
-        //            var plan = await kernel.RunPlan(goal);
-
-
-        //            Console.WriteLine("Plan:\n");
-        //            Console.WriteLine(JsonSerializer.Serialize(plan, new JsonSerializerOptions { WriteIndented = true }));
-
-        //            Console.WriteLine("\nPlan results:");
-        //            Console.WriteLine(JsonSerializer.Serialize(plan.State, new JsonSerializerOptions { WriteIndented = true }));
-        //        }
     }
 }
 
