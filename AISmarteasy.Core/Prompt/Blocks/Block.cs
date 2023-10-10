@@ -7,8 +7,6 @@ public abstract class Block
 {
     public virtual BlockTypeKind Type => BlockTypeKind.Undefined;
 
-    internal virtual bool? SynchronousRendering => null;
-
     public string Content { get; }
 
     private protected ILogger Logger { get; }

@@ -104,10 +104,10 @@ public sealed class CodeBlock : Block, ICodeRendering
         return context.Result;
     }
 
-    private ISKFunction? GetFunctionFromPlugins(FunctionIdBlock functionBlock)
+    private ISKFunction GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
         var plugin = KernelProvider.Kernel.Plugins[functionBlock.PluginName];
-        return plugin.GetFunction(functionBlock.FunctionName); ;
+        return plugin.GetFunction(functionBlock.FunctionName); 
     }
 
     private bool IsValidFunctionCall(out string errorMsg)

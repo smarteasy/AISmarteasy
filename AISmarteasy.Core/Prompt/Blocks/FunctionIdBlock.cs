@@ -12,7 +12,7 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
 
     internal string PluginName { get; } = string.Empty;
 
-    internal string FunctionName { get; } = string.Empty;
+    internal string FunctionName { get; }
 
     public FunctionIdBlock(string? text, ILoggerFactory? loggerFactory = null)
         : base(text?.Trim(), loggerFactory)
@@ -36,7 +36,7 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
 
     public override bool IsValid(out string errorMsg)
     {
-        if (!s_validContentRegex.IsMatch(Content))
+        if (!ValidContentRegex.IsMatch(Content))
         {
             errorMsg = "The function identifier is empty";
             return false;
@@ -65,5 +65,5 @@ internal sealed class FunctionIdBlock : Block, ITextRendering
         return value.Any(t => t == '.' && ++count > 1);
     }
 
-    private static readonly Regex s_validContentRegex = new("^[a-zA-Z0-9_.]*$");
+    private static readonly Regex ValidContentRegex = new("^[a-zA-Z0-9_.]*$");
 }

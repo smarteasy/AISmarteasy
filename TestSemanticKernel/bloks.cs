@@ -1,6 +1,5 @@
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Prompt.Blocks;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace TestSemanticKernel
 {

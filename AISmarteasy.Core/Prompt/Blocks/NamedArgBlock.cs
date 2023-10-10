@@ -41,13 +41,13 @@ internal sealed class NamedArgBlock : Block, ITextRendering
 
      internal string GetValue(ContextVariables? variables)
     {
-        var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out var errorMessage);
+        var valueIsValidValBlock = _valBlock != null && _valBlock.IsValid(out _);
         if (valueIsValidValBlock)
         {
             return _valBlock!.Render(variables);
         }
 
-        var valueIsValidVarBlock = _argValueAsVarBlock != null && _argValueAsVarBlock.IsValid(out var errorMessage2);
+        var valueIsValidVarBlock = _argValueAsVarBlock != null && _argValueAsVarBlock.IsValid(out _);
         if (valueIsValidVarBlock)
         {
             return _argValueAsVarBlock!.Render(variables);
@@ -112,7 +112,7 @@ internal sealed class NamedArgBlock : Block, ITextRendering
         }
 
         string[] trimmedParts = GetTrimmedParts(text);
-        switch (trimmedParts?.Length)
+        switch (trimmedParts.Length)
         {
             case 2:
                 return $"{trimmedParts[0]}{Symbols.NamedArgBlockSeparator}{trimmedParts[1]}";
@@ -130,8 +130,8 @@ internal sealed class NamedArgBlock : Block, ITextRendering
             return Array.Empty<string>();
         }
 
-        string[] parts = text.Split(new char[] { Symbols.NamedArgBlockSeparator }, 2);
-        string[] result = new string[parts.Length];
+        var parts = text.Split(new[] { Symbols.NamedArgBlockSeparator }, 2);
+        var result = new string[parts.Length];
         if (parts.Length > 0)
         {
             result[0] = parts[0].Trim();

@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -8,8 +7,6 @@ namespace AISmarteasy.Core.Context;
 public sealed class SKContext
 {
     public string Result => Variables.ToString();
-
-    public IReadOnlyCollection<ModelResult> ModelResults { get; set; } = Array.Empty<ModelResult>();
 
     public CultureInfo Culture { get; set; }
 

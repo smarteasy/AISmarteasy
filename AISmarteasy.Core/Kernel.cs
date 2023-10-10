@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using AISmarteasy.Core.Config;
+﻿using AISmarteasy.Core.Config;
 using AISmarteasy.Core.Connector.OpenAI;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
