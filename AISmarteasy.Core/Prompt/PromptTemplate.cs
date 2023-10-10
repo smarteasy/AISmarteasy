@@ -97,9 +97,9 @@ public class PromptTemplate : IPromptTemplate
         return result.ToString();
     }
 
-    private IList<Block> ExtractBlocks(string? template, bool validate = true)
+    private IList<Block> ExtractBlocks(string template, bool validate = true)
     {
-        this._logger.LogTrace("Extracting blocks from template: {0}", template);
+        _logger.LogTrace("Extracting blocks from template: {0}", template);
         var blocks = _tokenizer.Tokenize(template);
 
         if (validate)

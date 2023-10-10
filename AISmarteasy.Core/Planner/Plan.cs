@@ -40,7 +40,7 @@ public sealed class Plan : SemanticFunction, IPlan
     [JsonIgnore] 
     public bool HasNextStep => NextStepIndex < Steps.Count;
 
-    [JsonPropertyName("next_step_index")] public int NextStepIndex { get; private set; } = 0;
+    [JsonPropertyName("next_step_index")] public int NextStepIndex { get; private set; }
 
     public async Task RunAsync(AIRequestSettings requestSettings, CancellationToken cancellationToken = default)
     {
@@ -57,7 +57,7 @@ public sealed class Plan : SemanticFunction, IPlan
             {
                 Answer = State.TryGetValue(DEFAULT_RESULT_KEY, out string? currentPlanResult)
                     ? $"{currentPlanResult}\n{context.Variables.Input}" : context.Variables.Input;
-                State.Set(DEFAULT_RESULT_KEY, Answer);
+                State.Set(DEFAULT_RESULT_KEY, Answer);                
             }
 
             foreach (var item in step.Outputs)
@@ -73,11 +73,11 @@ public sealed class Plan : SemanticFunction, IPlan
     {
         var stepVariables = new ContextVariables();
 
-        foreach (var variable in variables)
+        foreach (var variable in step.Parameters)
         {
-            stepVariables.Set(variable.Key, variable.Value);
+            stepVariables.Set(variable.Name, variable.DefaultValue);
         }
-
+        
         var input = stepVariables.Input;
         if (!string.IsNullOrEmpty(input))
         {
@@ -100,6 +100,7 @@ public sealed class Plan : SemanticFunction, IPlan
             input = Description;
         }
 
+        stepVariables = new ContextVariables(input);
         KernelProvider.Kernel.Context = new SKContext(stepVariables);
 
         var functionParameters = step.Describe();
@@ -146,7 +147,7 @@ public sealed class Plan : SemanticFunction, IPlan
             }
         }
 
-        foreach (KeyValuePair<string, string> item in variables)
+        foreach (var item in variables)
         {
             if (!stepVariables.ContainsKey(item.Key))
             {
@@ -161,7 +162,7 @@ public sealed class Plan : SemanticFunction, IPlan
     {
         var result = input;
         var matches = VariablesRegex.Matches(input);
-        var orderedMatches = matches.Cast<Match>().Select(m => m.Groups["var"].Value).Distinct()
+        var orderedMatches = matches.Select(m => m.Groups["var"].Value).Distinct()
             .OrderByDescending(m => m.Length);
 
         foreach (var varName in orderedMatches)

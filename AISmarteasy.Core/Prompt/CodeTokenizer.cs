@@ -28,7 +28,7 @@ internal sealed class CodeTokenizer
         char textValueDelimiter = '\0';
 
         var blocks = new List<Block>();
-        char nextChar = text![0];
+        char nextChar = text[0];
 
         bool spaceSeparatorFound = false;
 
@@ -41,12 +41,12 @@ internal sealed class CodeTokenizer
             switch (nextChar)
             {
                 case Symbols.VarPrefix:
-                    blocks.Add(new VarBlock(text, this._loggerFactory));
+                    blocks.Add(new VariableBlock(text, this._loggerFactory));
                     break;
 
                 case Symbols.DblQuote:
                 case Symbols.SglQuote:
-                    blocks.Add(new ValBlock(text, this._loggerFactory));
+                    blocks.Add(new ValueBlock(text, this._loggerFactory));
                     break;
 
                 default:
@@ -102,7 +102,7 @@ internal sealed class CodeTokenizer
 
                 if (currentChar == textValueDelimiter && currentTokenType == TokenTypeKind.Value)
                 {
-                    blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new ValueBlock(currentTokenContent.ToString(), this._loggerFactory));
                     currentTokenContent.Clear();
                     currentTokenType = TokenTypeKind.None;
                     spaceSeparatorFound = false;
@@ -124,7 +124,7 @@ internal sealed class CodeTokenizer
             {
                 if (currentTokenType == TokenTypeKind.Variable)
                 {
-                    blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new VariableBlock(currentTokenContent.ToString(), this._loggerFactory));
                     currentTokenContent.Clear();
                     currentTokenType = TokenTypeKind.None;
                 }
@@ -169,7 +169,7 @@ internal sealed class CodeTokenizer
                 else
                 {
                     namedArgValuePrefix = currentChar;
-                    if (!IsQuote((char)namedArgValuePrefix) && namedArgValuePrefix != Symbols.VarPrefix)
+                    if (!IsQuote(namedArgValuePrefix) && namedArgValuePrefix != Symbols.VarPrefix)
                     {
                         throw new SKException($"Named argument values need to be prefixed with a quote or {Symbols.VarPrefix}.");
                     }
@@ -211,11 +211,11 @@ internal sealed class CodeTokenizer
         switch (currentTokenType)
         {
             case TokenTypeKind.Value:
-                blocks.Add(new ValBlock(currentTokenContent.ToString(), this._loggerFactory));
+                blocks.Add(new ValueBlock(currentTokenContent.ToString(), _loggerFactory));
                 break;
 
             case TokenTypeKind.Variable:
-                blocks.Add(new VarBlock(currentTokenContent.ToString(), this._loggerFactory));
+                blocks.Add(new VariableBlock(currentTokenContent.ToString(), _loggerFactory));
                 break;
 
             case TokenTypeKind.FunctionId:
@@ -223,16 +223,16 @@ internal sealed class CodeTokenizer
 
                 if (CodeTokenizer.IsValidNamedArg(tokenContent))
                 {
-                    blocks.Add(new NamedArgBlock(tokenContent, this._loggerFactory));
+                    blocks.Add(new NamedArgBlock(tokenContent, _loggerFactory));
                 }
                 else
                 {
-                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), this._loggerFactory));
+                    blocks.Add(new FunctionIdBlock(currentTokenContent.ToString(), _loggerFactory));
                 }
                 break;
 
             case TokenTypeKind.NamedArg:
-                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), this._loggerFactory));
+                blocks.Add(new NamedArgBlock(currentTokenContent.ToString(), _loggerFactory));
                 break;
 
             case TokenTypeKind.None:
@@ -269,7 +269,7 @@ internal sealed class CodeTokenizer
         try
         {
             var tokenContentAsNamedArg = new NamedArgBlock(tokenContent);
-            return tokenContentAsNamedArg.IsValid(out var error);
+            return tokenContentAsNamedArg.IsValid(out _);
         }
         catch
         {

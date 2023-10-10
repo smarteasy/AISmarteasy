@@ -18,19 +18,19 @@ public sealed class TemplateTokenizer
     }
 
 
-    public IList<Block> Tokenize(string? text)
+    public IList<Block> Tokenize(string text)
     {
         const int Empty_CodeBlock_Length = 4;
         const int Min_CodeBlock_Length = Empty_CodeBlock_Length + 1;
 
         if (string.IsNullOrEmpty(text))
         {
-            return new List<Block> { new TextBlock(string.Empty, this._loggerFactory) };
+            return new List<Block> { new TextBlock(string.Empty, _loggerFactory) };
         }
 
-        if (text!.Length < Min_CodeBlock_Length)
+        if (text.Length < Min_CodeBlock_Length)
         {
-            return new List<Block> { new TextBlock(text, this._loggerFactory) };
+            return new List<Block> { new TextBlock(text, _loggerFactory) };
         }
 
         var blocks = new List<Block>();
@@ -90,7 +90,7 @@ public sealed class TemplateTokenizer
                     {
                         if (blockStartPos > endOfLastBlock)
                         {
-                            blocks.Add(new TextBlock(text, endOfLastBlock, blockStartPos, this._loggerFactory));
+                            blocks.Add(new TextBlock(text, endOfLastBlock, blockStartPos, _loggerFactory));
                         }
  
                         var contentWithDelimiters = SubStr(text, blockStartPos, nextCharCursor + 1);
@@ -128,7 +128,7 @@ public sealed class TemplateTokenizer
                                     break;
 
                                 case BlockTypeKind.FunctionId:
-                                    blocks.Add(new CodeBlock(codeBlocks, contentWithoutDelimiters, this._loggerFactory));
+                                    blocks.Add(new CodeBlock(codeBlocks, contentWithoutDelimiters, _loggerFactory));
                                     break;
 
                                 case BlockTypeKind.Code:
@@ -149,7 +149,7 @@ public sealed class TemplateTokenizer
 
         if (endOfLastBlock < text.Length)
         {
-            blocks.Add(new TextBlock(text, endOfLastBlock, text.Length, this._loggerFactory));
+            blocks.Add(new TextBlock(text, endOfLastBlock, text.Length, _loggerFactory));
         }
 
         return blocks;

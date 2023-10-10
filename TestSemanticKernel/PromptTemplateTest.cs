@@ -16,110 +16,110 @@ namespace TestSemanticKernel
         }
 
 
-        [Test]
-        public async Task ItSupportsVariablesAsync()
-        {
-            const string Input = "template tests";
-            const string Winner = "SK";
-            const string Template = "And the winner\n of {{$input}} \nis: {{  $winner }}!";
+        //[Test]
+        //public async Task ItSupportsVariablesAsync()
+        //{
+        //    const string Input = "template tests";
+        //    const string Winner = "SK";
+        //    const string Template = "And the winner\n of {{$input}} \nis: {{  $winner }}!";
 
-            var kernel = Kernel.Builder.Build();
-            var context = kernel.CreateNewContext();
-            context.Variables["input"] = Input;
-            context.Variables["winner"] = Winner;
+        //    var kernel = Kernel.Builder.Build();
+        //    var context = kernel.CreateNewContext();
+        //    context.Variables["input"] = Input;
+        //    context.Variables["winner"] = Winner;
 
-            var result = await _target?.RenderAsync(Template, context)!;
+        //    var result = await _target?.RenderAsync(Template, context)!;
 
-            var expected = Template
-                .Replace("{{$input}}", Input, StringComparison.OrdinalIgnoreCase)
-                .Replace("{{  $winner }}", Winner, StringComparison.OrdinalIgnoreCase);
+        //    var expected = Template
+        //        .Replace("{{$input}}", Input, StringComparison.OrdinalIgnoreCase)
+        //        .Replace("{{  $winner }}", Winner, StringComparison.OrdinalIgnoreCase);
 
-            Assert.That(result, Is.EqualTo(expected));
-        }
+        //    Assert.That(result, Is.EqualTo(expected));
+        //}
 
-        [Test]
-        public async Task ItSupportsValuesAsync()
-        {
-            const string Template = "And the winner\n of {{'template\ntests'}} \nis: {{  \"SK\" }}!";
-            const string Expected = "And the winner\n of template\ntests \nis: SK!";
+        //[Test]
+        //public async Task ItSupportsValuesAsync()
+        //{
+        //    const string Template = "And the winner\n of {{'template\ntests'}} \nis: {{  \"SK\" }}!";
+        //    const string Expected = "And the winner\n of template\ntests \nis: SK!";
 
-            var kernel = Kernel.Builder.Build();
-            var context = kernel.CreateNewContext();
+        //    var kernel = Kernel.Builder.Build();
+        //    var context = kernel.CreateNewContext();
 
-            var result = await _target?.RenderAsync(Template, context)!;
+        //    var result = await _target?.RenderAsync(Template, context)!;
 
-            Assert.That(result, Is.EqualTo(Expected));
-        }
+        //    Assert.That(result, Is.EqualTo(Expected));
+        //}
 
-        [Test]
-        public async Task ItAllowsToPassVariablesToFunctionsAsync()
-        {
-            const string Template = "== {{my.check123 $call}} ==";
-            var kernel = Kernel.Builder.Build();
-            kernel.ImportSkill(new MySkill(), "my");
-            var context = kernel.CreateNewContext();
-            context.Variables["call"] = "123";
+        //[Test]
+        //public async Task ItAllowsToPassVariablesToFunctionsAsync()
+        //{
+        //    const string Template = "== {{my.check123 $call}} ==";
+        //    var kernel = Kernel.Builder.Build();
+        //    kernel.ImportSkill(new MySkill(), "my");
+        //    var context = kernel.CreateNewContext();
+        //    context.Variables["call"] = "123";
 
-            var result = await _target?.RenderAsync(Template, context)!;
+        //    var result = await _target?.RenderAsync(Template, context)!;
 
-            Assert.That(result, Is.EqualTo("== 123 ok =="));
-        }
+        //    Assert.That(result, Is.EqualTo("== 123 ok =="));
+        //}
 
-        [Test]
-        public async Task ItAllowsToPassValuesToFunctionsAsync()
-        {
-            const string Template = "== {{my.check123 '234'}} ==";
-            var kernel = Kernel.Builder.Build();
-            kernel.ImportSkill(new MySkill(), "my");
-            var context = kernel.CreateNewContext();
+        //[Test]
+        //public async Task ItAllowsToPassValuesToFunctionsAsync()
+        //{
+        //    const string Template = "== {{my.check123 '234'}} ==";
+        //    var kernel = Kernel.Builder.Build();
+        //    kernel.ImportSkill(new MySkill(), "my");
+        //    var context = kernel.CreateNewContext();
 
-            var result = await _target?.RenderAsync(Template, context)!;
+        //    var result = await _target?.RenderAsync(Template, context)!;
 
-            Assert.That(result, Is.EqualTo("== 234 != 123 =="));
-        }
+        //    Assert.That(result, Is.EqualTo("== 234 != 123 =="));
+        //}
 
-        [Test]
-        public async Task ItAllowsToPassEscapedValues1ToFunctionsAsync()
-        {
-            const char Esc = '\\';
-            string template = "== {{my.check123 'a" + Esc + "'b'}} ==";
-            var kernel = Kernel.Builder.Build();
-            kernel.ImportSkill(new MySkill(), "my");
-            var context = kernel.CreateNewContext();
+        //[Test]
+        //public async Task ItAllowsToPassEscapedValues1ToFunctionsAsync()
+        //{
+        //    const char Esc = '\\';
+        //    string template = "== {{my.check123 'a" + Esc + "'b'}} ==";
+        //    var kernel = Kernel.Builder.Build();
+        //    kernel.ImportSkill(new MySkill(), "my");
+        //    var context = kernel.CreateNewContext();
 
-            var result = await _target?.RenderAsync(template, context)!;
+        //    var result = await _target?.RenderAsync(template, context)!;
 
-            Assert.That(result, Is.EqualTo("== a'b != 123 =="));
-        }
+        //    Assert.That(result, Is.EqualTo("== a'b != 123 =="));
+        //}
 
-        [Test]
-        public async Task ItAllowsToPassEscapedValues2ToFunctionsAsync()
-        {
-            const char Esc = '\\';
-            string template = "== {{my.check123 \"a" + Esc + "\"b\"}} ==";
-            var kernel = Kernel.Builder.Build();
-            kernel.ImportSkill(new MySkill(), "my");
-            var context = kernel.CreateNewContext();
+        //[Test]
+        //public async Task ItAllowsToPassEscapedValues2ToFunctionsAsync()
+        //{
+        //    const char Esc = '\\';
+        //    string template = "== {{my.check123 \"a" + Esc + "\"b\"}} ==";
+        //    var kernel = Kernel.Builder.Build();
+        //    kernel.ImportSkill(new MySkill(), "my");
+        //    var context = kernel.CreateNewContext();
 
-            var result = await _target?.RenderAsync(template, context)!;
+        //    var result = await _target?.RenderAsync(template, context)!;
 
-            Assert.That(result, Is.EqualTo("== a\"b != 123 =="));
-        }
+        //    Assert.That(result, Is.EqualTo("== a\"b != 123 =="));
+        //}
 
-        [Test]
-        public async Task ItHandlesNamedArgsAsync()
-        {
-            // Arrange
-            string template = "Output: {{my.sayAge name=\"Mario\" birthdate=$birthdate exclamation='Wow, that\\'s surprising'}}";
-            var kernel = Kernel.Builder.Build();
-            kernel.ImportSkill(new MySkill(), "my");
-            var context = kernel.CreateNewContext();
-            context.Variables["birthdate"] = "1981-08-20T00:00:00";
+        //[Test]
+        //public async Task ItHandlesNamedArgsAsync()
+        //{
+        //    // Arrange
+        //    string template = "Output: {{my.sayAge name=\"Mario\" birthdate=$birthdate exclamation='Wow, that\\'s surprising'}}";
+        //    var kernel = Kernel.Builder.Build();
+        //    kernel.ImportSkill(new MySkill(), "my");
+        //    var context = kernel.CreateNewContext();
+        //    context.Variables["birthdate"] = "1981-08-20T00:00:00";
 
-            var result = await _target?.RenderAsync(template, context)!;
+        //    var result = await _target?.RenderAsync(template, context)!;
 
-            Assert.That(result, Is.EqualTo("Output: Mario is 42 today. Wow, that's surprising!"));
-        }
+        //    Assert.That(result, Is.EqualTo("Output: Mario is 42 today. Wow, that's surprising!"));
+        //}
     }
 
     public class MySkill

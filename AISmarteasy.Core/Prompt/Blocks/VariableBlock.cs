@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Blocks;
 
-public sealed class VarBlock : Block, ITextRendering
+public sealed class VariableBlock : Block, ITextRendering
 {
     public override BlockTypeKind Type => BlockTypeKind.Variable;
 
     public string Name { get; } = string.Empty;
 
-    public VarBlock(string? content, ILoggerFactory? loggerFactory = null) : base(content?.Trim(), loggerFactory)
+    public VariableBlock(string? content, ILoggerFactory? loggerFactory = null) : base(content?.Trim(), loggerFactory)
     {
         if (Content.Length < 2)
         {

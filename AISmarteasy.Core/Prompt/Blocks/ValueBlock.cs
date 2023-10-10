@@ -3,23 +3,16 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Blocks;
 
-public sealed class ValBlock : Block, ITextRendering
+public sealed class ValueBlock : Block, ITextRendering
 {
     public override BlockTypeKind Type => BlockTypeKind.Value;
 
-    // Cache the first and last char
     private readonly char _first = '\0';
     private readonly char _last = '\0';
 
-    // Content, excluding start/end quote chars
     private readonly string _value = string.Empty;
 
-    /// <summary>
-    /// Create an instance
-    /// </summary>
-    /// <param name="quotedValue">Block content, including the delimiting chars</param>
-    /// <param name="loggerFactory">The <see cref="ILoggerFactory"/> to use for logging. If null, no logging will be performed.</param>
-    public ValBlock(string? quotedValue, ILoggerFactory? loggerFactory = null)
+    public ValueBlock(string? quotedValue, ILoggerFactory? loggerFactory = null)
         : base(quotedValue?.Trim(), loggerFactory)
     {
         if (Content.Length < 2)
@@ -29,7 +22,7 @@ public sealed class ValBlock : Block, ITextRendering
         }
 
         _first = Content[0];
-        _last = Content[Content.Length - 1];
+        _last = Content[^1];
         _value = Content.Substring(1, Content.Length - 2);
     }
 
@@ -67,7 +60,7 @@ public sealed class ValBlock : Block, ITextRendering
     public static bool HasValPrefix(string? text)
     {
         return !string.IsNullOrEmpty(text)
-               && text!.Length > 0
+               && text.Length > 0
                && text[0] is Symbols.DblQuote or Symbols.SglQuote;
     }
 }
