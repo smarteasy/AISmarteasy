@@ -4,7 +4,7 @@ public struct AIServiceConfig
 {
     public AIServiceTypeKind ServiceType;
     public AIServiceVendorKind Vendor = AIServiceVendorKind.OpenAI;
-    public AIServiceFeatureKind ServiceFeature = AIServiceFeatureKind.Creativity;
+    public AIServiceFeatureKind ServiceFeature = AIServiceFeatureKind.Normal;
     public MemoryTypeKind MemoryType;
     public string APIKey;
     public string? MemoryEnvironment;

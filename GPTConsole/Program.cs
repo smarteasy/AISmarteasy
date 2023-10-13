@@ -1,13 +1,14 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System;
+using System.Globalization;
 using AISmarteasy.Core;
 using AISmarteasy.Core.Config;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+using AISmarteasy.Core.Connector.Pinecone;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
-using Google.Apis.CustomSearchAPI.v1.Data;
-using UglyToad.PdfPig.Content;
 
 namespace GPTConsole
 {
@@ -27,9 +28,44 @@ namespace GPTConsole
             //Run_Example05_InlineFunctionDefinition();
             //Run_Example06_TemplateLanguage();
             //RunExample10_DescribeAllPluginsAndFunctions();
-            Run_Example12_SequentialPlanner();
-
+            //Run_Example12_SequentialPlanner();
+            //Run_Example13_01_ConversationSummaryPlugin();
+            //Run_Example13_02_ConversationSummaryPlugin();
+            //Run_Example14_01_SemanticMemory();
+            Run_Example14_02_SemanticMemory();
+            // Run_Example13_03_ConversationSummaryPlugin();
+            //RunGetIntentFunction();
             Console.ReadLine();
+        }
+
+        public static async void RunGetIntentFunction()
+        {
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
+
+            var function = kernel.FindFunction("OrchestratorSkill", "GetIntent");
+
+
+            var parameters = new Dictionary<string, string>
+            {
+                ["input"] = "Yes",
+                ["history"] = @"Bot: How can I help you?
+        User: What's the weather like today?
+        Bot: Where are you located?
+        User: I'm in Seattle.
+        Bot: It's 70 degrees and sunny in Seattle today.
+        User: Thanks! I'll wear shorts.
+        Bot: You're welcome.
+        User: Could you remind me what I have on my calendar today?
+        Bot: You have a meeting with your team at 2:00 PM.
+        User: Oh right! My team just hit a major milestone; I should send them an email to congratulate them.
+        Bot: Would you like to write one for you?",
+                ["options"] = "SendEmail, ReadEmail, SendMeeting, RsvpToMeeting, SendChat"
+            };
+
+            var config = new FunctionRunConfig("OrchestratorSkill", "GetIntent", parameters);
+            await kernel.RunFunctionAsync(config);
+            Console.WriteLine(kernel.Context.Variables.Input);
         }
 
         public static async void Run_Example01_NativeFunctions()
@@ -37,7 +73,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var config = new FunctionRunConfig("TextSkill", "Uppercase");
@@ -52,7 +88,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var config = new PipelineRunConfig();
@@ -72,7 +108,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var variables = new ContextVariables("Today is: ");
@@ -93,7 +129,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var config = new PipelineRunConfig();
@@ -110,7 +146,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var config = new PipelineRunConfig();
@@ -161,7 +197,7 @@ namespace GPTConsole
             await kernel.RunFunctionAsync(inlineFunction, "I missed the F1 final race");
             Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
 
-             await kernel.RunFunctionAsync(inlineFunction, "sorry I forgot your birthday");
+            await kernel.RunFunctionAsync(inlineFunction, "sorry I forgot your birthday");
             Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
         }
 
@@ -170,7 +206,7 @@ namespace GPTConsole
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             string promptTemplate = @"
@@ -182,7 +218,7 @@ Is it morning, afternoon, evening, or night (morning/afternoon/evening/night)?
 Is it weekend time (weekend/not weekend)?
 ";
 
-        string configText = @"
+            string configText = @"
         {
             ""schema"": 1,
             ""type"": ""completion"",
@@ -196,7 +232,8 @@ Is it weekend time (weekend/not weekend)?
         ";
             var config = PromptTemplateConfig.FromJson(configText);
             var template = new PromptTemplate(promptTemplate, config);
-            var functionConfig = new SemanticFunctionConfig("TimeSkill", "GenerateDayTimeInformation", config, template);
+            var functionConfig =
+                new SemanticFunctionConfig("TimeSkill", "GenerateDayTimeInformation", config, template);
             var function = kernel.RegisterSemanticFunction(functionConfig);
 
             await kernel.RunFunctionAsync(function, string.Empty);
@@ -208,7 +245,7 @@ Is it weekend time (weekend/not weekend)?
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             foreach (var plugin in kernel.Plugins.Values)
@@ -244,7 +281,7 @@ Is it weekend time (weekend/not weekend)?
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
 
-            var loader = new NativePluginLoader();
+            var loader = new NativeFunctionLoader();
             loader.Load();
 
             var goal = "Write a poem about John Doe, then translate it into Korean.";
@@ -254,6 +291,110 @@ Is it weekend time (weekend/not weekend)?
             Console.WriteLine(plan.Content);
             Console.WriteLine("Answer:\n");
             Console.WriteLine(plan.Answer);
+        }
+
+        private static async void Run_Example13_01_ConversationSummaryPlugin()
+        {
+            Console.WriteLine("======== SamplePlugins - Conversation Summary Plugin - Summarize ========");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var config = new FunctionRunConfig("ConversationSummarySkill", "SummarizeConversation");
+            config.UpdateInput(ProviderChatTranscript.EXAMPLE13);
+            await kernel.RunFunctionAsync(config);
+
+            Console.WriteLine("Generated Summary:");
+            Console.WriteLine(kernel.Context.Variables.Input);
+        }
+
+        private static async void Run_Example13_02_ConversationSummaryPlugin()
+        {
+            Console.WriteLine("======== SamplePlugins - Conversation Summary Plugin - Action Items ========");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletionWithGpt35, API_KEY));
+
+            var config = new FunctionRunConfig("ConversationSummarySkill", "GenerateActionItems");
+            config.UpdateInput(ProviderChatTranscript.EXAMPLE13);
+            await kernel.RunFunctionAsync(config);
+
+            Console.WriteLine("Generated Action Items:");
+            Console.WriteLine(kernel.Result);
+        }
+
+        private static async void Run_Example13_03_ConversationSummaryPlugin()
+        {
+            Console.WriteLine("======== SamplePlugins - Conversation Summary Plugin - Topics ========");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, API_KEY));
+
+            var config = new FunctionRunConfig("ConversationSummarySkill", "GenerateTopics");
+            config.UpdateInput(ProviderChatTranscript.EXAMPLE13);
+            await kernel.RunFunctionAsync(config);
+
+            Console.WriteLine("Generated Topics::");
+            Console.WriteLine(kernel.Result);
+        }
+
+        private static async void Run_Example14_01_SemanticMemory()
+        {
+            Console.WriteLine("Adding some GitHub file URLs and their descriptions to the semantic memory.");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY,
+                    MemoryTypeKind.PineCone, PINECONE_API_KEY, PINECONE_ENVIRONMENT));
+
+            var githubFiles = SampleData();
+            await kernel.SaveMemoryAsync(githubFiles);
+        }
+
+        private static Dictionary<string, string> SampleData()
+        {
+            return new Dictionary<string, string>
+            {
+                ["https://github.com/microsoft/semantic-kernel/blob/main/README.md"]
+                    = "README: Installation, getting started, and how to contribute",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks/02-running-prompts-from-file.ipynb"]
+                    = "Jupyter notebook describing how to pass prompts from a file to a semantic plugin or function",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks//00-getting-started.ipynb"]
+                    = "Jupyter notebook describing how to get started with the Semantic Kernel",
+                ["https://github.com/microsoft/semantic-kernel/tree/main/samples/plugins/ChatPlugin/ChatGPT"]
+                    = "Sample demonstrating how to create a chat plugin interfacing with ChatGPT",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/dotnet/src/SemanticKernel/Memory/VolatileMemoryStore.cs"]
+                    = "C# class that defines a volatile embedding store",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/dotnet/KernelHttpServer/README.md"]
+                    = "README: How to set up a Semantic Kernel Service API using Azure Function Runtime v4",
+                ["https://github.com/microsoft/semantic-kernel/blob/main/samples/apps/chat-summary-webapp-react/README.md"]
+                    = "README: README associated with a sample chat summary react-based webapp",
+            };
+        }
+
+        private static async void Run_Example14_02_SemanticMemory()
+        {
+            var query = "Can I build a chat with SK?";
+
+            Console.WriteLine("\nQuery: " + query + "\n");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY,
+                    MemoryTypeKind.PineCone, PINECONE_API_KEY, PINECONE_ENVIRONMENT));
+
+            var memoryResults = await kernel.SearchMemoryAsync(query);
+
+            if (memoryResults != null)
+            {
+                var i = 0;
+                await foreach (MemoryQueryResult memoryResult in memoryResults)
+                {
+                    Console.WriteLine($"Result {++i}:");
+                    Console.WriteLine("  URL:     : " + memoryResult.Metadata.Id);
+                    Console.WriteLine("  Title    : " + memoryResult.Metadata.Text);
+                    Console.WriteLine("  Relevance: " + memoryResult.Relevance);
+                    Console.WriteLine();
+                }
+            }
         }
 
         //public static async Task RunPdf()
@@ -454,32 +595,7 @@ Is it weekend time (weekend/not weekend)?
         //            Console.WriteLine(answer.Text);
         //        }
 
-        //        public static async Task RunGetIntentFunction()
-        //        {
-        //            var kernel = new KernelBuilder()
-        //                .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, API_KEY));
 
-        //            var function = kernel.FindFunction("OrchestratorSkill", "GetIntent");
-
-        //            var parameters = new Dictionary<string, string>
-        //            {
-        //                ["input"] = "Yes",
-        //                ["history"] = @"Bot: How can I help you?
-        //User: What's the weather like today?
-        //Bot: Where are you located?
-        //User: I'm in Seattle.
-        //Bot: It's 70 degrees and sunny in Seattle today.
-        //User: Thanks! I'll wear shorts.
-        //Bot: You're welcome.
-        //User: Could you remind me what I have on my calendar today?
-        //Bot: You have a meeting with your team at 2:00 PM.
-        //User: Oh right! My team just hit a major milestone; I should send them an email to congratulate them.
-        //Bot: Would you like to write one for you?",
-        //                ["options"] = "SendEmail, ReadEmail, SendMeeting, RsvpToMeeting, SendChat"
-        //            };
-        //            var answer = await kernel.RunFunction(function, parameters);
-        //            Console.WriteLine(answer.Text);
-        //        }
 
         //        public static async Task RunOrchestratorFunction()
         //        {
@@ -512,8 +628,6 @@ Is it weekend time (weekend/not weekend)?
         //            var answer = await kernel.RunPipeline(jokeFunction, poemFunction, menuFunction);
         //            Console.WriteLine(answer.Text);
         //        }
-
-
     }
 }
 

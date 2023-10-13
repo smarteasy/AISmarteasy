@@ -21,7 +21,7 @@ public sealed class TextMemorySkill
     private const double DEFAULT_RELEVANCE = 0.0;
     private const int DEFAULT_LIMIT = 1;
 
-    private readonly ISemanticTextMemory? _memory;
+    private readonly ISemanticMemory? _memory;
 
     public TextMemorySkill()
     {
@@ -40,8 +40,8 @@ public sealed class TextMemorySkill
         ILoggerFactory? loggerFactory,
         CancellationToken cancellationToken = default)
     {
-        Verify.NotNullOrWhiteSpace(collection);
-        Verify.NotNullOrWhiteSpace(key);
+        Verify.NotNullOrWhitespace(collection);
+        Verify.NotNullOrWhitespace(key);
 
         loggerFactory?.CreateLogger(typeof(TextMemorySkill)).LogDebug("Recalling memory with key '{0}' from collection '{1}'", key, collection);
         var memory = await this._memory.GetAsync(collection, key, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -57,7 +57,7 @@ public sealed class TextMemorySkill
         ILoggerFactory? loggerFactory,
         CancellationToken cancellationToken = default)
     {
-        Verify.NotNullOrWhiteSpace(collection);
+        Verify.NotNullOrWhitespace(collection);
         relevance ??= DEFAULT_RELEVANCE;
         limit ??= DEFAULT_LIMIT;
 
@@ -92,12 +92,12 @@ public sealed class TextMemorySkill
         ILoggerFactory? loggerFactory,
         CancellationToken cancellationToken = default)
     {
-        Verify.NotNullOrWhiteSpace(collection);
-        Verify.NotNullOrWhiteSpace(key);
+        Verify.NotNullOrWhitespace(collection);
+        Verify.NotNullOrWhitespace(key);
 
         loggerFactory?.CreateLogger(typeof(TextMemorySkill)).LogDebug("Saving memory to collection '{0}'", collection);
 
-        await _memory.SaveInformationAsync(collection, text: input, id: key, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await _memory.SaveAsync(collection, text: input, id: key, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     [SKFunction, Description("Remove specific memory")]
@@ -107,8 +107,8 @@ public sealed class TextMemorySkill
         ILoggerFactory? loggerFactory,
         CancellationToken cancellationToken = default)
     {
-        Verify.NotNullOrWhiteSpace(collection);
-        Verify.NotNullOrWhiteSpace(key);
+        Verify.NotNullOrWhitespace(collection);
+        Verify.NotNullOrWhitespace(key);
 
         loggerFactory?.CreateLogger(typeof(TextMemorySkill)).LogDebug("Removing memory from collection '{0}'", collection);
 

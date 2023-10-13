@@ -1,6 +1,6 @@
 ﻿namespace AISmarteasy.Core.Web;
 
-internal sealed class NonDisposableHttpClientHandler : HttpClientHandler
+public sealed class NonDisposableHttpClientHandler : HttpClientHandler
 {
     private NonDisposableHttpClientHandler()
     {

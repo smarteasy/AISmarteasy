@@ -1,5 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.Json;
+﻿using System.Text.Json;
+using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 using AISmarteasy.Core.Context;
@@ -112,7 +112,7 @@ public class SemanticFunction : ISKFunction
             {
                 var prompt = await PromptTemplate.RenderAsync(cancellationToken).ConfigureAwait(false);
                 var answer = await client
-                    .RunTextCompletion(prompt, (CompleteRequestSettings)requestSettings, cancellationToken)
+                    .RunTextCompletion(prompt, (AIRequestSettings)requestSettings, cancellationToken)
                     .ConfigureAwait(false);
                 context.Variables.Update(answer.Text);
             }
@@ -123,7 +123,7 @@ public class SemanticFunction : ISKFunction
                 var chatHistory = new ChatHistory();
                 chatHistory.AddUserMessage(prompt);
                 var chtHistory = await client
-                    .RunChatCompletion(chatHistory, (CompleteRequestSettings)requestSettings, cancellationToken)
+                    .RunChatCompletionAsync(chatHistory, requestSettings, cancellationToken)
                     .ConfigureAwait(false);
                 context.Variables.Update(chtHistory.Messages[1].Content);
             }

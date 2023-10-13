@@ -15,10 +15,10 @@ public sealed class OpenAITextCompletion : OpenAIClientBase, IAIService
     {
     }
     
-    public override Task<SemanticAnswer> RunTextCompletion(string prompt, CompleteRequestSettings requestSettings,
+    public override Task<SemanticAnswer> RunTextCompletion(string prompt, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         LogActionDetails();
-        return InternalGetTextResultsAsync(prompt, requestSettings, cancellationToken);
+        return GetTextResultsAsync(prompt, requestSettings, cancellationToken);
     }
 }

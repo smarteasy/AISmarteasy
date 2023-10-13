@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Memory.Pinecone;
+using AISmarteasy.Core.Connector.Pinecone;
 using AISmarteasy.Core.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -56,13 +56,6 @@ public class PineconeMemoryStore : IPineconeMemoryStore
     {
         return await UpsertToNamespaceAsync(collectionName, string.Empty, record, cancellationToken).ConfigureAwait(false);
     }
-
-
-
-
-
-
-
 
     public async Task<string> UpsertToNamespaceAsync(string indexName, string indexNamespace, MemoryRecord record, CancellationToken cancellationToken = default)
     {
@@ -405,7 +398,7 @@ public class PineconeMemoryStore : IPineconeMemoryStore
         var results = _pineconeClient.GetMostRelevantAsync(indexName, embedding, minRelevanceScore, limit, withEmbeddings,
             true, indexNamespace, default, cancellationToken);
 
-        await foreach ((PineconeDocument, double) result in results.WithCancellation(cancellationToken).ConfigureAwait(false))
+        await foreach ((PineconeDocument, double) result in results.ConfigureAwait(false))
         {
             yield return (result.Item1.ToMemoryRecord(transferVectorOwnership: true), result.Item2);
         }
@@ -470,7 +463,7 @@ public class PineconeMemoryStore : IPineconeMemoryStore
             filter,
             cancellationToken);
 
-        await foreach ((PineconeDocument, double) result in results.WithCancellation(cancellationToken))
+        await foreach ((PineconeDocument, double) result in results.ConfigureAwait(false))
         {
             yield return (result.Item1.ToMemoryRecord(transferVectorOwnership: true), result.Item2);
         }

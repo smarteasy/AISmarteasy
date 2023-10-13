@@ -5,11 +5,11 @@ public interface IMemoryStore
     IAsyncEnumerable<string> GetCollectionsAsync(CancellationToken cancellationToken = default);
 
     Task CreateCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
-    
+
 
     Task<bool> DoesCollectionExistAsync(string collectionName, CancellationToken cancellationToken = default);
 
-   Task DeleteCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
+    Task DeleteCollectionAsync(string collectionName, CancellationToken cancellationToken = default);
 
     Task<string> UpsertAsync(string collectionName, MemoryRecord record, CancellationToken cancellationToken = default);
 
@@ -27,9 +27,9 @@ public interface IMemoryStore
 
     IAsyncEnumerable<MemoryRecord> GetBatchAsync(string collectionName, IEnumerable<string> keys, bool withEmbeddings = false, CancellationToken cancellationToken = default);
 
-     Task RemoveAsync(string collectionName, string key, CancellationToken cancellationToken = default);
+    Task RemoveAsync(string collectionName, string key, CancellationToken cancellationToken = default);
 
-     Task RemoveBatchAsync(string collectionName, IEnumerable<string> keys, CancellationToken cancellationToken = default);
+    Task RemoveBatchAsync(string collectionName, IEnumerable<string> keys, CancellationToken cancellationToken = default);
 
 
 

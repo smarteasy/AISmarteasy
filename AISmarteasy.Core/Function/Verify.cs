@@ -10,7 +10,7 @@ public static class Verify
     private static readonly Regex AsciiLettersDigitsUnderscoresRegex = new("^[0-9A-Za-z_]*$");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void NotNull([NotNull] object? obj, [CallerArgumentExpression("obj")] string? paramName = null)
+    public static void NotNull([NotNull] object? obj, [CallerArgumentExpression("obj")] string? paramName = null)
     {
         if (obj is null)
         {
@@ -19,7 +19,7 @@ public static class Verify
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NotNullOrWhiteSpace([NotNull] string? str, [CallerArgumentExpression("str")] string? paramName = null)
+    public static void NotNullOrWhitespace([NotNull] string? str, [CallerArgumentExpression("str")] string? paramName = null)
     {
         NotNull(str, paramName);
         if (string.IsNullOrWhiteSpace(str))
@@ -30,7 +30,7 @@ public static class Verify
 
     internal static void ValidPluginName([NotNull] string? pluginName)
     {
-        NotNullOrWhiteSpace(pluginName);
+        NotNullOrWhitespace(pluginName);
         if (!AsciiLettersDigitsUnderscoresRegex.IsMatch(pluginName))
         {
             ThrowInvalidName("plugin name", pluginName);
@@ -45,7 +45,7 @@ public static class Verify
 
     private static void ValidName([NotNull] string? name, string kind)
     {
-        NotNullOrWhiteSpace(name);
+        NotNullOrWhitespace(name);
         if (!AsciiLettersDigitsUnderscoresRegex.IsMatch(name))
         {
             ThrowInvalidName(kind, name);
@@ -56,7 +56,7 @@ public static class Verify
     {
         Debug.Assert(prefix is not null);
 
-        NotNullOrWhiteSpace(text, textParamName);
+        NotNullOrWhitespace(text, textParamName);
         if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(textParamName, message);

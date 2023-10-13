@@ -5,9 +5,7 @@ namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 
 public sealed class OpenAIChatCompletion : OpenAIClientBase, IAIService
 {
-    public OpenAIChatCompletion(
-        string modelId,
-        string apiKey,
+    public OpenAIChatCompletion(string modelId, string apiKey,
         string? organization = null,
         HttpClient? httpClient = null,
         ILoggerFactory? loggerFactory = null) : base(modelId, apiKey, organization, httpClient, loggerFactory)
@@ -15,11 +13,11 @@ public sealed class OpenAIChatCompletion : OpenAIClientBase, IAIService
     }
 
 
-    public override async Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
+    public override async Task<ChatHistory> RunChatCompletionAsync(ChatHistory chatHistory, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         LogActionDetails();
-        var chatResult = await InternalGetChatResultsAsync(chatHistory, new ChatRequestSettings(), cancellationToken);
+        var chatResult = await GetChatResultsAsync(chatHistory, requestSettings, cancellationToken).ConfigureAwait(false);
         var answer = chatResult[0].ModelResult.GetResult<ChatModelResult>().Choice.Message.Content;
         chatHistory.AddAssistantMessage(answer);
         return chatHistory;

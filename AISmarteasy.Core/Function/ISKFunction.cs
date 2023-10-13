@@ -1,4 +1,5 @@
-﻿using AISmarteasy.Core.Prompt;
+﻿using AISmarteasy.Core.Connector;
+using AISmarteasy.Core.Prompt;
 
 namespace AISmarteasy.Core.Function;
 

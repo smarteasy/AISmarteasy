@@ -1,6 +1,6 @@
 ﻿using AISmarteasy.Core.Config;
+using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
@@ -9,7 +9,6 @@ using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Planner;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
-using AISmarteasy.Core.Text;
 using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core;
@@ -23,7 +22,7 @@ public sealed class Kernel : IDisposable
     private readonly string _semanticPluginDirectory;
 
     private readonly ILogger _logger;
-    private ISemanticTextMemory? _memory;
+    private ISemanticMemory? _memory;
 
     public Dictionary<string, Plugin> Plugins { get; }
 
@@ -55,11 +54,12 @@ public sealed class Kernel : IDisposable
 
         Plugins = new Dictionary<string, Plugin>();
 
-        _semanticPluginDirectory = Path.Combine(Directory.GetCurrentDirectory(), "plugins", "semantic"); ;
+        _semanticPluginDirectory = Path.Combine(Directory.GetCurrentDirectory(), "plugins", "semantic"); 
         LoadSemanticPlugin(); 
     }
 
     public string ContextVariablesInput => KernelProvider.Kernel.Context.Variables.Input;
+    public string Result => Context.Result;
 
     public Task RunFunctionAsync(FunctionRunConfig config)
     {
@@ -81,31 +81,31 @@ public sealed class Kernel : IDisposable
             Context.Variables[parameter.Key] = parameter.Value;
         }
 
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return function.InvokeAsync(requestSetting);
+        return function.InvokeAsync(function.RequestSettings);
     }
-
-
-
-
-
-
-
-
-    public async Task<List<string>> SaveEmbeddingsFromDirectoryPdfFiles(string directory)
-    {
-        if (_memory != null) return await PdfLoader.SaveEmbeddingsFromDirectoryFiles(_memory, directory).ConfigureAwait(false);
-        return new List < string>();
-    }
-
-    public async Task<string?> SaveInformationAsync(string collection, string text, string id,
-        string? description = null, string? additionalMetadata = null)
-
+    
+    public async Task<bool> SaveMemoryFromPdfDirectory(string directory)
     {
         if (_memory != null) 
-            return await _memory.SaveInformationAsync(collection, text, id).ConfigureAwait(false);
+            return await Embedding.SaveFromPdfDirectory(_memory, directory).ConfigureAwait(false);
+        return false;
+    }
 
-        return null;
+    public async Task<bool> SaveMemoryAsync(Dictionary<string, string> textData)
+    {
+        if (_memory != null)
+            return await Embedding.SaveAsync(_memory, textData).ConfigureAwait(false);
+        return false;
+    }
+
+    public async Task<IAsyncEnumerable<MemoryQueryResult>?> SearchMemoryAsync(string query)
+    {
+        if (_memory == null)
+        {
+            return null;
+        }
+        
+        return await Embedding.SearchAsync(_memory, query).ConfigureAwait(false);
     }
 
     public void UseMemory(IAIService embeddingService, IMemoryStore storage)
@@ -125,7 +125,7 @@ public sealed class Kernel : IDisposable
 
             while (plan.HasNextStep)
             {
-                var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+                var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
                 await plan.RunAsync(requestSetting).ConfigureAwait(false);
             }
         }
@@ -149,26 +149,19 @@ public sealed class Kernel : IDisposable
 
         return result;
     }
-
-
-
-
-
+    
     public Task<ChatHistory> RunChatCompletion(ChatHistory history)
     {
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunChatCompletion(history, requestSetting);
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return AIService.RunChatCompletionAsync(history, requestSetting);
     }
 
     public Task<SemanticAnswer> RunCompletion(string prompt)
     {
-        var requestSetting = CompleteRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return AIService.RunTextCompletion(prompt, requestSetting);
     }
-
-
-
-
+    
     public ISKFunction FindFunction(string pluginName, string functionName)
     {
         Verify.ValidPluginName(pluginName);
@@ -212,7 +205,7 @@ public sealed class Kernel : IDisposable
 
         var func = SemanticFunction.FromSemanticConfig(config.PluginName, config.FunctionName, config, LoggerFactory);
 
-        func.SetAIConfiguration(CompleteRequestSettings.FromCompletionConfig(config.PromptTemplateConfig.Completion));
+        func.SetAIConfiguration(AIRequestSettings.FromCompletionConfig(config.PromptTemplateConfig.Completion));
 
         return func;
     }
@@ -265,8 +258,8 @@ public sealed class Kernel : IDisposable
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Config {0}: {1}", functionName, config.ToJson());
-            _logger.LogTrace("Registering function {0}.{1}", pluginName, functionName);
+            _logger.LogTrace($"Config {functionName}: {config.ToJson()}");
+            _logger.LogTrace($"Registering function {pluginName}.{functionName}");
         }
     }
 
@@ -304,7 +297,7 @@ public sealed class Kernel : IDisposable
     public void RegisterMemory(IAIService embeddingService, IMemoryStore storage)
     {
         EmbeddingService = embeddingService;
-        _memory = new SemanticTextMemory(embeddingService, storage);
+        _memory = new SemanticMemory(embeddingService, storage);
     }
 
     public SKContext CreateNewContext(ContextVariables variables)

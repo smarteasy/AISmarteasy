@@ -29,27 +29,25 @@ public abstract class ClientBase
 
     private static readonly Counter<int> PromptTokensCounter =
         Meter.CreateCounter<int>(
-            name: "SK.Connectors.OpenAI.PromptTokens",
+            name: "AISmarteasy.Core.Connector.OpenAI.PromptTokens",
             description: "Number of prompt tokens used");
 
     private static readonly Counter<int> CompletionTokensCounter =
         Meter.CreateCounter<int>(
-            name: "SK.Connectors.OpenAI.CompletionTokens",
+            name: "AISmarteasy.Core.Connector.OpenAI.CompletionTokens",
             description: "Number of completion tokens used");
 
     private static readonly Counter<int> TotalTokensCounter =
         Meter.CreateCounter<int>(
-            name: "SK.Connectors.OpenAI.TotalTokens",
+            name: "AISmarteasy.Core.Connector.OpenAI.TotalTokens",
             description: "Total number of tokens used");
 
-    private protected async Task<SemanticAnswer> InternalGetTextResultsAsync(
-        string prompt,
-        CompleteRequestSettings requestSettings,
+    private protected async Task<SemanticAnswer> GetTextResultsAsync(string prompt, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         Verify.NotNull(requestSettings);
-
         ValidateMaxTokens(requestSettings.MaxTokens);
+
         var options = CreateCompletionsOptions(prompt, requestSettings);
 
         Response<Completions>? response = await RunRequestAsync<Response<Completions>?>(
@@ -72,13 +70,10 @@ public abstract class ClientBase
         return new SemanticAnswer(responseData.Choices[0].Text);
     }
 
-    private protected async Task<IReadOnlyList<IChatResult>> InternalGetChatResultsAsync(
-        ChatHistory chatHistory,
-        ChatRequestSettings? chatSettings,
+    private protected async Task<IReadOnlyList<IChatResult>> GetChatResultsAsync(ChatHistory chatHistory, AIRequestSettings chatSettings, 
         CancellationToken cancellationToken = default)
     {
         Verify.NotNull(chatHistory);
-        chatSettings ??= new();
 
         ValidateMaxTokens(chatSettings.MaxTokens);
         var chatOptions = CreateChatCompletionsOptions(chatSettings, chatHistory);
@@ -103,7 +98,7 @@ public abstract class ClientBase
         return responseData.Choices.Select(chatChoice => new ChatResult(responseData, chatChoice)).ToList();
     }
 
-    private protected static OpenAIChatHistory InternalCreateNewChat(string? instructions = null)
+    private protected static OpenAIChatHistory CreateNewChat(string? instructions = null)
     {
         return new OpenAIChatHistory(instructions);
     }
@@ -140,9 +135,7 @@ public abstract class ClientBase
 
     
 
-    private protected async IAsyncEnumerable<TextStreamingResult> InternalGetTextStreamingResultsAsync(
-        string text,
-        CompleteRequestSettings requestSettings,
+    private protected async IAsyncEnumerable<TextStreamingResult> GetTextStreamingResultsAsync(string text, AIRequestSettings requestSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         Verify.NotNull(requestSettings);
@@ -164,9 +157,9 @@ public abstract class ClientBase
 
 
 
-    private protected async IAsyncEnumerable<IChatStreamingResult> InternalGetChatStreamingResultsAsync(
+    private protected async IAsyncEnumerable<IChatStreamingResult> GetChatStreamingResultsAsync(
         IEnumerable<ChatMessageBase> chat,
-        ChatRequestSettings? requestSettings,
+        AIRequestSettings? requestSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         Verify.NotNull(chat);
@@ -191,38 +184,36 @@ public abstract class ClientBase
         }
     }
 
-    private protected async Task<IReadOnlyList<ITextResult>> InternalGetChatResultsAsTextAsync(
-        string text,
-        CompleteRequestSettings? textSettings,
-        CancellationToken cancellationToken = default)
+    private protected async Task<IReadOnlyList<ITextResult>> GetChatResultsAsTextAsync(string text,
+        AIRequestSettings? textSettings, CancellationToken cancellationToken = default)
     {
         textSettings ??= new();
-        ChatHistory chat = PrepareChatHistory(text, textSettings, out ChatRequestSettings chatSettings);
+        ChatHistory chat = PrepareChatHistory(text, textSettings, out AIRequestSettings chatSettings);
 
-        return (await InternalGetChatResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
+        return (await GetChatResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
             .OfType<ITextResult>()
             .ToList();
     }
 
     private protected async IAsyncEnumerable<ITextStreamingResult> InternalGetChatStreamingResultsAsTextAsync(
         string text,
-        CompleteRequestSettings? textSettings,
+        AIRequestSettings? textSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ChatHistory chat = PrepareChatHistory(text, textSettings, out ChatRequestSettings chatSettings);
+        ChatHistory chat = PrepareChatHistory(text, textSettings, out AIRequestSettings chatSettings);
 
-        await foreach (var chatCompletionStreamingResult in InternalGetChatStreamingResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
+        await foreach (var chatCompletionStreamingResult in GetChatStreamingResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
         {
             yield return (ITextStreamingResult)chatCompletionStreamingResult;
         }
     }
 
-    private static OpenAIChatHistory PrepareChatHistory(string text, CompleteRequestSettings? requestSettings, out ChatRequestSettings settings)
+    private static OpenAIChatHistory PrepareChatHistory(string text, AIRequestSettings? requestSettings, out AIRequestSettings settings)
     {
         requestSettings ??= new();
-        var chat = InternalCreateNewChat(requestSettings.ChatSystemPrompt);
+        var chat = CreateNewChat(requestSettings.ChatSystemPrompt);
         chat.AddUserMessage(text);
-        settings = new ChatRequestSettings
+        settings = new AIRequestSettings
         {
             MaxTokens = requestSettings.MaxTokens,
             Temperature = requestSettings.Temperature,
@@ -234,7 +225,7 @@ public abstract class ClientBase
         return chat;
     }
 
-    private static CompletionsOptions CreateCompletionsOptions(string text, CompleteRequestSettings requestSettings)
+    private static CompletionsOptions CreateCompletionsOptions(string text, AIRequestSettings requestSettings)
     {
         if (requestSettings.ResultsPerPrompt is < 1 or > MAX_RESULTS_PER_PROMPT)
         {
@@ -272,7 +263,7 @@ public abstract class ClientBase
         return options;
     }
 
-    private static ChatCompletionsOptions CreateChatCompletionsOptions(ChatRequestSettings requestSettings, IEnumerable<ChatMessageBase> chatHistory)
+    private static ChatCompletionsOptions CreateChatCompletionsOptions(AIRequestSettings requestSettings, IEnumerable<ChatMessageBase> chatHistory)
     {
         if (requestSettings.ResultsPerPrompt is < 1 or > MAX_RESULTS_PER_PROMPT)
         {

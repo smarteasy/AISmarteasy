@@ -11,18 +11,23 @@ public readonly struct FunctionRunConfig
     private const string INPUT_PARAMETER_KEY = "input";
 
     public FunctionRunConfig()
+        : this(string.Empty, string.Empty)
     {
-        PluginName = string.Empty;
-        FunctionName = string.Empty;
-        Parameters[INPUT_PARAMETER_KEY] = string.Empty;
     }
 
     public FunctionRunConfig(string pluginName, string functionName)
     {
         FunctionName = functionName;
         PluginName = pluginName;
-
         Parameters[INPUT_PARAMETER_KEY] = string.Empty;
+    }
+
+    public FunctionRunConfig(string pluginName, string functionName, Dictionary<string, string> parameters)
+    : this(pluginName, functionName)
+    {
+        FunctionName = functionName;
+        PluginName = pluginName;
+        Parameters = parameters;
     }
 
     public void UpdateInput(string value)

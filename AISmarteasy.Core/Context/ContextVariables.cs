@@ -50,7 +50,7 @@ public sealed class ContextVariables : IDictionary<string, string>
 
     public void Set(string name, string? value)
     {
-        Verify.NotNullOrWhiteSpace(name);
+        Verify.NotNullOrWhitespace(name);
         if (value != null)
         {
             _variables[name] = value;

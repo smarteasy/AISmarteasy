@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Memory.Pinecone;
+﻿using AISmarteasy.Core.Connector.Pinecone;
 
 namespace AISmarteasy.Core.Memory;
 

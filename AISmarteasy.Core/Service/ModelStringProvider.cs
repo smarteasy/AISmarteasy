@@ -4,25 +4,21 @@ public static class ModelStringProvider
 {
     public static string ProvideCompletionModel(AIServiceTypeKind serviceType)
     {
-        switch (serviceType)
+        return serviceType switch
         {
-            case AIServiceTypeKind.TextCompletion:
-                return "text-davinci-003";
-            case AIServiceTypeKind.ChatCompletion:
-                return "gpt-4";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-        }
+            AIServiceTypeKind.TextCompletion => "text-davinci-003",
+            AIServiceTypeKind.ChatCompletion => "gpt-4",
+            AIServiceTypeKind.ChatCompletionWithGpt35 => "gpt-3.5-turbo",
+            _ => throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null)
+        };
     }
 
     public static string ProvideEmbeddingModel(MemoryTypeKind memoryType)
     {
-        switch (memoryType)
+        return memoryType switch
         {
-            case MemoryTypeKind.PineCone:
-                return "text-embedding-ada-002";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(memoryType), memoryType, null);
-        }
+            MemoryTypeKind.PineCone => "text-embedding-ada-002",
+            _ => throw new ArgumentOutOfRangeException(nameof(memoryType), memoryType, null)
+        };
     }
 }

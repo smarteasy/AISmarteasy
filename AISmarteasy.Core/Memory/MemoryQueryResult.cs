@@ -17,9 +17,9 @@ public class MemoryQueryResult
         double relevance,
         ReadOnlyMemory<float>? embedding)
     {
-        this.Metadata = metadata;
-        this.Relevance = relevance;
-        this.Embedding = embedding;
+        Metadata = metadata;
+        Relevance = relevance;
+        Embedding = embedding;
     }
 
     internal static MemoryQueryResult FromMemoryRecord(

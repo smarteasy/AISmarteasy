@@ -19,7 +19,7 @@ public class ParameterViewType : IEquatable<ParameterViewType>
 
     public ParameterViewType(string name)
     {
-        Verify.NotNullOrWhiteSpace(name, nameof(name));
+        Verify.NotNullOrWhitespace(name, nameof(name));
 
         _name = name;
     }

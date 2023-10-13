@@ -2,7 +2,7 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using AISmarteasy.Core.Memory.Pinecone;
+using AISmarteasy.Core.Connector.Pinecone;
 using AISmarteasy.Core.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

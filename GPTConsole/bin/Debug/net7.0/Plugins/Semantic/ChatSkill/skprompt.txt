@@ -1,6 +1,0 @@
-
-ChatBot can have a conversation with you about any topic. It can give explicit instructions or say 'I don't know' if it does not have an answer.
-
-{{$history}}
-User: {{$userInput}}
-ChatBot:";

@@ -1,4 +1,5 @@
-﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+﻿using AISmarteasy.Core.Connector;
+using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using Microsoft.Extensions.Logging;
@@ -92,7 +93,7 @@ public sealed class CodeBlock : Block, ICodeRendering
 
         try
         {
-            var requestSetting = CompleteRequestSettings.FromCompletionConfig(new PromptTemplateConfig().Completion);
+            var requestSetting = AIRequestSettings.FromCompletionConfig(new PromptTemplateConfig().Completion);
             await function.InvokeAsync(requestSetting).ConfigureAwait(false);
         }
         catch (Exception ex)

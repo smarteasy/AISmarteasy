@@ -1,4 +1,5 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.Connector;
+using AISmarteasy.Core.Function;
 
 namespace AISmarteasy.Core.Planner;
 

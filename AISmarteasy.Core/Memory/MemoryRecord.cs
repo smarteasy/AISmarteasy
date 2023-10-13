@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using AISmarteasy.Core.Memory.Pinecone;
+using AISmarteasy.Core.Connector.Pinecone;
 
 namespace AISmarteasy.Core.Memory;
 
@@ -133,6 +133,6 @@ public class MemoryRecord : DataEntryBase
 
     public string GetSerializedMetadata()
     {
-        return JsonSerializer.Serialize(this.Metadata);
+        return JsonSerializer.Serialize(Metadata);
     }
 }

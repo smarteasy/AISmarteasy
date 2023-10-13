@@ -40,7 +40,7 @@ internal static class AsyncEnumerable
 
     public static async ValueTask<T?> LastOrDefaultAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
     {
-        var last = default(T)!; 
+        var last = default(T)!;
         var hasLast = false;
 
         await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))

@@ -36,6 +36,7 @@ public sealed class KernelBuilder
                 WithOpenAITextCompletionService(model, config.APIKey);
                 break;
             case AIServiceTypeKind.ChatCompletion:
+            case AIServiceTypeKind.ChatCompletionWithGpt35:
                 WithOpenAIChatCompletionService(model, config.APIKey);
                 break;
             default:

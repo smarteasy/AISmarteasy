@@ -19,8 +19,8 @@ public abstract class OpenAIClientBase : ClientBase
         HttpClient? httpClient = null,
         ILoggerFactory? loggerFactory = null) : base(loggerFactory)
     {
-        Verify.NotNullOrWhiteSpace(modelId);
-        Verify.NotNullOrWhiteSpace(apiKey);
+        Verify.NotNullOrWhitespace(modelId);
+        Verify.NotNullOrWhitespace(apiKey);
 
         ModelId = modelId;
 
@@ -43,7 +43,7 @@ public abstract class OpenAIClientBase : ClientBase
        OpenAIClient openAIClient,
        ILoggerFactory? loggerFactory = null) : base(loggerFactory)
     {
-        Verify.NotNullOrWhiteSpace(modelId);
+        Verify.NotNullOrWhitespace(modelId);
         Verify.NotNull(openAIClient);
 
         ModelId = modelId;
@@ -67,13 +67,13 @@ public abstract class OpenAIClientBase : ClientBase
         };
     }
 
-    public virtual Task<SemanticAnswer> RunTextCompletion(string prompt, CompleteRequestSettings requestSettings,
+    public virtual Task<SemanticAnswer> RunTextCompletion(string prompt, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult<SemanticAnswer>(null!);
     }
 
-    public virtual Task<ChatHistory> RunChatCompletion(ChatHistory chatHistory, CompleteRequestSettings requestSettings,
+    public virtual Task<ChatHistory> RunChatCompletionAsync(ChatHistory chatHistory, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult<ChatHistory>(null!);
