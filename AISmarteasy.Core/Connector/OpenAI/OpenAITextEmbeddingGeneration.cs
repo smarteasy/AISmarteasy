@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+﻿using AISmarteasy.Core.Connector.OpenAI.Text;
 using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +20,6 @@ public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, IAIService
         CancellationToken cancellationToken = default)
     {
         LogActionDetails();
-        return await InternalGetEmbeddingsAsync(data, cancellationToken).ConfigureAwait(false);
+        return await GetEmbeddingsAsync(data, cancellationToken).ConfigureAwait(false);
     }
 }

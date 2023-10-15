@@ -1,7 +1,7 @@
 ﻿using Azure.Core;
 using Azure.Core.Pipeline;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.Completion;
 
 internal sealed class AddHeaderRequestPolicy : HttpPipelineSynchronousPolicy
 {

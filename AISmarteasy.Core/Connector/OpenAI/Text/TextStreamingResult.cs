@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Azure.AI.OpenAI;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.Completion;
 
 internal sealed class TextStreamingResult : ITextStreamingResult
 {

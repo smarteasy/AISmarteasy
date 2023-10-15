@@ -1,43 +1,29 @@
 ﻿using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
-using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Handler;
 using AISmarteasy.Core.Memory;
-using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using AISmarteasy.Core.Util;
-using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core;
 
 public sealed class KernelBuilder
 {
-    private readonly IPromptTemplate _promptTemplateEngine;
-    private ILoggerFactory _loggerFactory = ConsoleLogger.LoggerFactory;
-    private IDelegatingHandlerFactory _httpHandlerFactory = NullHttpHandlerFactory.Instance;
-
-    private Func<IMemoryStore>? _memoryStorageFactory;
-    private IAIService? _completionService;
-    private IAIService? _embeddingService;
-
-    public KernelBuilder()
-    {
-        _promptTemplateEngine = new PromptTemplate(_loggerFactory);
-    }
-
     public Kernel Build(AIServiceConfig config)
     {
-        var model = ModelStringProvider.ProvideCompletionModel(config.ServiceType);
+        var modelId = ModelStringProvider.ProvideCompletionModel(config.ServiceType);
+        Func<IMemoryStore>? memoryStorageFactory = null; 
+        IAIService completionService;
+        IAIService? embeddingService = null;
+        IAIService? imageGenerationService = null;
 
         switch (config.ServiceType)
         {
             case AIServiceTypeKind.TextCompletion:
-                WithOpenAITextCompletionService(model, config.APIKey);
+                completionService = new OpenAITextCompletion(modelId, config.APIKey);
                 break;
             case AIServiceTypeKind.ChatCompletion:
             case AIServiceTypeKind.ChatCompletionWithGpt35:
-                WithOpenAIChatCompletionService(model, config.APIKey);
+                completionService = new OpenAIChatCompletion(modelId, config.APIKey);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(config.ServiceType), config.ServiceType, null);
@@ -46,64 +32,28 @@ public sealed class KernelBuilder
         if (config.MemoryType == MemoryTypeKind.PineCone)
         {
             var embeddingModel = ModelStringProvider.ProvideEmbeddingModel(config.MemoryType);
-            WithOpenAIEmbeddingService(embeddingModel, config.APIKey);
-            WithMemoryStorage(new PineconeMemoryStore(config.MemoryEnvironment!, config.MemoryApiKey!));
+            embeddingService = new OpenAITextEmbeddingGeneration(embeddingModel, config.APIKey);
+            memoryStorageFactory = () => new PineconeMemoryStore(config.MemoryEnvironment!, config.MemoryApiKey!);
         }
 
-        var kernel = new Kernel(_completionService!, _httpHandlerFactory, _loggerFactory);
+        config.LoggerFactory ??= ConsoleLogger.LoggerFactory;
+        config.HttpHandlerFactory ??= NullHttpHandlerFactory.Instance;
 
-        if (_memoryStorageFactory != null)
+        var kernel = new Kernel(completionService, config.HttpHandlerFactory, config.LoggerFactory);
+
+        if (memoryStorageFactory != null)
         {
-            kernel.UseMemory((_embeddingService as IAIService)!, _memoryStorageFactory.Invoke());
+            kernel.UseMemory(embeddingService!, memoryStorageFactory.Invoke());
+        }
+
+        if (config.ImageGenerationType == ImageGenerationTypeKind.DallE)
+        {
+            imageGenerationService = new OpenAIImageGeneration(config.APIKey);
+            kernel.ImageGenerationService = imageGenerationService;
         }
 
         KernelProvider.Kernel = kernel;
 
         return kernel;
-    }
-
-    public KernelBuilder WithMemoryStorage(IMemoryStore storage)
-    {
-        Verify.NotNull(storage);
-        _memoryStorageFactory = () => storage;
-        return this;
-    }
-    
-
-    private KernelBuilder WithOpenAITextCompletionService(string model, string apiKey)
-    {
-        _completionService = new OpenAITextCompletion(model, apiKey);
-        return this;
-    }
-
-    private KernelBuilder WithOpenAIChatCompletionService(string model, string apiKey)
-    {
-        _completionService = new OpenAIChatCompletion(model, apiKey);
-        return this;
-    }
-
-    private KernelBuilder WithOpenAIEmbeddingService(string model, string apiKey)
-    {
-        _embeddingService = new OpenAITextEmbeddingGeneration(model, apiKey);
-        return this;
-    }
-
-
-
-
-
-
-    public KernelBuilder WithHttpHandlerFactory(IDelegatingHandlerFactory httpHandlerFactory)
-    {
-        Verify.NotNull(httpHandlerFactory);
-        _httpHandlerFactory = httpHandlerFactory;
-        return this;
-    }
-
-    public KernelBuilder WithLoggerFactory(ILoggerFactory loggerFactory)
-    {
-        Verify.NotNull(loggerFactory);
-        _loggerFactory = loggerFactory;
-        return this;
     }
 }

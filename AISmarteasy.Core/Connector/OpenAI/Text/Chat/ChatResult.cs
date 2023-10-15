@@ -1,7 +1,9 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.Connector.OpenAI.Completion;
+using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
+using AISmarteasy.Core.Function;
 using Azure.AI.OpenAI;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+namespace AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 
 internal sealed class ChatResult : IChatResult, ITextResult
 {

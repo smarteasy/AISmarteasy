@@ -1,4 +1,7 @@
-﻿namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+﻿using AISmarteasy.Core.Connector.OpenAI.Completion;
+using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
+
+namespace AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 
 public class SKChatMessage : ChatMessageBase
 {

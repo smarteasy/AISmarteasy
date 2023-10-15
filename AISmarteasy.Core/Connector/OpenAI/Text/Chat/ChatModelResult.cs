@@ -1,8 +1,8 @@
 ﻿using Azure.AI.OpenAI;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 
-public sealed class TextModelResult
+public class ChatModelResult
 {
     public string Id { get; }
 
@@ -10,11 +10,11 @@ public sealed class TextModelResult
 
     public IReadOnlyList<PromptFilterResult> PromptFilterResults { get; }
 
-    public Choice Choice { get; }
+    public ChatChoice Choice { get; }
 
     public CompletionsUsage Usage { get; }
 
-    internal TextModelResult(Completions completionsData, Choice choiceData)
+    internal ChatModelResult(ChatCompletions completionsData, ChatChoice choiceData)
     {
         Id = completionsData.Id;
         Created = completionsData.Created;

@@ -1,5 +1,4 @@
-﻿using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
-using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.Function;
 
 namespace AISmarteasy.Core.Planner;
 

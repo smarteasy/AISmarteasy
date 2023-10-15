@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;

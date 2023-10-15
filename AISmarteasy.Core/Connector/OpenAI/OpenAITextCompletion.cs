@@ -1,7 +1,8 @@
-﻿using AISmarteasy.Core.Service;
+﻿using AISmarteasy.Core.Connector.OpenAI.Text;
+using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI;
 
 public sealed class OpenAITextCompletion : OpenAIClientBase, IAIService
 {

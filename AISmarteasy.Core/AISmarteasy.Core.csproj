@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Connector\OpenAI\TextCompletion\Chat\ChatRequestSettings.cs" />
-    <Compile Remove="Connector\OpenAI\TextCompletion\CompleteRequestSettings.cs" />
+    <Compile Remove="Connector\OpenAI\Text\Chat\ChatRequestSettings.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,12 +20,6 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="4.56.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.28.0" />
     <PackageReference Include="PdfPig" Version="0.1.9-alpha-20230930-06ac8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.SemanticKernel.Connectors.AI.OpenAI">
-      <HintPath>..\..\..\..\..\source\repos\Solution1\packages\Microsoft.SemanticKernel.Connectors.AI.OpenAI.0.23.230906.2-preview\lib\netstandard2.0\Microsoft.SemanticKernel.Connectors.AI.OpenAI.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

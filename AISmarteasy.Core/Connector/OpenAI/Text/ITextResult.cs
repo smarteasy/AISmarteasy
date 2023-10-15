@@ -1,4 +1,4 @@
-﻿namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+﻿namespace AISmarteasy.Core.Connector.OpenAI.Completion;
 
 public interface ITextResult
 {

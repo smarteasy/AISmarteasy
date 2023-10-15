@@ -1,7 +1,7 @@
 ﻿using AISmarteasy.Core.Config;
 using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Handler;
@@ -13,31 +13,22 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core;
 
-public sealed class Kernel : IDisposable
+public sealed class Kernel// : IDisposable
 {
     private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
     private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
-
-
     private readonly string _semanticPluginDirectory;
-
     private readonly ILogger _logger;
     private ISemanticMemory? _memory;
 
     public Dictionary<string, Plugin> Plugins { get; }
-
     public IPromptTemplate PromptTemplate { get; }
-
     public PromptTemplateConfig PromptTemplateConfig { get; }
-
     public ILoggerFactory LoggerFactory { get; }
-
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
-
     public IAIService AIService { get; }
-
     public IAIService? EmbeddingService { get; private set; }
-
+    public IAIService? ImageGenerationService { get; set; }
     public SKContext Context { get; set; }
 
     public Kernel(IAIService aiService, IDelegatingHandlerFactory httpHandlerFactory, ILoggerFactory loggerFactory)
@@ -149,14 +140,21 @@ public sealed class Kernel : IDisposable
 
         return result;
     }
-    
-    public Task<ChatHistory> RunChatCompletion(ChatHistory history)
+
+    public async Task<ChatHistory> StartChatCompletionAsync(string systemMessage)
+    {
+        var chatHistory = AIService.CreateNewChat(systemMessage);
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return await AIService.RunChatCompletionAsync(chatHistory, requestSetting).ConfigureAwait(false);
+    }
+
+    public Task<ChatHistory> RunChatCompletionAsync(ChatHistory history)
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return AIService.RunChatCompletionAsync(history, requestSetting);
     }
 
-    public Task<SemanticAnswer> RunCompletion(string prompt)
+    public Task<SemanticAnswer> RunTextCompletionAsync(string prompt)
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return AIService.RunTextCompletion(prompt, requestSetting);
@@ -305,13 +303,21 @@ public sealed class Kernel : IDisposable
         return new SKContext(variables);
     }
 
-
-
-
-
-    public void Dispose()
+    public async Task<string?> GenerateImageAsync(string description, int width, int height)
     {
-        if (_memory is IDisposable mem) { mem.Dispose(); }
-        if (Plugins is IDisposable plugins) { plugins.Dispose(); }
+        if (ImageGenerationService != null)
+        {
+            return await ImageGenerationService.GenerateImageAsync(description, width, height).ConfigureAwait(false);
+        }
+
+        return null;
     }
 }
+
+//public void Dispose()
+//    {
+//        if (_memory is IDisposable mem) { mem.Dispose(); }
+//        if (Plugins is IDisposable plugins) { plugins.Dispose(); }
+//    }
+
+

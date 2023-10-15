@@ -1,5 +1,4 @@
 ﻿using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using Microsoft.Extensions.Logging;

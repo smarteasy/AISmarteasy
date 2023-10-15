@@ -2,7 +2,7 @@
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.Completion;
 
 public sealed class ModelResult
 {

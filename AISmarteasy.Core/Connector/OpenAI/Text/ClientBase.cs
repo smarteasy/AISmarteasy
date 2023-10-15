@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Connector.OpenAI.TextCompletion.Chat;
+using AISmarteasy.Core.Connector.OpenAI.Completion;
+using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
+using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Util;
 using Azure;
@@ -8,7 +10,7 @@ using Azure.AI.OpenAI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace AISmarteasy.Core.Connector.OpenAI.TextCompletion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
 public abstract class ClientBase
 {
@@ -21,7 +23,7 @@ public abstract class ClientBase
 
     private protected string ModelId { get; set; } = string.Empty;
 
-    private protected abstract OpenAIClient Client { get; }
+    private protected abstract OpenAIClient? Client { get; }
 
     private protected ILogger Logger { get; set; }
 
@@ -98,12 +100,7 @@ public abstract class ClientBase
         return responseData.Choices.Select(chatChoice => new ChatResult(responseData, chatChoice)).ToList();
     }
 
-    private protected static OpenAIChatHistory CreateNewChat(string? instructions = null)
-    {
-        return new OpenAIChatHistory(instructions);
-    }
-
-    private protected async Task<IList<ReadOnlyMemory<float>>> InternalGetEmbeddingsAsync(IList<string> texts, CancellationToken cancellationToken = default)
+    private protected async Task<IList<ReadOnlyMemory<float>>> GetEmbeddingsAsync(IList<string> texts, CancellationToken cancellationToken = default)
     {
         var result = new List<ReadOnlyMemory<float>>(texts.Count);
         foreach (var text in texts)
@@ -128,13 +125,7 @@ public abstract class ClientBase
 
         return result;
     }
-
-
-
-
-
     
-
     private protected async IAsyncEnumerable<TextStreamingResult> GetTextStreamingResultsAsync(string text, AIRequestSettings requestSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -152,10 +143,6 @@ public abstract class ClientBase
             yield return new TextStreamingResult(streamingChatCompletions, choice);
         }
     }
-
-
-
-
 
     private protected async IAsyncEnumerable<IChatStreamingResult> GetChatStreamingResultsAsync(
         IEnumerable<ChatMessageBase> chat,
@@ -195,35 +182,18 @@ public abstract class ClientBase
             .ToList();
     }
 
-    private protected async IAsyncEnumerable<ITextStreamingResult> InternalGetChatStreamingResultsAsTextAsync(
-        string text,
-        AIRequestSettings? textSettings,
+    private protected async IAsyncEnumerable<ITextStreamingResult> GetChatStreamingResultsAsTextAsync(string text, AIRequestSettings? requestSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        ChatHistory chat = PrepareChatHistory(text, textSettings, out AIRequestSettings chatSettings);
+        ChatHistory chat = PrepareChatHistory(text, requestSettings, out AIRequestSettings settings);
 
-        await foreach (var chatCompletionStreamingResult in GetChatStreamingResultsAsync(chat, chatSettings, cancellationToken).ConfigureAwait(false))
+        await foreach (var chatCompletionStreamingResult in GetChatStreamingResultsAsync(chat, settings, cancellationToken).ConfigureAwait(false))
         {
             yield return (ITextStreamingResult)chatCompletionStreamingResult;
         }
     }
 
-    private static OpenAIChatHistory PrepareChatHistory(string text, AIRequestSettings? requestSettings, out AIRequestSettings settings)
-    {
-        requestSettings ??= new();
-        var chat = CreateNewChat(requestSettings.ChatSystemPrompt);
-        chat.AddUserMessage(text);
-        settings = new AIRequestSettings
-        {
-            MaxTokens = requestSettings.MaxTokens,
-            Temperature = requestSettings.Temperature,
-            TopP = requestSettings.TopP,
-            PresencePenalty = requestSettings.PresencePenalty,
-            FrequencyPenalty = requestSettings.FrequencyPenalty,
-            StopSequences = requestSettings.StopSequences,
-        };
-        return chat;
-    }
+    protected abstract ChatHistory PrepareChatHistory(string text, AIRequestSettings? requestSettings, out AIRequestSettings settings);
 
     private static CompletionsOptions CreateCompletionsOptions(string text, AIRequestSettings requestSettings)
     {
