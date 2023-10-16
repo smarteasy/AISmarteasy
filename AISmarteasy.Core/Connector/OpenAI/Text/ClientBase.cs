@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Connector.OpenAI.Completion;
 using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
 using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Function;
+using AISmarteasy.Core.Service;
 using AISmarteasy.Core.Util;
 using Azure;
 using Azure.AI.OpenAI;
@@ -23,7 +23,7 @@ public abstract class ClientBase
 
     private protected string ModelId { get; set; } = string.Empty;
 
-    private protected abstract OpenAIClient? Client { get; }
+    protected OpenAIClient? Client { get; set; }
 
     private protected ILogger Logger { get; set; }
 
@@ -49,6 +49,7 @@ public abstract class ClientBase
     {
         Verify.NotNull(requestSettings);
         ValidateMaxTokens(requestSettings.MaxTokens);
+        Verify.NotNull(Client);
 
         var options = CreateCompletionsOptions(prompt, requestSettings);
 
@@ -76,6 +77,7 @@ public abstract class ClientBase
         CancellationToken cancellationToken = default)
     {
         Verify.NotNull(chatHistory);
+        Verify.NotNull(Client);
 
         ValidateMaxTokens(chatSettings.MaxTokens);
         var chatOptions = CreateChatCompletionsOptions(chatSettings, chatHistory);
@@ -102,6 +104,8 @@ public abstract class ClientBase
 
     private protected async Task<IList<ReadOnlyMemory<float>>> GetEmbeddingsAsync(IList<string> texts, CancellationToken cancellationToken = default)
     {
+        Verify.NotNull(Client);
+
         var result = new List<ReadOnlyMemory<float>>(texts.Count);
         foreach (var text in texts)
         {
@@ -126,30 +130,13 @@ public abstract class ClientBase
         return result;
     }
     
-    private protected async IAsyncEnumerable<TextStreamingResult> GetTextStreamingResultsAsync(string text, AIRequestSettings requestSettings,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        Verify.NotNull(requestSettings);
-
-        ValidateMaxTokens(requestSettings.MaxTokens);
-        var options = CreateCompletionsOptions(text, requestSettings);
-
-        var response = await RunRequestAsync<Response<StreamingCompletions>>(
-            () => Client.GetCompletionsStreamingAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
-
-        using StreamingCompletions streamingChatCompletions = response.Value;
-        await foreach (StreamingChoice choice in streamingChatCompletions.GetChoicesStreaming(cancellationToken).ConfigureAwait(false))
-        {
-            yield return new TextStreamingResult(streamingChatCompletions, choice);
-        }
-    }
-
     private protected async IAsyncEnumerable<IChatStreamingResult> GetChatStreamingResultsAsync(
         IEnumerable<ChatMessageBase> chat,
         AIRequestSettings? requestSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         Verify.NotNull(chat);
+        Verify.NotNull(Client);
         requestSettings ??= new();
 
         ValidateMaxTokens(requestSettings.MaxTokens);
@@ -195,7 +182,7 @@ public abstract class ClientBase
 
     protected abstract ChatHistory PrepareChatHistory(string text, AIRequestSettings? requestSettings, out AIRequestSettings settings);
 
-    private static CompletionsOptions CreateCompletionsOptions(string text, AIRequestSettings requestSettings)
+    protected static CompletionsOptions CreateCompletionsOptions(string text, AIRequestSettings requestSettings)
     {
         if (requestSettings.ResultsPerPrompt is < 1 or > MAX_RESULTS_PER_PROMPT)
         {
@@ -286,7 +273,7 @@ public abstract class ClientBase
         return validRole;
     }
 
-    private static void ValidateMaxTokens(int? maxTokens)
+    protected static void ValidateMaxTokens(int? maxTokens)
     {
         if (maxTokens is < 1)
         {
@@ -294,7 +281,7 @@ public abstract class ClientBase
         }
     }
 
-    private static async Task<T> RunRequestAsync<T>(Func<Task<T>> request)
+    protected static async Task<T> RunRequestAsync<T>(Func<Task<T>?> request)
     {
         try
         {
@@ -304,6 +291,11 @@ public abstract class ClientBase
         {
             throw e.ToHttpOperationException();
         }
+    }
+
+    public ChatHistory CreateNewChat(string? systemMessage = null)
+    {
+        return new OpenAIChatHistory(systemMessage);
     }
 
     private void CaptureUsageDetails(CompletionsUsage usage)

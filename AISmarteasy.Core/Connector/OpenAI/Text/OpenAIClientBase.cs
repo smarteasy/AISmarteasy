@@ -1,11 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
-using AISmarteasy.Core.Connector.OpenAI.Completion;
-using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
 using AISmarteasy.Core.Connector.OpenAI.Image;
-using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt;
+using AISmarteasy.Core.Service;
 using AISmarteasy.Core.Web;
 using Azure.AI.OpenAI;
 using Azure.Core;
@@ -17,7 +15,6 @@ namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
 public abstract class OpenAIClientBase : ClientBase
 {
-    private protected override OpenAIClient? Client { get; }
     private readonly ILogger? _logger;
     private readonly HttpClient? _httpClient;
 
@@ -44,16 +41,6 @@ public abstract class OpenAIClientBase : ClientBase
         Client = new OpenAIClient(apiKey, options);
     }
 
-    private protected OpenAIClientBase(string modelId, OpenAIClient client, ILoggerFactory? loggerFactory = null) 
-        : base(loggerFactory)
-    {
-        Verify.NotNullOrWhitespace(modelId);
-        Verify.NotNull(client);
-
-        ModelId = modelId;
-        Client = client;
-    }
-
     private protected OpenAIClientBase(HttpClient? httpClient, ILoggerFactory? loggerFactory = null)
     {
         _httpClient = httpClient ?? new HttpClient(NonDisposableHttpClientHandler.Instance, disposeHandler: false);
@@ -77,7 +64,13 @@ public abstract class OpenAIClientBase : ClientBase
         };
     }
 
-    public virtual Task<SemanticAnswer> RunTextCompletion(string prompt, AIRequestSettings requestSettings,
+    public virtual Task<SemanticAnswer> RunTextCompletionAsync(string prompt, AIRequestSettings requestSettings,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual Task<TextStreamingResult> RunTextStreamCompletionAsync(string prompt, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
@@ -115,11 +108,6 @@ public abstract class OpenAIClientBase : ClientBase
             StopSequences = requestSettings.StopSequences,
         };
         return chatHistory;
-    }
-
-    public ChatHistory CreateNewChat(string? systemMessage = null)
-    {
-        return new OpenAIChatHistory(systemMessage);
     }
 
     private protected async Task<IList<string>?> GenerateImageGenerationAsync(string url, string requestBody, 

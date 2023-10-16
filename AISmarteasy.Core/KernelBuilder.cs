@@ -12,9 +12,8 @@ public sealed class KernelBuilder
     {
         var modelId = ModelStringProvider.ProvideCompletionModel(config.ServiceType);
         Func<IMemoryStore>? memoryStorageFactory = null; 
-        IAIService completionService;
-        IAIService? embeddingService = null;
-        IAIService? imageGenerationService = null;
+        ITextCompletion completionService;
+        IEmbeddingGeneration? embeddingService = null;
 
         switch (config.ServiceType)
         {
@@ -32,7 +31,7 @@ public sealed class KernelBuilder
         if (config.MemoryType == MemoryTypeKind.PineCone)
         {
             var embeddingModel = ModelStringProvider.ProvideEmbeddingModel(config.MemoryType);
-            embeddingService = new OpenAITextEmbeddingGeneration(embeddingModel, config.APIKey);
+            embeddingService = new OpenAIEmbeddingGeneration(embeddingModel, config.APIKey);
             memoryStorageFactory = () => new PineconeMemoryStore(config.MemoryEnvironment!, config.MemoryApiKey!);
         }
 
@@ -48,7 +47,7 @@ public sealed class KernelBuilder
 
         if (config.ImageGenerationType == ImageGenerationTypeKind.DallE)
         {
-            imageGenerationService = new OpenAIImageGeneration(config.APIKey);
+            IImageGeneration imageGenerationService = new OpenAIImageGeneration(config.APIKey);
             kernel.ImageGenerationService = imageGenerationService;
         }
 

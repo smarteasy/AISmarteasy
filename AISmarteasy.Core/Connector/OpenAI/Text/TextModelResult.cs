@@ -1,6 +1,6 @@
 ﻿using Azure.AI.OpenAI;
 
-namespace AISmarteasy.Core.Connector.OpenAI.Completion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
 public sealed class TextModelResult
 {

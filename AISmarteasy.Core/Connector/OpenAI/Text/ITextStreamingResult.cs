@@ -1,4 +1,4 @@
-﻿namespace AISmarteasy.Core.Connector.OpenAI.Completion;
+﻿namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
 public interface ITextStreamingResult : ITextResult
 {

@@ -3,12 +3,12 @@ using AISmarteasy.Core.Service;
 
 namespace AISmarteasy.Core.Memory;
 
-public sealed class SemanticMemory : ISemanticMemory, IDisposable
+public sealed class SemanticMemory : ISemanticMemory//, IDisposable
 {
-    private readonly IAIService _embeddingService;
+    private readonly IEmbeddingGeneration _embeddingService;
     private readonly IMemoryStore _storage;
 
-    public SemanticMemory(IAIService embeddingService, IMemoryStore storage)
+    public SemanticMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
     {
         _embeddingService = embeddingService;
         _storage = storage;
@@ -86,9 +86,9 @@ public sealed class SemanticMemory : ISemanticMemory, IDisposable
         }
     }
 
-    public void Dispose()
-    {
-        if (_embeddingService is IDisposable emb) { emb.Dispose(); }
-        if (_storage is IDisposable storage) { storage.Dispose(); }
-    }
+    //public void Dispose()
+    //{
+    //    if (_embeddingService is IDisposable emb) { emb.Dispose(); }
+    //    if (_storage is IDisposable storage) { storage.Dispose(); }
+    //}
 }

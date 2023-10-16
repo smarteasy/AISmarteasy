@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Connector.OpenAI;
 
-public sealed class OpenAITextEmbeddingGeneration : OpenAIClientBase, IAIService
+public sealed class OpenAIEmbeddingGeneration : OpenAIClientBase, IEmbeddingGeneration
 {
-    public OpenAITextEmbeddingGeneration(
+    public OpenAIEmbeddingGeneration(
         string modelId,
         string apiKey,
         string? organization = null,

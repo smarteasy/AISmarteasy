@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Azure.AI.OpenAI;
 
-namespace AISmarteasy.Core.Connector.OpenAI.Completion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
-internal sealed class TextStreamingResult : ITextStreamingResult
+public sealed class TextStreamingResult : ITextStreamingResult
 {
     private readonly StreamingChoice _choice;
 

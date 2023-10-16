@@ -5,12 +5,18 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Connector.OpenAI;
 
-public sealed class OpenAIChatCompletion : OpenAIClientBase, IAIService
+public sealed class OpenAIChatCompletion : OpenAIClientBase, ITextCompletion
 {
     public OpenAIChatCompletion(string modelId, string apiKey,
         string? organization = null, HttpClient? httpClient = null, ILoggerFactory? loggerFactory = null)
         : base(modelId, apiKey, organization, httpClient, loggerFactory)
     {
+    }
+
+    public IAsyncEnumerable<TextStreamingResult> RunTextStreamingCompletionAsync(string prompt, AIRequestSettings requestSettings,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 
     public override async Task<ChatHistory> RunChatCompletionAsync(ChatHistory chatHistory, AIRequestSettings requestSettings,

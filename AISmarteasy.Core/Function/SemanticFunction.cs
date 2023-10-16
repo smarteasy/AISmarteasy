@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
@@ -37,7 +36,7 @@ public class SemanticFunction : ISKFunction
     {
         var kernel = KernelProvider.Kernel;
         AddDefaultValues(kernel.Context.Variables);
-        return RunPromptAsync(kernel.AIService, requestSettings, cancellationToken);
+        return RunPromptAsync(kernel.TextCompletionService, requestSettings, cancellationToken);
     }
 
     public ISKFunction SetDefaultPluginCollection(IPlugin plugins)
@@ -98,7 +97,7 @@ public class SemanticFunction : ISKFunction
         }
     }
 
-    private async Task RunPromptAsync(IAIService? client, AIRequestSettings? requestSettings,
+    private async Task RunPromptAsync(ITextCompletion? client, AIRequestSettings? requestSettings,
         CancellationToken cancellationToken)
     {
         Verify.NotNull(client);
@@ -112,7 +111,7 @@ public class SemanticFunction : ISKFunction
             {
                 var prompt = await PromptTemplate.RenderAsync(cancellationToken).ConfigureAwait(false);
                 var answer = await client
-                    .RunTextCompletion(prompt, (AIRequestSettings)requestSettings, cancellationToken)
+                    .RunTextCompletionAsync(prompt, requestSettings, cancellationToken)
                     .ConfigureAwait(false);
                 context.Variables.Update(answer.Text);
             }

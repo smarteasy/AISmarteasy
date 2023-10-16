@@ -1,13 +1,14 @@
 ﻿using AISmarteasy.Core.Connector.OpenAI.Completion;
 using AISmarteasy.Core.Connector.OpenAI.Completion.Chat;
+using AISmarteasy.Core.Connector.OpenAI.Text;
 
-namespace AISmarteasy.Core.Connector.OpenAI.Text.Chat;
+namespace AISmarteasy.Core.Service;
 
 public class ChatHistory : List<ChatMessageBase>
 {
     private sealed class ChatMessage : ChatMessageBase
     {
-        public ChatMessage(AuthorRole authorRole, string message) 
+        public ChatMessage(AuthorRole authorRole, string message)
             : base(authorRole, message)
         {
         }

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Connector.OpenAI;
 
-public class OpenAIImageGeneration : OpenAIClientBase, IAIService
+public class OpenAIImageGeneration : OpenAIClientBase, IImageGeneration
 {
     private const string OPEN_AI_ENDPOINT = "https://api.openai.com/v1/images/generations";
 
@@ -39,7 +39,7 @@ public class OpenAIImageGeneration : OpenAIClientBase, IAIService
         }
     }
 
-    public Task<string?> GenerateImageAsync(string description, int width, int height,
+    public override Task<string?> GenerateImageAsync(string description, int width, int height,
         CancellationToken cancellationToken = default)
     {
         Verify.NotNull(description);

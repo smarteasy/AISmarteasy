@@ -8,8 +8,8 @@ public sealed class GoogleSkill: WebSearchEngineSkill
     public GoogleSkill()
     {
         var connector = new GoogleConnector(
-            apiKey: Env.GOOGLE_API_KEY,
-            searchEngineId: Env.SEARCH_ENGINE_ID);
+            apiKey: Env.GoogleAPIKey,
+            searchEngineId: Env.SearchEngineId);
         
         Connector = connector;
     }

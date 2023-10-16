@@ -1,4 +1,4 @@
-﻿namespace AISmarteasy.Core;
+﻿namespace AISmarteasy.Core.Service;
 
 public class SemanticAnswer
 {

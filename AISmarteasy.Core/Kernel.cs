@@ -1,7 +1,7 @@
 ﻿using AISmarteasy.Core.Config;
 using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
+using AISmarteasy.Core.Connector.OpenAI.Text;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Handler;
@@ -26,14 +26,14 @@ public sealed class Kernel// : IDisposable
     public PromptTemplateConfig PromptTemplateConfig { get; }
     public ILoggerFactory LoggerFactory { get; }
     public IDelegatingHandlerFactory HttpHandlerFactory { get; }
-    public IAIService AIService { get; }
-    public IAIService? EmbeddingService { get; private set; }
-    public IAIService? ImageGenerationService { get; set; }
+    public ITextCompletion TextCompletionService { get; }
+    public IEmbeddingGeneration? EmbeddingService { get; private set; }
+    public IImageGeneration? ImageGenerationService { get; set; }
     public SKContext Context { get; set; }
 
-    public Kernel(IAIService aiService, IDelegatingHandlerFactory httpHandlerFactory, ILoggerFactory loggerFactory)
+    public Kernel(ITextCompletion textCompletionService, IDelegatingHandlerFactory httpHandlerFactory, ILoggerFactory loggerFactory)
     {
-        AIService = aiService;
+        TextCompletionService = textCompletionService;
         HttpHandlerFactory = httpHandlerFactory;
         LoggerFactory = loggerFactory;
 
@@ -74,7 +74,15 @@ public sealed class Kernel// : IDisposable
 
         return function.InvokeAsync(function.RequestSettings);
     }
-    
+
+    public Task RunFunctionAsync(string prompt)
+    {
+        var config = new FunctionRunConfig();
+        config.UpdateInput(prompt);
+        var function = FindFunction("QASkill", "Question");
+        return RunFunctionAsync(function, config.Parameters);
+    }
+
     public async Task<bool> SaveMemoryFromPdfDirectory(string directory)
     {
         if (_memory != null) 
@@ -99,7 +107,7 @@ public sealed class Kernel// : IDisposable
         return await Embedding.SearchAsync(_memory, query).ConfigureAwait(false);
     }
 
-    public void UseMemory(IAIService embeddingService, IMemoryStore storage)
+    public void UseMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
     {
         Verify.NotNull(storage);
         Verify.NotNull(embeddingService);
@@ -143,23 +151,29 @@ public sealed class Kernel// : IDisposable
 
     public async Task<ChatHistory> StartChatCompletionAsync(string systemMessage)
     {
-        var chatHistory = AIService.CreateNewChat(systemMessage);
+        var chatHistory = TextCompletionService.CreateNewChat(systemMessage);
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return await AIService.RunChatCompletionAsync(chatHistory, requestSetting).ConfigureAwait(false);
+        return await TextCompletionService.RunChatCompletionAsync(chatHistory, requestSetting).ConfigureAwait(false);
     }
 
     public Task<ChatHistory> RunChatCompletionAsync(ChatHistory history)
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunChatCompletionAsync(history, requestSetting);
+        return TextCompletionService.RunChatCompletionAsync(history, requestSetting);
     }
 
     public Task<SemanticAnswer> RunTextCompletionAsync(string prompt)
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return AIService.RunTextCompletion(prompt, requestSetting);
+        return TextCompletionService.RunTextCompletionAsync(prompt, requestSetting);
     }
-    
+
+    public IAsyncEnumerable<TextStreamingResult> RunTextStreamingCompletionAsync(string prompt)
+    {
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return TextCompletionService.RunTextStreamingCompletionAsync(prompt, requestSetting);
+    }
+
     public ISKFunction FindFunction(string pluginName, string functionName)
     {
         Verify.ValidPluginName(pluginName);
@@ -292,7 +306,7 @@ public sealed class Kernel// : IDisposable
         plugin.AddFunction(function);
     }
     
-    public void RegisterMemory(IAIService embeddingService, IMemoryStore storage)
+    public void RegisterMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
     {
         EmbeddingService = embeddingService;
         _memory = new SemanticMemory(embeddingService, storage);

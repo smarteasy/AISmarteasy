@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI.Completion;
+using AISmarteasy.Core.Connector.OpenAI.Text;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Prompt;
 using Microsoft.Extensions.Logging;

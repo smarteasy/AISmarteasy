@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using AISmarteasy.Core.Function;
 
-namespace AISmarteasy.Core.Connector.OpenAI.Completion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text;
 public readonly struct AuthorRole : IEquatable<AuthorRole>
 {
     public static readonly AuthorRole System = new("system");

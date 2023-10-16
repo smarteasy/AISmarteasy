@@ -2,7 +2,7 @@
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt;
 
-namespace AISmarteasy.Core.Connector.OpenAI.Completion;
+namespace AISmarteasy.Core.Connector.OpenAI.Text;
 
 public sealed class ModelResult
 {
@@ -11,7 +11,6 @@ public sealed class ModelResult
     public ModelResult(object result)
     {
         Verify.NotNull(result);
-
         _result = result;
     }
 
