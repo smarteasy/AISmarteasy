@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
-using System.Threading;
 using AISmarteasy.Core;
 using AISmarteasy.Core.Config;
+using AISmarteasy.Core.Connector.OpenAI.Text;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Memory;
@@ -36,8 +36,8 @@ namespace GPTConsole
             //Run_Example17_ChatGPT();
             //Run_Example18_01_DallE();
             //Run_Example18_02_DallE();
-
-            Run_Example32_StreamingCompletion();
+            //Run_Example32_StreamingCompletion();
+            Run_Example33_StreamingChat();
 
             Console.ReadLine();
         }
@@ -488,15 +488,12 @@ Is it weekend time (weekend/not weekend)?
         
         public static async void Run_Example32_StreamingCompletion()
         {
-            Console.WriteLine("======== SamplePlugins - Conversation Summary Plugin - Summarize ========");
+            Console.WriteLine("======== Azure OpenAI - Text Completion - Raw Streaming ========");
 
             var kernel = new KernelBuilder()
                 .Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
 
-            var config = new FunctionRunConfig("ConversationSummarySkill", "SummarizeConversation");
-            config.UpdateInput(ProviderChatTranscript.EXAMPLE13);
             var prompt = "Write one paragraph why AI is awesome";
-
 
             Console.WriteLine("Prompt: " + prompt);
             await foreach (var answer in kernel.RunTextStreamingCompletionAsync(prompt))
@@ -508,6 +505,36 @@ Is it weekend time (weekend/not weekend)?
             }
 
             Console.WriteLine();
+        }
+
+        public static async void Run_Example33_StreamingChat()
+        {
+            Console.WriteLine("======== Open AI - ChatGPT Streaming ========");
+
+            var kernel = new KernelBuilder()
+                .Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
+
+            Console.WriteLine("Chat content:");
+            Console.WriteLine("------------------------");
+
+            var systemMessage = "You are a librarian, expert about books";
+            var chatHistory = await kernel.StartChatCompletionAsync(systemMessage);
+            await MessageOutputAsync(chatHistory);
+
+            chatHistory.AddUserMessage("Hi, I'm looking for book suggestions");
+            await MessageOutputAsync(chatHistory);
+
+            Console.Write($"{AuthorRole.Assistant}: ");
+
+            string fullMessage = string.Empty;
+
+            await foreach (var answer in kernel.RunChatStreamingAsync(chatHistory))
+            {
+                await foreach (var stream in answer.GetStreamingChatMessageAsync())
+                {
+                    Console.Write(stream.Content);
+                }
+            }
         }
 
 

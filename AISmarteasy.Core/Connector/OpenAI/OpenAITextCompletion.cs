@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using AISmarteasy.Core.Connector.OpenAI.Text;
+using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Service;
 using Azure;
@@ -43,6 +44,12 @@ public sealed class OpenAITextCompletion : OpenAIClientBase, ITextCompletion
         {
             yield return new TextStreamingResult(streamingChatCompletions, choice);
         }
+    }
+
+    public IAsyncEnumerable<IChatStreamingResult> RunChatStreamingCompletionAsync(ChatHistory chatHistory, AIRequestSettings requestSettings,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 
     private async IAsyncEnumerable<TextStreamingResult> GetTextStreamingResultsAsync(string text, AIRequestSettings requestSettings,

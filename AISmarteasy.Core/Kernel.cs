@@ -2,6 +2,7 @@
 using AISmarteasy.Core.Connector;
 using AISmarteasy.Core.Connector.OpenAI;
 using AISmarteasy.Core.Connector.OpenAI.Text;
+using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Handler;
@@ -10,6 +11,9 @@ using AISmarteasy.Core.Planner;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
+using Directory = System.IO.Directory;
+using File = System.IO.File;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AISmarteasy.Core;
 
@@ -172,6 +176,12 @@ public sealed class Kernel// : IDisposable
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return TextCompletionService.RunTextStreamingCompletionAsync(prompt, requestSetting);
+    }
+
+    public IAsyncEnumerable<IChatStreamingResult> RunChatStreamingAsync(ChatHistory chatHistory)
+    {
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return TextCompletionService.RunChatStreamingCompletionAsync(chatHistory, requestSetting);
     }
 
     public ISKFunction FindFunction(string pluginName, string functionName)

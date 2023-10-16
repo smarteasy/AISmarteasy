@@ -130,10 +130,8 @@ public abstract class ClientBase
         return result;
     }
     
-    private protected async IAsyncEnumerable<IChatStreamingResult> GetChatStreamingResultsAsync(
-        IEnumerable<ChatMessageBase> chat,
-        AIRequestSettings? requestSettings,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private protected async IAsyncEnumerable<IChatStreamingResult> GetChatStreamingResultsAsync(IEnumerable<ChatMessageBase> chat,
+        AIRequestSettings? requestSettings, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         Verify.NotNull(chat);
         Verify.NotNull(Client);
