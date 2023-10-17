@@ -1,12 +1,12 @@
 ﻿using System.Text.Json;
-using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Connecting;
+using AISmarteasy.Core.Connecting.OpenAI;
 using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Util;
 
 namespace AISmarteasy.Core.Function;
 

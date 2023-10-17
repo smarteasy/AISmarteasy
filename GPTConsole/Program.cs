@@ -1,13 +1,11 @@
 ﻿using System.Globalization;
 using AISmarteasy.Core;
-using AISmarteasy.Core.Config;
-using AISmarteasy.Core.Connector.OpenAI.Text;
+using AISmarteasy.Core.Connecting.OpenAI.Text;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
-using Azure.AI.OpenAI;
 
 namespace GPTConsole
 {

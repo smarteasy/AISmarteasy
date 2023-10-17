@@ -6,13 +6,13 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI.Text;
+using AISmarteasy.Core.Connecting;
+using AISmarteasy.Core.Connecting.OpenAI.Text;
 using AISmarteasy.Core.Context;
+using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Prompt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using SemanticKernel.Util;
 
 namespace AISmarteasy.Core.Function;
 

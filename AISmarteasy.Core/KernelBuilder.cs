@@ -1,8 +1,8 @@
-﻿using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Handler;
+﻿using AISmarteasy.Core.Connecting.OpenAI;
+using AISmarteasy.Core.Connecting.Pinecone;
+using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Service;
-using AISmarteasy.Core.Util;
 
 namespace AISmarteasy.Core;
 

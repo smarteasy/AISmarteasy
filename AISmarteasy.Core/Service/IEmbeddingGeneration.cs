@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Connector;
+﻿using AISmarteasy.Core.Connecting;
 
 namespace AISmarteasy.Core.Service;
 

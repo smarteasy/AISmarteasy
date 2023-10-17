@@ -1,6 +1,4 @@
-﻿using AISmarteasy.Core.Util;
-
-namespace AISmarteasy.Core;
+﻿namespace AISmarteasy.Core;
 
 public static class Telemetry
 {

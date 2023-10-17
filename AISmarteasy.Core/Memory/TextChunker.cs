@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using AISmarteasy.Core.Util;
+using AISmarteasy.Core.Handling;
 
 namespace AISmarteasy.Core.Memory;
 

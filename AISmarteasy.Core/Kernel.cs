@@ -1,11 +1,10 @@
-﻿using AISmarteasy.Core.Config;
-using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI;
-using AISmarteasy.Core.Connector.OpenAI.Text;
-using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
+﻿using AISmarteasy.Core.Connecting;
+using AISmarteasy.Core.Connecting.OpenAI;
+using AISmarteasy.Core.Connecting.OpenAI.Text;
+using AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
-using AISmarteasy.Core.Handler;
+using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Memory;
 using AISmarteasy.Core.Planner;
 using AISmarteasy.Core.Prompt;

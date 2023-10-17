@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using AISmarteasy.Core.Connector.OpenAI;
+using AISmarteasy.Core.Connecting.OpenAI;
 using AISmarteasy.Core.Function;
 using AISmarteasy.Core.Prompt.Blocks;
 using Microsoft.Extensions.Logging;

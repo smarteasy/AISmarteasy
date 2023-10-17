@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Connector;
+﻿using AISmarteasy.Core.Connecting;
 using AISmarteasy.Core.Context;
 using AISmarteasy.Core.Function;
 using Microsoft.Extensions.Logging;

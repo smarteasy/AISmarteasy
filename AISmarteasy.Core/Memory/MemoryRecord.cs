@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using AISmarteasy.Core.Connector.Pinecone;
+using AISmarteasy.Core.Connecting.Pinecone;
 
 namespace AISmarteasy.Core.Memory;
 

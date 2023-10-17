@@ -1,5 +1,5 @@
-﻿using AISmarteasy.Core.Connector;
-using AISmarteasy.Core.Connector.OpenAI.Text.Chat;
+﻿using AISmarteasy.Core.Connecting;
+using AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
 
 namespace AISmarteasy.Core.Service;
 

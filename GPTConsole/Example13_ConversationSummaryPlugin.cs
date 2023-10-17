@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AISmarteasy.Core.Function;
-using AISmarteasy.Core;
-using AISmarteasy.Core.Service;
-using AISmarteasy.Core.Config;
-
-namespace GPTConsole
+﻿namespace GPTConsole
 {
     public static class ProviderChatTranscript
     {

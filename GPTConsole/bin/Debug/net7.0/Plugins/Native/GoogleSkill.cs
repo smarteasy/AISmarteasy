@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Connector.Web;
+﻿using AISmarteasy.Core.Connecting.Google;
 using GPTConsole;
 
 namespace Plugins.Native.Skills;

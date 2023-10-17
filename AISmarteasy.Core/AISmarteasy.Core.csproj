@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Connector\OpenAI\Text\Chat\ChatRequestSettings.cs" />
+    <Compile Remove="Connecting\OpenAI\Text\Chat\ChatRequestSettings.cs" />
   </ItemGroup>
 
   <ItemGroup>

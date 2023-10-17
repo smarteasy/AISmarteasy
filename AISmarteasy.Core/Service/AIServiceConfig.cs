@@ -1,4 +1,4 @@
-using AISmarteasy.Core.Handler;
+using AISmarteasy.Core.Handling;
 using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Service;
