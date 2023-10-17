@@ -17,7 +17,7 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AISmarteasy.Core;
 
-public sealed class Kernel// : IDisposable
+public sealed class Kernel
 {
     private const string SEMANTIC_PLUGIN_CONFIG_FILE = "config.json";
     private const string SEMANTIC_PLUGIN_PROMPT_FILE = "skprompt.txt";
@@ -53,7 +53,7 @@ public sealed class Kernel// : IDisposable
         LoadSemanticPlugin(); 
     }
 
-    public string ContextVariablesInput => KernelProvider.Kernel.Context.Variables.Input;
+    public string ContextVariablesInput => Context.Variables.Input;
     public string Result => Context.Result;
 
     public Task RunFunctionAsync(FunctionRunConfig config)
@@ -79,97 +79,23 @@ public sealed class Kernel// : IDisposable
         return function.InvokeAsync(function.RequestSettings);
     }
 
-    public Task RunFunctionAsync(string prompt)
+    public Task<SemanticAnswer> RunTextCompletionAsync(string prompt)
     {
-        var config = new FunctionRunConfig();
-        config.UpdateInput(prompt);
-        var function = FindFunction("QASkill", "Question");
-        return RunFunctionAsync(function, config.Parameters);
+        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+        return TextCompletionService.RunTextCompletionAsync(prompt, requestSetting);
     }
 
-    public async Task<bool> SaveMemoryFromPdfDirectory(string directory)
-    {
-        if (_memory != null) 
-            return await Embedding.SaveFromPdfDirectory(_memory, directory).ConfigureAwait(false);
-        return false;
-    }
-
-    public async Task<bool> SaveMemoryAsync(Dictionary<string, string> textData)
-    {
-        if (_memory != null)
-            return await Embedding.SaveAsync(_memory, textData).ConfigureAwait(false);
-        return false;
-    }
-
-    public async Task<IAsyncEnumerable<MemoryQueryResult>?> SearchMemoryAsync(string query)
-    {
-        if (_memory == null)
-        {
-            return null;
-        }
-        
-        return await Embedding.SearchAsync(_memory, query).ConfigureAwait(false);
-    }
-
-    public void UseMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
-    {
-        Verify.NotNull(storage);
-        Verify.NotNull(embeddingService);
-        RegisterMemory(embeddingService, storage);
-    }
-
-    public async Task<Plan> RunPlanAsync(string goal)
-    {
-        Plan? plan;
-        try
-        {
-            var planBuilder = new PlanBuilder();
-            plan = await planBuilder.Build(goal).ConfigureAwait(false);
-
-            while (plan.HasNextStep)
-            {
-                var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-                await plan.RunAsync(requestSetting).ConfigureAwait(false);
-            }
-        }
-        catch (SKException e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-
-        return plan;
-    }
-
-    public string BuildFunctionViews()
-    {
-        var result = string.Empty;
-        foreach (var plugin in Plugins.Values)
-        {
-            result += string.Join("\n\n", plugin.BuildPluginView().FunctionViews.Values.Select(x => x.ToManualString()));
-            result += "\n\n";
-        }
-
-        return result;
-    }
-
-    public async Task<ChatHistory> StartChatCompletionAsync(string systemMessage)
+    public Task<ChatHistory> RunChatCompletionAsync(string systemMessage)
     {
         var chatHistory = TextCompletionService.CreateNewChat(systemMessage);
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return await TextCompletionService.RunChatCompletionAsync(chatHistory, requestSetting).ConfigureAwait(false);
+        return TextCompletionService.RunChatCompletionAsync(chatHistory, requestSetting);
     }
 
     public Task<ChatHistory> RunChatCompletionAsync(ChatHistory history)
     {
         var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
         return TextCompletionService.RunChatCompletionAsync(history, requestSetting);
-    }
-
-    public Task<SemanticAnswer> RunTextCompletionAsync(string prompt)
-    {
-        var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-        return TextCompletionService.RunTextCompletionAsync(prompt, requestSetting);
     }
 
     public IAsyncEnumerable<TextStreamingResult> RunTextStreamingCompletionAsync(string prompt)
@@ -184,13 +110,37 @@ public sealed class Kernel// : IDisposable
         return TextCompletionService.RunChatStreamingCompletionAsync(chatHistory, requestSetting);
     }
 
-    public ISKFunction FindFunction(string pluginName, string functionName)
+    public async Task<bool> SaveMemoryFromPdfDirectory(string directory)
     {
-        Verify.ValidPluginName(pluginName);
-        Verify.ValidFunctionName(functionName);
+        Verify.NotNull(_memory);
+        return await Embedding.SaveFromPdfDirectory(_memory, directory).ConfigureAwait(false);
+    }
 
-        Plugins.TryGetValue(pluginName, out var plugin);
-        return plugin!.GetFunction(functionName);
+    public async Task<bool> SaveMemoryAsync(Dictionary<string, string> textData)
+    {
+        Verify.NotNull(_memory); 
+        return await Embedding.SaveAsync(_memory, textData).ConfigureAwait(false);
+    }
+
+    public async Task<IAsyncEnumerable<MemoryQueryResult>> SearchMemoryAsync(string query)
+    {
+        Verify.NotNull(_memory);
+        return await Embedding.SearchAsync(_memory, query).ConfigureAwait(false);
+    }
+
+    public void UseMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
+    {
+        Verify.NotNull(storage);
+        Verify.NotNull(embeddingService);
+
+        EmbeddingService = embeddingService;
+        _memory = new SemanticMemory(embeddingService, storage);
+    }
+
+    public async Task<string?> RunImageGenerationAsync(string description, int width, int height)
+    {
+        Verify.NotNull(ImageGenerationService);
+        return await ImageGenerationService.GenerateImageAsync(description, width, height).ConfigureAwait(false);
     }
 
     public async Task<SemanticAnswer> RunPipelineAsync(PipelineRunConfig config)
@@ -218,6 +168,29 @@ public sealed class Kernel// : IDisposable
         return new SemanticAnswer(ContextVariablesInput);
     }
 
+    public async Task<Plan> RunPlanAsync(string goal)
+    {
+        Verify.NotNullOrWhitespace(goal);
+
+        try
+        {
+            var planBuilder = new PlanBuilder();
+            var plan = await planBuilder.Build(goal).ConfigureAwait(false);
+
+            while (plan.HasNextStep)
+            {
+                var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
+                await plan.RunAsync(requestSetting).ConfigureAwait(false);
+            }
+            return plan;
+        }
+        catch (SKException e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     private ISKFunction CreateSemanticFunction(SemanticFunctionConfig config)
     {
         if (!config.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
@@ -231,8 +204,6 @@ public sealed class Kernel// : IDisposable
 
         return func;
     }
-
-
 
     private void LoadSemanticPlugin()
     {
@@ -315,33 +286,27 @@ public sealed class Kernel// : IDisposable
 
         plugin.AddFunction(function);
     }
-    
-    public void RegisterMemory(IEmbeddingGeneration embeddingService, IMemoryStore storage)
+
+    public ISKFunction FindFunction(string pluginName, string functionName)
     {
-        EmbeddingService = embeddingService;
-        _memory = new SemanticMemory(embeddingService, storage);
+        Verify.ValidPluginName(pluginName);
+        Verify.ValidFunctionName(functionName);
+
+        Plugins.TryGetValue(pluginName, out var plugin);
+        return plugin!.GetFunction(functionName);
     }
 
-    public SKContext CreateNewContext(ContextVariables variables)
+    public string BuildFunctionViews()
     {
-        return new SKContext(variables);
-    }
-
-    public async Task<string?> GenerateImageAsync(string description, int width, int height)
-    {
-        if (ImageGenerationService != null)
+        var result = string.Empty;
+        foreach (var plugin in Plugins.Values)
         {
-            return await ImageGenerationService.GenerateImageAsync(description, width, height).ConfigureAwait(false);
+            result += string.Join("\n\n", plugin.BuildPluginView().FunctionViews.Values.Select(x => x.ToManualString()));
+            result += "\n\n";
         }
 
-        return null;
+        return result;
     }
 }
-
-//public void Dispose()
-//    {
-//        if (_memory is IDisposable mem) { mem.Dispose(); }
-//        if (Plugins is IDisposable plugins) { plugins.Dispose(); }
-//    }
 
 

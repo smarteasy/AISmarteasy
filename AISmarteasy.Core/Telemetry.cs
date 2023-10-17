@@ -4,9 +4,9 @@ namespace AISmarteasy.Core;
 
 public static class Telemetry
 {
-    private const string TelemetryDisabledEnvVar = "AZURE_TELEMETRY_DISABLED";
+    private const string TELEMETRY_DISABLED_ENV_VAR = "AZURE_TELEMETRY_DISABLED";
 
-    public const string HttpUserAgent = "Semantic-Kernel";
+    public const string HTTP_USER_AGENT = "Semantic-Kernel";
 
-    public static bool IsTelemetryEnabled => !EnvExtensions.GetBoolEnvVar(TelemetryDisabledEnvVar) ?? true;
+    public static bool IsTelemetryEnabled => !EnvExtensions.GetBoolEnvVar(TELEMETRY_DISABLED_ENV_VAR) ?? true;
 }

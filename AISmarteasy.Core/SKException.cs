@@ -11,7 +11,8 @@ public class SKException : Exception
     {
     }
 
-    public SKException(string? message, Exception? innerException) : base(message, innerException)
+    public SKException(string? message, Exception? innerException) 
+        : base(message, innerException)
     {
     }
 }

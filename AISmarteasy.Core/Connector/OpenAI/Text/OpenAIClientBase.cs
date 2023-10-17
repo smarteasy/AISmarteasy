@@ -59,7 +59,7 @@ public abstract class OpenAIClientBase : ClientBase
             Diagnostics =
             {
                 IsTelemetryEnabled = Telemetry.IsTelemetryEnabled,
-                ApplicationId = Telemetry.HttpUserAgent,
+                ApplicationId = Telemetry.HTTP_USER_AGENT,
             }
         };
     }
@@ -167,6 +167,6 @@ public abstract class OpenAIClientBase : ClientBase
 
     private protected virtual void AddRequestHeaders(HttpRequestMessage request)
     {
-        request.Headers.Add("User-Agent", Telemetry.HttpUserAgent);
+        request.Headers.Add("User-Agent", Telemetry.HTTP_USER_AGENT);
     }
 }

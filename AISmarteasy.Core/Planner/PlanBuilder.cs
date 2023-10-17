@@ -38,7 +38,6 @@ public sealed class PlanBuilder
             { "input", goal }
         };
 
-
         await kernel.RunFunctionAsync(function, parameters).ConfigureAwait(false);
 
         var planXml = KernelProvider.Kernel.ContextVariablesInput.Trim();

@@ -6,9 +6,9 @@ using AISmarteasy.Core.Util;
 
 namespace AISmarteasy.Core;
 
-public sealed class KernelBuilder
+public static class KernelBuilder
 {
-    public Kernel Build(AIServiceConfig config)
+    public static void Build(AIServiceConfig config)
     {
         var modelId = ModelStringProvider.ProvideCompletionModel(config.ServiceType);
         Func<IMemoryStore>? memoryStorageFactory = null; 
@@ -51,8 +51,6 @@ public sealed class KernelBuilder
             kernel.ImageGenerationService = imageGenerationService;
         }
 
-        KernelProvider.Kernel = kernel;
-
-        return kernel;
+        KernelProvider.Initialize(kernel);
     }
 }

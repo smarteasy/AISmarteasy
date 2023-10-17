@@ -2,11 +2,11 @@
 {
     public static class KernelProvider
     {
-        static void Initialize(Kernel kernel)
+        public static void Initialize(Kernel kernel)
         {
             Kernel = kernel;
         }
 
-        public static Kernel Kernel { get; set; } = null!;
+        public static Kernel? Kernel { get; private set; }
     }
 }
