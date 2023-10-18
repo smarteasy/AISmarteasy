@@ -92,8 +92,10 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\GroundingSkill\ReferenceCheckEntities\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\IntentDetectionSkill\AssistantIntent\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\IntentDetectionSkill\AssistantIntent\skprompt.txt" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Continue\config.json" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Continue\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\LanguageMathProblemSkill\TranslateMathProblem\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\LanguageMathProblemSkill\TranslateMathProblem\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Continue\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Continue\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetIntent\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\OrchestratorSkill\GetNumbers\config.json" />
@@ -124,10 +126,10 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Summarize\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Topics\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\SummarizeSkill\Topics\skprompt.txt" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Menu\config.json" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Menu\skprompt.txt" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Poem\config.json" />
-    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscPlugin\Poem\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Menu\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Menu\skprompt.txt" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Poem\config.json" />
+    <Content Include="bin\Debug\net7.0\Plugins\Semantic\MiscSkill\Poem\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\AcronymGenerator\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\AcronymGenerator\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\AcronymReverse\config.json" />
@@ -160,6 +162,10 @@
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\Translate\skprompt.txt" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\TwoSentenceSummary\config.json" />
     <Content Include="bin\Debug\net7.0\Plugins\Semantic\WriteSkill\TwoSentenceSummary\skprompt.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ncalc" Version="1.3.8" />
   </ItemGroup>
 
   <ItemGroup>

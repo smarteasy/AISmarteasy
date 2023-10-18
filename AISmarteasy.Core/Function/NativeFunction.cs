@@ -247,9 +247,9 @@ internal sealed class NativeFunction : ISKFunction, IDisposable
         Task Function(AIRequestSettings? _, CancellationToken cancellationToken)
         {
             object?[] args = parameterFuncs.Length != 0 ? new object?[parameterFuncs.Length] : Array.Empty<object?>();
-            var context = KernelProvider.Kernel.Context;
+            var context = KernelProvider.Kernel!.Context;
             
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 args[i] = parameterFuncs[i](context, cancellationToken);
             }

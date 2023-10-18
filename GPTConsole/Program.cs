@@ -35,7 +35,9 @@ namespace GPTConsole
             //Run_Example18_01_DallE();
             //Run_Example18_02_DallE();
             //Run_Example32_StreamingCompletion();
-            Run_Example33_StreamingChat();
+            //Run_Example33_StreamingChat();
+
+            Run_LanguageCalculatorPlugin();
 
             Console.ReadLine();
         }
@@ -515,6 +517,24 @@ Is it weekend time (weekend/not weekend)?
                     Console.Write(stream.Content);
                 }
             }
+        }
+
+        public static async void Run_LanguageCalculatorPlugin()
+        {
+            KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
+            var kernel = KernelProvider.Kernel;
+            var loader = new NativeFunctionLoader();
+            loader.Load();
+
+            var config = new PipelineRunConfig();
+
+            config.AddPluginFunctionName("LanguageMathProblemSkill", "TranslateMathProblem");
+            config.AddPluginFunctionName("LanguageCalculatorSkill", "Calculate");
+
+            config.UpdateInput("what is the square root of 625?");
+
+            var answer = await kernel!.RunPipelineAsync(config);
+            Console.WriteLine(answer.Text);
         }
 
 
