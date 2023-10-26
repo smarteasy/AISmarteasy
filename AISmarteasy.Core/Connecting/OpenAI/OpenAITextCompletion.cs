@@ -1,25 +1,19 @@
 ﻿using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Connecting;
 using AISmarteasy.Core.Connecting.OpenAI.Text;
 using AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Service;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.Logging;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace AISmarteasy.Core.Connecting.OpenAI;
 
 public sealed class OpenAITextCompletion : OpenAIClientBase, ITextCompletion
 {
-    public OpenAITextCompletion(
-        string modelId,
-        string apiKey,
-        string? organization = null,
-        HttpClient? httpClient = null,
-        ILoggerFactory? loggerFactory = null
-    ) : base(modelId, apiKey, organization, httpClient, loggerFactory)
+    public OpenAITextCompletion(string modelId, string apiKey, AIServiceTypeKind serviceType,
+        string? organization = null, HttpClient? httpClient = null, ILoggerFactory? loggerFactory = null
+    ) : base(modelId, apiKey, serviceType, organization, httpClient, loggerFactory)
     {
     }
     
@@ -37,7 +31,7 @@ public sealed class OpenAITextCompletion : OpenAIClientBase, ITextCompletion
 
         var options = CreateCompletionsOptions(prompt, requestSettings);
 
-        Response<StreamingCompletions>? response = await RunRequestAsync<Response<StreamingCompletions>>(
+        var response = await RunRequestAsync<Response<StreamingCompletions>>(
             () => Client?.GetCompletionsStreamingAsync(ModelId, options, cancellationToken)).ConfigureAwait(false);
 
         using StreamingCompletions streamingChatCompletions = response.Value;
@@ -48,6 +42,12 @@ public sealed class OpenAITextCompletion : OpenAIClientBase, ITextCompletion
     }
 
     public IAsyncEnumerable<IChatStreamingResult> RunChatStreamingCompletionAsync(ChatHistory chatHistory, AIRequestSettings requestSettings,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> GenerateMessageAsync(ChatHistory chat, AIRequestSettings requestSettings,
         CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();

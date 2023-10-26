@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 
 namespace AISmarteasy.Core.Context;
 
@@ -12,7 +12,7 @@ public sealed class ContextVariables : IDictionary<string, string>
 {
     public ContextVariables(string? value = null)
     {
-        _variables[MainKey] = value ?? string.Empty;
+        _variables[MAIN_KEY] = value ?? string.Empty;
     }
 
     public ContextVariables Clone()
@@ -26,11 +26,11 @@ public sealed class ContextVariables : IDictionary<string, string>
         return clone;
     }
 
-    public string Input => _variables.TryGetValue(MainKey, out string? value) ? value : string.Empty;
+    public string Input => _variables.TryGetValue(MAIN_KEY, out string? value) ? value : string.Empty;
 
     public ContextVariables Update(string? value)
     {
-        _variables[MainKey] = value ?? string.Empty;
+        _variables[MAIN_KEY] = value ?? string.Empty;
         return this;
     }
 
@@ -106,11 +106,11 @@ public sealed class ContextVariables : IDictionary<string, string>
         set => ((IDictionary<string, string>)_variables)[key] = value;
     }
 
-    internal const string MainKey = "INPUT";
+    internal const string MAIN_KEY = "INPUT";
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     internal string DebuggerDisplay =>
-        TryGetValue(MainKey, out string? input) && !string.IsNullOrEmpty(input)
+        TryGetValue(MAIN_KEY, out string? input) && !string.IsNullOrEmpty(input)
             ? $"Variables = {_variables.Count}, Input = {input}"
             : $"Variables = {_variables.Count}";
 

@@ -1,6 +1,6 @@
 ﻿using AISmarteasy.Core.Connecting;
 using AISmarteasy.Core.Context;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using Microsoft.Extensions.Logging;
 
 namespace AISmarteasy.Core.Prompt.Blocks;
@@ -93,7 +93,7 @@ public sealed class CodeBlock : Block, ICodeRendering
         try
         {
             var requestSetting = AIRequestSettings.FromCompletionConfig(new PromptTemplateConfig().Completion);
-            await function.InvokeAsync(requestSetting).ConfigureAwait(false);
+            await function.RunAsync(requestSetting).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -104,9 +104,9 @@ public sealed class CodeBlock : Block, ICodeRendering
         return context.Result;
     }
 
-    private ISKFunction GetFunctionFromPlugins(FunctionIdBlock functionBlock)
+    private PluginFunction.Function GetFunctionFromPlugins(FunctionIdBlock functionBlock)
     {
-        var plugin = KernelProvider.Kernel.Plugins[functionBlock.PluginName];
+        var plugin = KernelProvider.Kernel!.Plugins[functionBlock.PluginName];
         return plugin.GetFunction(functionBlock.FunctionName); 
     }
 

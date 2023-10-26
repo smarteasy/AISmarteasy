@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using AISmarteasy.Core.Connecting.OpenAI.Image;
 using AISmarteasy.Core.Connecting.OpenAI.Text;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ public class OpenAIImageGeneration : OpenAIClientBase, IImageGeneration
         string? organization = null,
         HttpClient? httpClient = null,
         ILoggerFactory? loggerFactory = null
-    ) : base(httpClient, loggerFactory)
+    ) : base(AIServiceTypeKind.ImageGeneration, httpClient, loggerFactory)
     {
         Verify.NotNullOrWhitespace(apiKey);
         _authorizationHeaderValue = $"Bearer {apiKey}";
@@ -67,7 +67,7 @@ public class OpenAIImageGeneration : OpenAIClientBase, IImageGeneration
             Format = format,
         });
 
-        var list = await GenerateImageGenerationAsync(OPEN_AI_ENDPOINT, requestBody, extractResponse!, cancellationToken).ConfigureAwait(false);
+        var list = await GenerateImageGenerationAsync(OPEN_AI_ENDPOINT, requestBody, extractResponse, cancellationToken).ConfigureAwait(false);
         return list?[0];
     }
 }

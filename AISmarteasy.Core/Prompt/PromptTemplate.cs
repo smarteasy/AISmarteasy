@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using AISmarteasy.Core.Connecting.OpenAI;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Prompt.Blocks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,9 +9,10 @@ namespace AISmarteasy.Core.Prompt;
 
 public class PromptTemplate : IPromptTemplate
 {
+    public PromptTemplateConfig PromptConfig { get; }
+
     private readonly string _template;
     private readonly TemplateTokenizer _tokenizer;
-    private readonly PromptTemplateConfig _promptConfig;
     private readonly ILogger _logger;
 
     public PromptTemplate()
@@ -35,7 +36,7 @@ public class PromptTemplate : IPromptTemplate
     public PromptTemplate(string template, PromptTemplateConfig config, ILoggerFactory loggerFactory)
     {
         _template = template;
-        _promptConfig = config;
+        PromptConfig = config;
         _logger = loggerFactory.CreateLogger(typeof(PromptTemplate));
         _tokenizer = new TemplateTokenizer(loggerFactory);
 
@@ -46,8 +47,8 @@ public class PromptTemplate : IPromptTemplate
 
     private List<ParameterView> InitParameters()
     {
-        Dictionary<string, ParameterView> result = new(_promptConfig.Input.Parameters.Count, StringComparer.OrdinalIgnoreCase);
-        foreach (var p in this._promptConfig.Input.Parameters)
+        Dictionary<string, ParameterView> result = new(PromptConfig.Input.Parameters.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var p in PromptConfig.Input.Parameters)
         {
             result[p.Name] = new ParameterView(p.Name, p.Description, p.DefaultValue);
         }
@@ -64,7 +65,7 @@ public class PromptTemplate : IPromptTemplate
 
     internal async Task<string> RenderAsync(IList<Block> blocks, CancellationToken cancellationToken = default)
     {
-        var context = KernelProvider.Kernel.Context;
+        var context = KernelProvider.Kernel!.Context;
         _logger.LogTrace("Rendering list of {0} blocks", blocks.Count);
         var tasks = new List<Task<string>>(blocks.Count);
         foreach (var block in blocks)
@@ -81,7 +82,7 @@ public class PromptTemplate : IPromptTemplate
 
                 default:
                     const string Error = "Unexpected block type, the block doesn't have a rendering method";
-                    this._logger.LogError(Error);
+                    _logger.LogError(Error);
                     throw new SKException(Error);
             }
         }

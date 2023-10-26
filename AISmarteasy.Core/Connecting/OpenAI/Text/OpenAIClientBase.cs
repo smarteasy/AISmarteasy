@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 using AISmarteasy.Core.Connecting.OpenAI.Image;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
@@ -18,9 +18,9 @@ public abstract class OpenAIClientBase : ClientBase
     private readonly ILogger? _logger;
     private readonly HttpClient? _httpClient;
 
-    private protected OpenAIClientBase(string modelId, string apiKey, 
+    private protected OpenAIClientBase(string modelId, string apiKey, AIServiceTypeKind serviceType,
         string? organization = null, HttpClient? httpClient = null, ILoggerFactory? loggerFactory = null)
-        : base(loggerFactory)
+        : base(serviceType, loggerFactory)
     {
         Verify.NotNullOrWhitespace(modelId);
         Verify.NotNullOrWhitespace(apiKey);
@@ -41,7 +41,8 @@ public abstract class OpenAIClientBase : ClientBase
         Client = new OpenAIClient(apiKey, options);
     }
 
-    private protected OpenAIClientBase(HttpClient? httpClient, ILoggerFactory? loggerFactory = null)
+    private protected OpenAIClientBase(AIServiceTypeKind serviceType, HttpClient? httpClient, ILoggerFactory? loggerFactory = null)
+    : base(serviceType, loggerFactory)
     {
         _httpClient = httpClient ?? new HttpClient(NonDisposableHttpClientHandler.Instance, disposeHandler: false);
         _logger = loggerFactory is not null ? loggerFactory.CreateLogger(this.GetType()) : NullLogger.Instance;

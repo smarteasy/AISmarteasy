@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.PluginFunction;
 using Google.Apis.CustomSearchAPI.v1;
 using Google.Apis.Services;
 using Microsoft.Extensions.Logging;

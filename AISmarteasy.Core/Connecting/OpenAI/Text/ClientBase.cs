@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Connecting;
 using AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Service;
 using Azure;
@@ -16,8 +15,11 @@ public abstract class ClientBase
 {
     private const int MAX_RESULTS_PER_PROMPT = 128;
 
-    private protected ClientBase(ILoggerFactory? loggerFactory = null)
+    public AIServiceTypeKind ServiceType { get; set; }
+
+    private protected ClientBase(AIServiceTypeKind serviceType, ILoggerFactory? loggerFactory = null)
     {
+        ServiceType = serviceType;
         Logger = loggerFactory is not null ? loggerFactory.CreateLogger(GetType()) : NullLogger.Instance;
     }
 
@@ -276,11 +278,11 @@ public abstract class ClientBase
         }
     }
 
-    protected static async Task<T> RunRequestAsync<T>(Func<Task<T>> request)
+    protected static async Task<T> RunRequestAsync<T>(Func<Task<T>?> request)
     {
         try
         {
-            return await request.Invoke().ConfigureAwait(false);
+            return await request.Invoke()!.ConfigureAwait(false);
         }
         catch (RequestFailedException e)
         {

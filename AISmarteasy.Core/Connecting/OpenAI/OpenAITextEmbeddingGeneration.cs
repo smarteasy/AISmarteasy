@@ -12,7 +12,7 @@ public sealed class OpenAIEmbeddingGeneration : OpenAIClientBase, IEmbeddingGene
         string? organization = null,
         HttpClient? httpClient = null,
         ILoggerFactory? loggerFactory = null
-    ) : base(modelId, apiKey, organization, httpClient, loggerFactory)
+    ) : base(modelId, apiKey, AIServiceTypeKind.EmbeddingGeneration, organization, httpClient, loggerFactory)
     {
     }
 

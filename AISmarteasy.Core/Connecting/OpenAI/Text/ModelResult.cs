@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Prompt;
 
 namespace AISmarteasy.Core.Connecting.OpenAI.Text;

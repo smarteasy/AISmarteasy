@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 
 namespace AISmarteasy.Core.Connecting.OpenAI.Text;
 public readonly struct AuthorRole : IEquatable<AuthorRole>

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 

@@ -40,12 +40,12 @@ internal sealed class CodeTokenizer
         {
             switch (nextChar)
             {
-                case Symbols.VarPrefix:
+                case Symbols.VAR_PREFIX:
                     blocks.Add(new VariableBlock(text, this._loggerFactory));
                     break;
 
-                case Symbols.DblQuote:
-                case Symbols.SglQuote:
+                case Symbols.DBL_QUOTE:
+                case Symbols.SGL_QUOTE:
                     blocks.Add(new ValueBlock(text, this._loggerFactory));
                     break;
 
@@ -91,7 +91,7 @@ internal sealed class CodeTokenizer
 
             if (currentTokenType == TokenTypeKind.Value || (currentTokenType == TokenTypeKind.NamedArg && IsQuote(namedArgValuePrefix)))
             {
-                if (currentChar == Symbols.EscapeChar && CanBeEscaped(nextChar))
+                if (currentChar == Symbols.ESCAPE_CHAR && CanBeEscaped(nextChar))
                 {
                     currentTokenContent.Append(nextChar);
                     skipNextChar = true;
@@ -161,7 +161,7 @@ internal sealed class CodeTokenizer
             {
                 if (!namedArgSeparatorFound)
                 {
-                    if (currentChar == Symbols.NamedArgBlockSeparator)
+                    if (currentChar == Symbols.NAMED_ARG_BLOCK_SEPARATOR)
                     {
                         namedArgSeparatorFound = true;
                     }
@@ -169,9 +169,9 @@ internal sealed class CodeTokenizer
                 else
                 {
                     namedArgValuePrefix = currentChar;
-                    if (!IsQuote(namedArgValuePrefix) && namedArgValuePrefix != Symbols.VarPrefix)
+                    if (!IsQuote(namedArgValuePrefix) && namedArgValuePrefix != Symbols.VAR_PREFIX)
                     {
-                        throw new SKException($"Named argument values need to be prefixed with a quote or {Symbols.VarPrefix}.");
+                        throw new SKException($"Named argument values need to be prefixed with a quote or {Symbols.VAR_PREFIX}.");
                     }
                 }
                 currentTokenContent.Append(currentChar);
@@ -244,22 +244,22 @@ internal sealed class CodeTokenizer
 
     private static bool IsVarPrefix(char c)
     {
-        return (c == Symbols.VarPrefix);
+        return (c == Symbols.VAR_PREFIX);
     }
 
     private static bool IsBlankSpace(char c)
     {
-        return c is Symbols.Space or Symbols.NewLine or Symbols.CarriageReturn or Symbols.Tab;
+        return c is Symbols.SPACE or Symbols.NEW_LINE or Symbols.CARRIAGE_RETURN or Symbols.TAB;
     }
 
     private static bool IsQuote(char c)
     {
-        return c is Symbols.DblQuote or Symbols.SglQuote;
+        return c is Symbols.DBL_QUOTE or Symbols.SGL_QUOTE;
     }
 
     private static bool CanBeEscaped(char c)
     {
-        return c is Symbols.DblQuote or Symbols.SglQuote or Symbols.EscapeChar;
+        return c is Symbols.DBL_QUOTE or Symbols.SGL_QUOTE or Symbols.ESCAPE_CHAR;
     }
 
     [SuppressMessage("Design", "CA1031:Modify to catch a more specific allowed exception type, or rethrow exception",

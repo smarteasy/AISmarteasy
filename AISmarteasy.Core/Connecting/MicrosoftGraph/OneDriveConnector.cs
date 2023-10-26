@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Handling;
 using Microsoft.Graph;
 

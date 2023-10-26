@@ -3,10 +3,10 @@ using AISmarteasy.Core.Connecting.OpenAI;
 using AISmarteasy.Core.Connecting.OpenAI.Text;
 using AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
 using AISmarteasy.Core.Context;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Memory;
-using AISmarteasy.Core.Planner;
+using AISmarteasy.Core.Planning;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
 using Microsoft.Extensions.Logging;
@@ -23,6 +23,8 @@ public sealed class Kernel
     private readonly string _semanticPluginDirectory;
     private readonly ILogger _logger;
     private ISemanticMemory? _memory;
+
+    private List<string> _includedFunctionViews = new List<string>();
 
     public Dictionary<string, Plugin> Plugins { get; }
     public IPromptTemplate PromptTemplate { get; }
@@ -49,7 +51,22 @@ public sealed class Kernel
         Plugins = new Dictionary<string, Plugin>();
 
         _semanticPluginDirectory = Path.Combine(Directory.GetCurrentDirectory(), "plugins", "semantic"); 
-        LoadSemanticPlugin(); 
+    }
+
+    public void LoadPlugin()
+    {
+        LoadSemanticPlugin();
+        LoadNativePlugin();
+    }
+
+    private void LoadNativePlugin()
+    {
+        foreach (var function in NativeFunctionLoader.Load().Values)
+        {
+            RegisterNativeFunction(function);
+        }
+
+        NativeFunctionLoader.Load();
     }
 
     public string ContextVariablesInput => Context.Variables.Input;
@@ -61,21 +78,24 @@ public sealed class Kernel
         return RunFunctionAsync(function, config.Parameters);
     }
 
-    public Task RunFunctionAsync(ISKFunction function, string prompt)
+    public Task RunFunctionAsync(Function function, string prompt)
     {
         var config = new FunctionRunConfig();
         config.UpdateInput(prompt);
         return RunFunctionAsync(function, config.Parameters);
     }
 
-    public Task RunFunctionAsync(ISKFunction function, Dictionary<string, string> parameters)
+    public Task RunFunctionAsync(Function function, Dictionary<string, string>? parameters = default)
     {
-        foreach (var parameter in parameters)
+        if (parameters != null)
         {
-            Context.Variables[parameter.Key] = parameter.Value;
+            foreach (var parameter in parameters)
+            {
+                Context.Variables[parameter.Key] = parameter.Value;
+            }
         }
 
-        return function.InvokeAsync(function.RequestSettings);
+        return function.RunAsync(function.RequestSettings);
     }
 
     public Task<SemanticAnswer> RunTextCompletionAsync(string prompt)
@@ -167,30 +187,36 @@ public sealed class Kernel
         return new SemanticAnswer(ContextVariablesInput);
     }
 
-    public async Task<Plan> RunPlanAsync(string goal)
+    public async Task<Plan?> RunPlanAsync(string goal, WorkerTypeKind workerType)
     {
         Verify.NotNullOrWhitespace(goal);
 
+        Worker planner = new ActionPlanWorker(goal);
+        Plan? plan;
         try
         {
-            var planBuilder = new PlanBuilder();
-            var plan = await planBuilder.Build(goal).ConfigureAwait(false);
-
-            while (plan.HasNextStep)
+            switch (workerType)
             {
-                var requestSetting = AIRequestSettings.FromCompletionConfig(PromptTemplateConfig.Completion);
-                await plan.RunAsync(requestSetting).ConfigureAwait(false);
+                case WorkerTypeKind.Sequential:
+                    planner = new SequentialPlanWorker(goal);
+                    break;
+                case WorkerTypeKind.Stepwise:
+                    planner = new StepwisePlanWorker(goal);
+                    break;
             }
-            return plan;
+            await planner.BuildPlanAsync().ConfigureAwait(false);
+            plan = await planner.RunPlanAsync();
         }
         catch (SKException e)
         {
             Console.WriteLine(e);
             throw;
         }
+
+        return plan;
     }
 
-    private ISKFunction CreateSemanticFunction(SemanticFunctionConfig config)
+    private Function CreateSemanticFunction(SemanticFunctionConfig config)
     {
         if (!config.PromptTemplateConfig.Type.Equals("completion", StringComparison.OrdinalIgnoreCase))
         {
@@ -198,9 +224,7 @@ public sealed class Kernel
         }
 
         var func = SemanticFunction.FromSemanticConfig(config.PluginName, config.FunctionName, config, LoggerFactory);
-
         func.SetAIConfiguration(AIRequestSettings.FromCompletionConfig(config.PromptTemplateConfig.Completion));
-
         return func;
     }
 
@@ -255,13 +279,13 @@ public sealed class Kernel
         }
     }
 
-    public ISKFunction RegisterSemanticFunction(SemanticFunctionConfig config)
+    public Function RegisterSemanticFunction(SemanticFunctionConfig config)
     {
         var pluginName = config.PluginName;
         Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(config.FunctionName);
 
-        ISKFunction function = CreateSemanticFunction(config);
+        Function function = CreateSemanticFunction(config);
 
         if (!Plugins.TryGetValue(pluginName, out var plugin))
         {
@@ -274,7 +298,7 @@ public sealed class Kernel
         return function;
     }
 
-    public void RegisterNativeFunction(ISKFunction function)
+    public void RegisterNativeFunction(Function function)
     {
         var pluginName = function.PluginName;
         if (!Plugins.TryGetValue(pluginName, out var plugin))
@@ -286,13 +310,15 @@ public sealed class Kernel
         plugin.AddFunction(function);
     }
 
-    public ISKFunction FindFunction(string pluginName, string functionName)
+    public Function? FindFunction(string pluginName, string functionName)
     {
         Verify.ValidPluginName(pluginName);
         Verify.ValidFunctionName(functionName);
 
         Plugins.TryGetValue(pluginName, out var plugin);
-        return plugin!.GetFunction(functionName);
+        if (plugin != null)
+            return plugin.GetFunction(functionName);
+        return null;
     }
 
     public string BuildFunctionViews()
@@ -300,11 +326,22 @@ public sealed class Kernel
         var result = string.Empty;
         foreach (var plugin in Plugins.Values)
         {
-            result += string.Join("\n\n", plugin.BuildPluginView().FunctionViews.Values.Select(x => x.ToManualString()));
-            result += "\n\n";
+            if(!_includedFunctionViews.Contains(plugin.Name))
+                continue;
+
+            foreach (var function in plugin.Functions)
+            {
+                result += string.Join("\n\n", function.View.ToManualString());
+                result += "\n\n";
+            }
         }
 
         return result;
+    }
+
+    public void AddIncludedFunctionView(string[] pluginNames)
+    {
+        _includedFunctionViews.AddRange(pluginNames);
     }
 }
 

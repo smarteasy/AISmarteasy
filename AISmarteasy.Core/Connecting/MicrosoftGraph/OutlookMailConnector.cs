@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.PluginFunction;
 using Microsoft.Graph;
 
 namespace AISmarteasy.Core.Connecting.MicrosoftGraph;

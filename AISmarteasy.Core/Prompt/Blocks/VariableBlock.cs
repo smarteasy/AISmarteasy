@@ -27,14 +27,14 @@ public sealed class VariableBlock : Block, ITextRendering
 
         if (string.IsNullOrEmpty(Content))
         {
-            errorMsg = $"A variable must start with the symbol {Symbols.VarPrefix} and have a name";
+            errorMsg = $"A variable must start with the symbol {Symbols.VAR_PREFIX} and have a name";
             Logger.LogError(errorMsg);
             return false;
         }
 
-        if (Content[0] != Symbols.VarPrefix)
+        if (Content[0] != Symbols.VAR_PREFIX)
         {
-            errorMsg = $"A variable must start with the symbol {Symbols.VarPrefix}";
+            errorMsg = $"A variable must start with the symbol {Symbols.VAR_PREFIX}";
             Logger.LogError(errorMsg);
             return false;
         }
@@ -73,7 +73,7 @@ public sealed class VariableBlock : Block, ITextRendering
             return value;
         }
 
-        Logger.LogWarning("Variable `{0}{1}` not found", Symbols.VarPrefix, Name);
+        Logger.LogWarning("Variable `{0}{1}` not found", Symbols.VAR_PREFIX, Name);
 
         return string.Empty;
     }

@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.PluginFunction;
 
 namespace AISmarteasy.Core.Memory;
 

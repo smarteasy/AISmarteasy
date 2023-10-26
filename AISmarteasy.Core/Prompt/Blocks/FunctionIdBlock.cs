@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using AISmarteasy.Core.Context;
 using Microsoft.Extensions.Logging;
 

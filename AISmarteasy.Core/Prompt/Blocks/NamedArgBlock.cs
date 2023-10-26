@@ -13,23 +13,23 @@ internal sealed class NamedArgBlock : Block, ITextRendering
     public NamedArgBlock(string? text, ILoggerFactory? logger = null)
         : base(TrimWhitespace(text), logger)
     {
-        var argParts = Content.Split(Symbols.NamedArgBlockSeparator);
+        var argParts = Content.Split(Symbols.NAMED_ARG_BLOCK_SEPARATOR);
         if (argParts.Length != 2)
         {
             Logger.LogError("Invalid named argument `{Text}`", text);
-            throw new SKException($"A function named argument must contain a name and value separated by a '{Symbols.NamedArgBlockSeparator}' character.");
+            throw new SKException($"A function named argument must contain a name and value separated by a '{Symbols.NAMED_ARG_BLOCK_SEPARATOR}' character.");
         }
 
         Name = argParts[0];
-        _argNameAsVarBlock = new VariableBlock($"{Symbols.VarPrefix}{argParts[0]}");
+        _argNameAsVarBlock = new VariableBlock($"{Symbols.VAR_PREFIX}{argParts[0]}");
         var argValue = argParts[1];
         if (argValue.Length == 0)
         {
             Logger.LogError("Invalid named argument `{Text}`", text);
-            throw new SKException($"A function named argument must contain a quoted value or variable after the '{Symbols.NamedArgBlockSeparator}' character.");
+            throw new SKException($"A function named argument must contain a quoted value or variable after the '{Symbols.NAMED_ARG_BLOCK_SEPARATOR}' character.");
         }
 
-        if (argValue[0] == Symbols.VarPrefix)
+        if (argValue[0] == Symbols.VAR_PREFIX)
         {
             _argValueAsVarBlock = new VariableBlock(argValue);
         }
@@ -115,7 +115,7 @@ internal sealed class NamedArgBlock : Block, ITextRendering
         switch (trimmedParts.Length)
         {
             case 2:
-                return $"{trimmedParts[0]}{Symbols.NamedArgBlockSeparator}{trimmedParts[1]}";
+                return $"{trimmedParts[0]}{Symbols.NAMED_ARG_BLOCK_SEPARATOR}{trimmedParts[1]}";
             case 1:
                 return trimmedParts[0];
             default:
@@ -130,7 +130,7 @@ internal sealed class NamedArgBlock : Block, ITextRendering
             return Array.Empty<string>();
         }
 
-        var parts = text.Split(new[] { Symbols.NamedArgBlockSeparator }, 2);
+        var parts = text.Split(new[] { Symbols.NAMED_ARG_BLOCK_SEPARATOR }, 2);
         var result = new string[parts.Length];
         if (parts.Length > 0)
         {

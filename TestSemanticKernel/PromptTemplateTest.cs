@@ -1,6 +1,6 @@
 
 using AISmarteasy.Core;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Prompt;
 
 namespace TestSemanticKernel

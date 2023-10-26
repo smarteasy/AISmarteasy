@@ -14,7 +14,7 @@ public abstract class Block
     private protected Block(string? content, ILoggerFactory? loggerFactory)
     {
         this.Content = content ?? string.Empty;
-        this.Logger = loggerFactory is not null ? loggerFactory.CreateLogger(this.GetType()) : NullLogger.Instance;
+        this.Logger = loggerFactory is not null ? loggerFactory.CreateLogger(GetType()) : NullLogger.Instance;
     }
 
     public abstract bool IsValid(out string errorMsg);

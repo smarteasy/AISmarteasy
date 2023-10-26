@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using Microsoft.Graph;
 using TaskStatus = Microsoft.Graph.TaskStatus;
 

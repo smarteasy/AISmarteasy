@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using AISmarteasy.Core.Connecting;
 using AISmarteasy.Core.Prompt;
 
 namespace AISmarteasy.Core;
@@ -77,6 +78,14 @@ public class PromptTemplateConfig
     [JsonPropertyOrder(6)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public InputConfig Input { get; set; } = new();
+
+    public List<AIRequestSettings> ModelSettings { get; set; } = new();
+
+    public AIRequestSettings GetDefaultRequestSettings()
+    {
+        return ModelSettings.FirstOrDefault() ??
+               AIRequestSettings.FromCompletionConfig(KernelProvider.Kernel!.PromptTemplateConfig.Completion);
+    }
 
     public static PromptTemplateConfig FromJson(string json)
     {

@@ -1,6 +1,4 @@
-﻿using AISmarteasy.Core.Connecting;
-
-namespace AISmarteasy.Core.Service;
+﻿namespace AISmarteasy.Core.Service;
 
 public interface IImageGeneration : IAIService
 {

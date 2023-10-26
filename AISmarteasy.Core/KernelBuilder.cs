@@ -18,11 +18,11 @@ public static class KernelBuilder
         switch (config.ServiceType)
         {
             case AIServiceTypeKind.TextCompletion:
-                completionService = new OpenAITextCompletion(modelId, config.APIKey);
+                completionService = new OpenAITextCompletion(modelId, config.APIKey, config.ServiceType);
                 break;
             case AIServiceTypeKind.ChatCompletion:
             case AIServiceTypeKind.ChatCompletionWithGpt35:
-                completionService = new OpenAIChatCompletion(modelId, config.APIKey);
+                completionService = new OpenAIChatCompletion(modelId, config.APIKey, config.ServiceType);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(config.ServiceType), config.ServiceType, null);
@@ -52,5 +52,7 @@ public static class KernelBuilder
         }
 
         KernelProvider.Initialize(kernel);
+        kernel.LoadPlugin();
+        kernel.BuildFunctionViews();
     }
 }

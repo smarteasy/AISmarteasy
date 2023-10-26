@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Memory;
 using Azure.AI.OpenAI;
 

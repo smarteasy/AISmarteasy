@@ -61,6 +61,6 @@ public sealed class ValueBlock : Block, ITextRendering
     {
         return !string.IsNullOrEmpty(text)
                && text.Length > 0
-               && text[0] is Symbols.DblQuote or Symbols.SglQuote;
+               && text[0] is Symbols.DBL_QUOTE or Symbols.SGL_QUOTE;
     }
 }

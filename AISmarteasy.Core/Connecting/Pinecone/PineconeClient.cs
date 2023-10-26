@@ -2,12 +2,10 @@
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using AISmarteasy.Core.Connecting.Pinecone;
 using AISmarteasy.Core.Handling;
 using AISmarteasy.Core.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using HttpContentExtensions = AISmarteasy.Core.Connecting.HttpContentExtensions;
 
 namespace AISmarteasy.Core.Connecting.Pinecone;
 

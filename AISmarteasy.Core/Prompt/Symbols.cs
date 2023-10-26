@@ -2,18 +2,18 @@
 
 internal static class Symbols
 {
-    internal const char BlockStarter = '{';
-    internal const char BlockEnder = '}';
+    internal const char BLOCK_STARTER = '{';
+    internal const char BLOCK_ENDER = '}';
 
-    internal const char VarPrefix = '$';
-    internal const char NamedArgBlockSeparator = '=';
+    internal const char VAR_PREFIX = '$';
+    internal const char NAMED_ARG_BLOCK_SEPARATOR = '=';
 
-    internal const char DblQuote = '"';
-    internal const char SglQuote = '\'';
-    internal const char EscapeChar = '\\';
+    internal const char DBL_QUOTE = '"';
+    internal const char SGL_QUOTE = '\'';
+    internal const char ESCAPE_CHAR = '\\';
 
-    internal const char Space = ' ';
-    internal const char Tab = '\t';
-    internal const char NewLine = '\n';
-    internal const char CarriageReturn = '\r';
+    internal const char SPACE = ' ';
+    internal const char TAB = '\t';
+    internal const char NEW_LINE = '\n';
+    internal const char CARRIAGE_RETURN = '\r';
 }

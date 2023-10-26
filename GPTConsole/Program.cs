@@ -2,10 +2,12 @@
 using AISmarteasy.Core;
 using AISmarteasy.Core.Connecting.OpenAI.Text;
 using AISmarteasy.Core.Context;
-using AISmarteasy.Core.Function;
+using AISmarteasy.Core.PluginFunction;
 using AISmarteasy.Core.Memory;
+using AISmarteasy.Core.Planning;
 using AISmarteasy.Core.Prompt;
 using AISmarteasy.Core.Service;
+using AISmarteasy.Core.PluginFunction.NativeSkill;
 
 namespace GPTConsole
 {
@@ -28,21 +30,23 @@ namespace GPTConsole
             //Run_Example12_SequentialPlanner();
             //Run_Example13_01_ConversationSummaryPlugin();
             //Run_Example13_02_ConversationSummaryPlugin();
-            // Run_Example13_03_ConversationSummaryPlugin();
+            //Run_Example13_03_ConversationSummaryPlugin();
             //Run_Example14_01_SemanticMemory();
             //Run_Example14_02_SemanticMemory();
             //Run_Example17_ChatGPT();
             //Run_Example18_01_DallE();
             //Run_Example18_02_DallE();
+            //Run_Example28_ActionPlanner();
             //Run_Example32_StreamingCompletion();
             //Run_Example33_StreamingChat();
 
-            Run_LanguageCalculatorPlugin();
+            Run_StepwisePlanner();
+            //Run_LanguageCalculatorPlugin();
 
             Console.ReadLine();
         }
 
-        public static async void RunGetIntentFunction()
+        private static async void RunGetIntentFunction()
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
@@ -64,30 +68,26 @@ namespace GPTConsole
             };
 
             var config = new FunctionRunConfig("OrchestratorSkill", "GetIntent", parameters);
-            await kernel.RunFunctionAsync(config);
+            await kernel!.RunFunctionAsync(config);
             Console.WriteLine(kernel.Context.Variables.Input);
         }
 
-        public static async void Run_Example01_NativeFunctions()
+        private static async void Run_Example01_NativeFunctions()
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var config = new FunctionRunConfig("TextSkill", "Uppercase");
             config.UpdateInput("ciao");
-            await kernel.RunFunctionAsync(config);
+            await kernel!.RunFunctionAsync(config);
 
-            Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
+            Console.WriteLine(KernelProvider.Kernel!.ContextVariablesInput);
         }
 
-        public static async void Run_Example02_Pipeline()
+        private static async void Run_Example02_Pipeline()
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var config = new PipelineRunConfig();
 
@@ -97,7 +97,7 @@ namespace GPTConsole
 
             config.UpdateInput("    i n f i n i t e     s p a c e     ");
 
-            var answer = await kernel.RunPipelineAsync(config);
+            var answer = await kernel!.RunPipelineAsync(config);
             Console.WriteLine(answer.Text);
         }
 
@@ -106,13 +106,10 @@ namespace GPTConsole
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
 
-            var loader = new NativeFunctionLoader();
-            loader.Load();
-
             var variables = new ContextVariables("Today is: ");
             variables.Set("day", DateTimeOffset.Now.ToString("dddd", CultureInfo.CurrentCulture));
 
-            kernel.Context = new SKContext(variables);
+            kernel!.Context = new SKContext(variables);
 
             var config = new PipelineRunConfig();
             config.AddPluginFunctionName("TextSkill", "AppendDay");
@@ -126,15 +123,13 @@ namespace GPTConsole
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var config = new PipelineRunConfig();
             config.AddPluginFunctionName("GoogleSkill", "Search");
             config.AddPluginFunctionName("SummarizeSkill", "Summarize");
             config.UpdateInput("What's the tallest building in South America");
 
-            var result2 = await kernel.RunPipelineAsync(config);
+            var result2 = await kernel!.RunPipelineAsync(config);
             Console.WriteLine(result2.Text);
         }
 
@@ -142,8 +137,6 @@ namespace GPTConsole
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var config = new PipelineRunConfig();
             config.AddPluginFunctionName("GoogleSkill", "Search");
@@ -151,7 +144,7 @@ namespace GPTConsole
             config.UpdateInput("What's the tallest building in South America");
 
             Console.WriteLine("======== Notegen ========");
-            var result1 = await kernel.RunPipelineAsync(config);
+            var result1 = await kernel!.RunPipelineAsync(config);
             Console.WriteLine(result1.Text);
         }
 
@@ -187,10 +180,10 @@ namespace GPTConsole
             var config = PromptTemplateConfig.FromJson(configText);
             var template = new PromptTemplate(promptTemplate, config);
             var functionConfig = new SemanticFunctionConfig("EventSkill", "GenerateReasonOrExcuse", config, template);
-            var inlineFunction = kernel.RegisterSemanticFunction(functionConfig);
+            var inlineFunction = kernel!.RegisterSemanticFunction(functionConfig);
 
             await kernel.RunFunctionAsync(inlineFunction, "I missed the F1 final race");
-            Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
+            Console.WriteLine(KernelProvider.Kernel!.ContextVariablesInput);
 
             await kernel.RunFunctionAsync(inlineFunction, "sorry I forgot your birthday");
             Console.WriteLine(KernelProvider.Kernel.ContextVariablesInput);
@@ -200,8 +193,6 @@ namespace GPTConsole
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             string promptTemplate = @"
 Today is: {{TimeSkill.Date}}
@@ -234,18 +225,16 @@ Is it weekend time (weekend/not weekend)?
             Console.WriteLine(KernelProvider.Kernel?.ContextVariablesInput);
         }
 
-        public static Task RunExample10_DescribeAllPluginsAndFunctions()
+        private static Task RunExample10_DescribeAllPluginsAndFunctions()
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             foreach (var plugin in kernel!.Plugins.Values)
             {
-                foreach (var functionView in plugin.BuildPluginView().FunctionViews.Values)
+                foreach (var function in plugin.Functions)
                 {
-                    PrintFunction(functionView);
+                    PrintFunction(function.View);
                 }
             }
 
@@ -273,12 +262,10 @@ Is it weekend time (weekend/not weekend)?
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var goal = "Write a poem about John Doe, then translate it into Korean.";
 
-            var plan = await kernel.RunPlanAsync(goal);
+            var plan = await kernel!.RunPlanAsync(goal, WorkerTypeKind.Sequential);
             Console.WriteLine("Plan:\n");
             Console.WriteLine(plan.Content);
             Console.WriteLine("Answer:\n");
@@ -365,22 +352,21 @@ Is it weekend time (weekend/not weekend)?
 
             Console.WriteLine("\nQuery: " + query + "\n");
 
-            KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey, ImageGenerationTypeKind.None,
-                    MemoryTypeKind.PineCone, PineconeAPIKey, PineconeEnvironment));
+            KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey,
+                ImageGenerationTypeKind.None,
+                MemoryTypeKind.PineCone, PineconeAPIKey, PineconeEnvironment));
             var kernel = KernelProvider.Kernel;
             var memoryResults = await kernel!.SearchMemoryAsync(query);
 
-            if (memoryResults != null)
+
+            var i = 0;
+            await foreach (MemoryQueryResult memoryResult in memoryResults)
             {
-                var i = 0;
-                await foreach (MemoryQueryResult memoryResult in memoryResults)
-                {
-                    Console.WriteLine($"Result {++i}:");
-                    Console.WriteLine("  URL:     : " + memoryResult.Metadata.Id);
-                    Console.WriteLine("  Title    : " + memoryResult.Metadata.Text);
-                    Console.WriteLine("  Relevance: " + memoryResult.Relevance);
-                    Console.WriteLine();
-                }
+                Console.WriteLine($"Result {++i}:");
+                Console.WriteLine("  URL:     : " + memoryResult.Metadata.Id);
+                Console.WriteLine("  Title    : " + memoryResult.Metadata.Text);
+                Console.WriteLine("  Relevance: " + memoryResult.Relevance);
+                Console.WriteLine();
             }
         }
 
@@ -469,8 +455,8 @@ Is it weekend time (weekend/not weekend)?
             chatHistory = await kernel.RunChatCompletionAsync(chatHistory);
             await MessageOutputAsync(chatHistory);
         }
-        
-        public static async void Run_Example32_StreamingCompletion()
+
+        private static async void Run_Example32_StreamingCompletion()
         {
             Console.WriteLine("======== Azure OpenAI - Text Completion - Raw Streaming ========");
 
@@ -490,7 +476,7 @@ Is it weekend time (weekend/not weekend)?
             Console.WriteLine();
         }
 
-        public static async void Run_Example33_StreamingChat()
+        private static async void Run_Example33_StreamingChat()
         {
             Console.WriteLine("======== Open AI - ChatGPT Streaming ========");
 
@@ -508,8 +494,6 @@ Is it weekend time (weekend/not weekend)?
 
             Console.Write($"{AuthorRole.Assistant}: ");
 
-            string fullMessage = string.Empty;
-
             await foreach (var answer in kernel.RunChatStreamingAsync(chatHistory))
             {
                 await foreach (var stream in answer.GetStreamingChatMessageAsync())
@@ -519,12 +503,10 @@ Is it weekend time (weekend/not weekend)?
             }
         }
 
-        public static async void Run_LanguageCalculatorPlugin()
+        private static async void Run_LanguageCalculatorPlugin()
         {
             KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.TextCompletion, OpenaiAPIKey));
             var kernel = KernelProvider.Kernel;
-            var loader = new NativeFunctionLoader();
-            loader.Load();
 
             var config = new PipelineRunConfig();
 
@@ -535,6 +517,37 @@ Is it weekend time (weekend/not weekend)?
 
             var answer = await kernel!.RunPipelineAsync(config);
             Console.WriteLine(answer.Text);
+        }
+
+        private static async void Run_Example28_ActionPlanner()
+        {
+            Console.WriteLine("======== Action Planner ========");
+            KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
+            var kernel = KernelProvider.Kernel;
+
+            var goal = "Write a joke about Cleopatra in the style of Hulk Hogan.";
+
+            var plan = await kernel!.RunPlanAsync(goal, WorkerTypeKind.Action);
+            Console.WriteLine("Plan:\n");
+            Console.WriteLine(plan!.Content);
+            Console.WriteLine("Answer:\n");
+            Console.WriteLine(plan.Answer);
+        }
+
+        private static async void Run_StepwisePlanner()
+        {
+            Console.WriteLine("======== Stepwise Planner ========");
+            KernelBuilder.Build(new AIServiceConfig(AIServiceTypeKind.ChatCompletion, OpenaiAPIKey));
+            var kernel = KernelProvider.Kernel;
+
+            var goal = "What is the weather in Seattle?";
+
+            kernel!.AddIncludedFunctionView(new []{"GoogleSkill"});
+            var plan = await kernel!.RunPlanAsync(goal, WorkerTypeKind.Stepwise);
+            Console.WriteLine("Plan:\n");
+            Console.WriteLine(plan!.Content);
+            Console.WriteLine("Answer:\n");
+            Console.WriteLine(plan.Answer);
         }
 
 

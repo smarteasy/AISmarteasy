@@ -58,7 +58,7 @@ public sealed class TemplateTokenizer
                 continue;
             }
 
-            if (!insideTextValue && currentChar == Symbols.BlockStarter && nextChar == Symbols.BlockStarter)
+            if (!insideTextValue && currentChar == Symbols.BLOCK_STARTER && nextChar == Symbols.BLOCK_STARTER)
             {
                 blockStartPos = currentCharPos;
                 blockStartFound = true;
@@ -68,7 +68,7 @@ public sealed class TemplateTokenizer
             {
                 if (insideTextValue)
                 {
-                    if (currentChar == Symbols.EscapeChar && CanBeEscaped(nextChar))
+                    if (currentChar == Symbols.ESCAPE_CHAR && CanBeEscaped(nextChar))
                     {
                         skipNextChar = true;
                         continue;
@@ -86,7 +86,7 @@ public sealed class TemplateTokenizer
                         insideTextValue = true;
                         textValueDelimiter = currentChar;
                     }
-                    else if (currentChar == Symbols.BlockEnder && nextChar == Symbols.BlockEnder)
+                    else if (currentChar == Symbols.BLOCK_ENDER && nextChar == Symbols.BLOCK_ENDER)
                     {
                         if (blockStartPos > endOfLastBlock)
                         {
@@ -165,11 +165,11 @@ public sealed class TemplateTokenizer
 
     private static bool IsQuote(char c)
     {
-        return c is Symbols.DblQuote or Symbols.SglQuote;
+        return c is Symbols.DBL_QUOTE or Symbols.SGL_QUOTE;
     }
 
     private static bool CanBeEscaped(char c)
     {
-        return c is Symbols.DblQuote or Symbols.SglQuote or Symbols.EscapeChar;
+        return c is Symbols.DBL_QUOTE or Symbols.SGL_QUOTE or Symbols.ESCAPE_CHAR;
     }
 }

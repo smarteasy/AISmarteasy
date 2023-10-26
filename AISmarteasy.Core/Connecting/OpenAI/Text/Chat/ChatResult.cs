@@ -1,4 +1,4 @@
-﻿using AISmarteasy.Core.Function;
+﻿using AISmarteasy.Core.PluginFunction;
 using Azure.AI.OpenAI;
 
 namespace AISmarteasy.Core.Connecting.OpenAI.Text.Chat;
