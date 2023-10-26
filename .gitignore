@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /GPTConsole/Env.cs
 /AISmarteasy.Core/EnvExtensions.cs
+/AISmarteasy.Core/Env.cs
